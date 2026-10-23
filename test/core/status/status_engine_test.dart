@@ -10,15 +10,14 @@ WorkerProfile _worker({
   bool active = true,
   List<EmploymentPeriod>? periods,
   String? housingId = 'house-1',
-}) =>
-    WorkerProfile(
-      employeeUid: id,
-      code: '001',
-      fullName: 'Worker',
-      isActive: active,
-      housingId: housingId,
-      employmentPeriods: periods ?? [const EmploymentPeriod('2026-01-01')],
-    );
+}) => WorkerProfile(
+  employeeUid: id,
+  code: '001',
+  fullName: 'Worker',
+  isActive: active,
+  housingId: housingId,
+  employmentPeriods: periods ?? [const EmploymentPeriod('2026-01-01')],
+);
 
 LocalEvent _event(
   EventType type, {
@@ -32,20 +31,21 @@ LocalEvent _event(
   DateTime? receivedAt,
   EventDelivery delivery = EventDelivery.pending,
   bool late = false,
-}) =>
-    LocalEvent(
-      eventId: id,
-      employeeUid: workerId,
-      type: type,
-      action: action,
-      businessDate: date,
-      teamId: teamId,
-      housingId: housingId,
-      deviceSeq: seq,
-      receivedAtUtc: receivedAt ?? _now,
-      delivery: delivery,
-      isLate: late,
-    );
+  ResolutionKind? resolutionKind,
+}) => LocalEvent(
+  eventId: id,
+  employeeUid: workerId,
+  type: type,
+  action: action,
+  businessDate: date,
+  teamId: teamId,
+  housingId: housingId,
+  deviceSeq: seq,
+  receivedAtUtc: receivedAt ?? _now,
+  delivery: delivery,
+  isLate: late,
+  resolutionKind: resolutionKind,
+);
 
 WorkerStatusResult _evaluate(
   List<LocalEvent> events, {
@@ -53,14 +53,16 @@ WorkerStatusResult _evaluate(
   String date = _day,
   DateTime? now,
   int slaMinutes = 120,
-}) =>
-    StatusEngine().evaluate(
+}) => StatusEngine()
+    .evaluate(
       workers: [worker ?? _worker()],
       events: events,
       businessDate: date,
       nowUtc: now ?? _now,
       slaMinutes: slaMinutes,
-    ).workers.single;
+    )
+    .workers
+    .single;
 
 void main() {
   group('worker status rules', () {
@@ -78,16 +80,16 @@ void main() {
 
     test('housingCheck_isHousingOnly', () {
       expect(
-        _evaluate([_event(EventType.housingCheck, housingId: 'house-1')]).status,
+        _evaluate([_event(EventType.housingCheck, housingId: 'house-1')])
+            .status,
         WorkerStatus.housingOnly,
       );
     });
 
     test('housingAbsent_isUnknown', () {
       expect(
-        _evaluate([
-          _event(EventType.housingAbsent, housingId: 'house-1'),
-        ]).status,
+        _evaluate([_event(EventType.housingAbsent, housingId: 'house-1')])
+            .status,
         WorkerStatus.unknown,
       );
     });
@@ -125,6 +127,57 @@ void main() {
       expect(result.status, WorkerStatus.onSite);
       expect(result.teamId, 'team-b');
       expect(result.flags, contains(StatusFlag.multipleSiteTeams));
+    });
+
+    test('activeResolution_clearsConflictFlagWithoutChangingStatus', () {
+      final result = _evaluate([
+        _event(EventType.housingAbsent, housingId: 'house-1'),
+        _event(EventType.sitePresent, id: 'e2', teamId: 'team-a', seq: 2),
+        _event(
+          EventType.resolution,
+          id: 'e3',
+          seq: 3,
+          resolutionKind: ResolutionKind.housingError,
+        ),
+      ]);
+      expect(result.status, WorkerStatus.onSite);
+      expect(result.flags, isNot(contains(StatusFlag.housingSiteConflict)));
+    });
+
+    test('movedDuringDayResolution_clearsMultipleTeamFlag', () {
+      final result = _evaluate([
+        _event(EventType.sitePresent, teamId: 'team-a'),
+        _event(EventType.sitePresent, id: 'e2', teamId: 'team-b', seq: 2),
+        _event(
+          EventType.resolution,
+          id: 'e3',
+          seq: 3,
+          resolutionKind: ResolutionKind.movedDuringDay,
+        ),
+      ]);
+      expect(result.status, WorkerStatus.onSite);
+      expect(result.flags, isNot(contains(StatusFlag.multipleSiteTeams)));
+    });
+
+    test('clearedResolution_restoresConflictFlag', () {
+      final result = _evaluate([
+        _event(EventType.housingAbsent, housingId: 'house-1'),
+        _event(EventType.sitePresent, id: 'e2', teamId: 'team-a', seq: 2),
+        _event(
+          EventType.resolution,
+          id: 'e3',
+          seq: 3,
+          resolutionKind: ResolutionKind.housingError,
+        ),
+        _event(
+          EventType.resolution,
+          id: 'e4',
+          action: EventAction.clear,
+          seq: 4,
+          resolutionKind: ResolutionKind.housingError,
+        ),
+      ]);
+      expect(result.flags, contains(StatusFlag.housingSiteConflict));
     });
 
     test('clearedSitePresence_doesNotRemainOnSite', () {
@@ -201,12 +254,7 @@ void main() {
             teamId: 'team-a',
             seq: 2,
           ),
-          _event(
-            EventType.sitePresent,
-            id: 'e3',
-            teamId: 'team-a',
-            seq: 3,
-          ),
+          _event(EventType.sitePresent, id: 'e3', teamId: 'team-a', seq: 3),
         ]).status,
         WorkerStatus.onSite,
       );
@@ -252,12 +300,7 @@ void main() {
       expect(
         _evaluate([
           _event(EventType.sitePresent, teamId: 'team-a', seq: 1),
-          _event(
-            EventType.sitePresent,
-            id: 'e2',
-            teamId: 'team-b',
-            seq: 2,
-          ),
+          _event(EventType.sitePresent, id: 'e2', teamId: 'team-b', seq: 2),
         ]).teamId,
         'team-b',
       );
@@ -286,54 +329,43 @@ void main() {
 
     test('otherHousingCheck_doesNotApplyToWorker', () {
       expect(
-        _evaluate([
-          _event(EventType.housingCheck, housingId: 'house-2'),
-        ]).status,
+        _evaluate([_event(EventType.housingCheck, housingId: 'house-2')])
+            .status,
         WorkerStatus.notRecorded,
       );
     });
 
     test('absenceForOtherHousing_doesNotApplyToWorker', () {
       expect(
-        _evaluate([
-          _event(EventType.housingAbsent, housingId: 'house-2'),
-        ]).status,
+        _evaluate([_event(EventType.housingAbsent, housingId: 'house-2')])
+            .status,
         WorkerStatus.notRecorded,
       );
     });
 
     test('slaBreach_requiresUnknownAndElapsedBeyondLimit', () {
       final checkedAt = _now.subtract(const Duration(minutes: 121));
-      final result = _evaluate(
-        [
-          _event(
-            EventType.housingCheck,
-            housingId: 'house-1',
-            receivedAt: checkedAt,
-          ),
-          _event(
-            EventType.housingAbsent,
-            housingId: 'house-1',
-            id: 'e2',
-          ),
-        ],
-        now: _now,
-      );
+      final result = _evaluate([
+        _event(
+          EventType.housingCheck,
+          housingId: 'house-1',
+          receivedAt: checkedAt,
+        ),
+        _event(EventType.housingAbsent, housingId: 'house-1', id: 'e2'),
+      ], now: _now);
       expect(result.status, WorkerStatus.unknown);
       expect(result.isSlaBreached, isTrue);
     });
 
     test('slaAtExactLimit_isNotBreached', () {
-      final result = _evaluate(
-        [
-          _event(
-            EventType.housingCheck,
-            housingId: 'house-1',
-            receivedAt: _now.subtract(const Duration(minutes: 120)),
-          ),
-          _event(EventType.housingAbsent, housingId: 'house-1', id: 'e2'),
-        ],
-      );
+      final result = _evaluate([
+        _event(
+          EventType.housingCheck,
+          housingId: 'house-1',
+          receivedAt: _now.subtract(const Duration(minutes: 120)),
+        ),
+        _event(EventType.housingAbsent, housingId: 'house-1', id: 'e2'),
+      ]);
       expect(result.isSlaBreached, isFalse);
     });
 
@@ -364,10 +396,9 @@ void main() {
     });
 
     test('inactiveWorkerWithEvent_isFlagged', () {
-      final result = _evaluate(
-        [_event(EventType.sitePresent, teamId: 'team-a')],
-        worker: _worker(active: false),
-      );
+      final result = _evaluate([
+        _event(EventType.sitePresent, teamId: 'team-a'),
+      ], worker: _worker(active: false));
       expect(result.flags, contains(StatusFlag.inactiveWorkerEvent));
       expect(result.isEligible, isFalse);
     });
@@ -381,10 +412,9 @@ void main() {
     });
 
     test('eventBeforeEmployment_isFlagged', () {
-      final result = _evaluate(
-        [_event(EventType.sitePresent, teamId: 'team-a')],
-        worker: _worker(periods: [const EmploymentPeriod('2026-10-24')]),
-      );
+      final result = _evaluate([
+        _event(EventType.sitePresent, teamId: 'team-a'),
+      ], worker: _worker(periods: [const EmploymentPeriod('2026-10-24')]));
       expect(result.flags, contains(StatusFlag.eventOutsideEmployment));
     });
 
@@ -404,11 +434,7 @@ void main() {
     test('otherEmployeeEvents_areIgnored', () {
       expect(
         _evaluate([
-          _event(
-            EventType.sitePresent,
-            workerId: 'worker-2',
-            teamId: 'team-a',
-          ),
+          _event(EventType.sitePresent, workerId: 'worker-2', teamId: 'team-a'),
         ]).status,
         WorkerStatus.notRecorded,
       );
@@ -460,11 +486,7 @@ void main() {
     test('clearedStatusEventForUnknownDate_doesNotLeakIntoCurrentDate', () {
       expect(
         _evaluate([
-          _event(
-            EventType.sitePresent,
-            date: '2026-10-22',
-            teamId: 'team-a',
-          ),
+          _event(EventType.sitePresent, date: '2026-10-22', teamId: 'team-a'),
           _event(
             EventType.sitePresent,
             id: 'clear',
@@ -479,7 +501,10 @@ void main() {
 
     test('resultsRemainInRosterOrder', () {
       final snapshot = StatusEngine().evaluate(
-        workers: [_worker(id: 'second'), _worker(id: 'first')],
+        workers: [
+          _worker(id: 'second'),
+          _worker(id: 'first'),
+        ],
         events: const [],
         businessDate: _day,
         nowUtc: _now,

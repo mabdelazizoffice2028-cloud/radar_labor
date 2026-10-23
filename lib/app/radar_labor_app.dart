@@ -16,6 +16,9 @@ import 'package:radar_labor/core/status/status_models.dart';
 import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/core/time/clock.dart';
 import 'package:radar_labor/features/dashboard/data/status_snapshot_repository.dart';
+import 'package:radar_labor/features/dashboard/data/dashboard_actions_repository.dart';
+import 'package:radar_labor/features/dashboard/data/dashboard_coverage_repository.dart';
+import 'package:radar_labor/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:radar_labor/features/operations/presentation/operations_screen.dart';
 import 'package:radar_labor/features/operations/data/operations_repository.dart';
 import 'package:uuid/uuid.dart';
@@ -50,7 +53,7 @@ class _RadarLaborAppState extends State<RadarLaborApp> {
       key,
     );
     final settings = LocalSettingsRepository(database);
-    await settings.seedDefaults(locale: 'ar');
+    await settings.seedDefaults(locale: 'en');
     final deviceId = await settings.ensureDeviceId();
     return _AppSession(
       database,
@@ -140,7 +143,7 @@ class _Home extends StatefulWidget {
 
 class _HomeState extends State<_Home> {
   int _tab = 0;
-  String _locale = 'ar';
+  String _locale = 'en';
   bool get _ar => _locale == 'ar';
   String _t(String ar, String en) => _ar ? ar : en;
   late final _settings = LocalSettingsRepository(widget.database);
@@ -149,6 +152,11 @@ class _HomeState extends State<_Home> {
     events: widget.events,
     clock: const SystemClock(),
   );
+  late final _coverage = DashboardCoverageRepository(
+    database: widget.database,
+    events: widget.events,
+  );
+  late final _dashboardActions = DashboardActionsRepository(widget.events);
   late final _operations = OperationsRepository(
     database: widget.database,
     events: widget.events,
@@ -165,7 +173,12 @@ class _HomeState extends State<_Home> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      _Dashboard(repository: _dashboard, arabic: _ar),
+      DashboardScreen(
+        statusRepository: _dashboard,
+        coverageRepository: _coverage,
+        actionsRepository: _dashboardActions,
+        arabic: _ar,
+      ),
       _Workers(database: widget.database, events: widget.events, arabic: _ar),
       _Entities(database: widget.database, arabic: _ar, teams: true),
       _Entities(database: widget.database, arabic: _ar, teams: false),
@@ -222,217 +235,6 @@ class _HomeState extends State<_Home> {
       ),
     );
   }
-}
-
-class _Dashboard extends StatelessWidget {
-  const _Dashboard({required this.repository, required this.arabic});
-  final StatusSnapshotRepository repository;
-  final bool arabic;
-
-  String _label(WorkerStatus status) => switch (status) {
-    WorkerStatus.onSite => arabic ? 'في الموقع' : 'On site',
-    WorkerStatus.housingOnly => arabic ? 'في السكن فقط' : 'Housing only',
-    WorkerStatus.unknown => arabic ? 'غير معلوم' : 'Unknown',
-    WorkerStatus.justified => arabic ? 'مبرر' : 'Justified',
-    WorkerStatus.notRecorded => arabic ? 'لم يسجل بعد' : 'Not recorded',
-  };
-
-  Color _color(WorkerStatus status, ColorScheme colors) => switch (status) {
-    WorkerStatus.onSite => const Color(0xff15803d),
-    WorkerStatus.housingOnly => const Color(0xffb45309),
-    WorkerStatus.unknown => const Color(0xffb91c1c),
-    WorkerStatus.justified => const Color(0xff0e7490),
-    WorkerStatus.notRecorded => colors.outline,
-  };
-
-  IconData _icon(WorkerStatus status) => switch (status) {
-    WorkerStatus.onSite => Icons.check_circle_outline,
-    WorkerStatus.housingOnly => Icons.home_outlined,
-    WorkerStatus.unknown => Icons.warning_amber_rounded,
-    WorkerStatus.justified => Icons.verified_outlined,
-    WorkerStatus.notRecorded => Icons.schedule_outlined,
-  };
-
-  @override
-  Widget build(BuildContext context) => StreamBuilder<StatusSnapshot>(
-    stream: repository.watch(arabic: arabic),
-    builder: (context, state) {
-      if (state.hasError) {
-        return Center(
-          child: Text(
-            arabic
-                ? 'تعذر تحميل لوحة الحالات'
-                : 'Could not load status dashboard',
-          ),
-        );
-      }
-      if (!state.hasData) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      final snapshot = state.data!;
-      final active = snapshot.workers.where((row) => row.isEligible).toList();
-      final unknown = active
-          .where((row) => row.status == WorkerStatus.unknown)
-          .toList();
-      final conflictCount = active.where((row) => row.flags.isNotEmpty).length;
-      const cards = [
-        WorkerStatus.onSite,
-        WorkerStatus.housingOnly,
-        WorkerStatus.unknown,
-        WorkerStatus.justified,
-      ];
-      return ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(
-            color: Theme.of(context).colorScheme.primary,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    arabic ? 'متابعة العمال اليوم' : 'Today at a glance',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    arabic
-                        ? 'محلي بالكامل • البيانات محفوظة على الجهاز'
-                        : 'Fully local • data stays on this device',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    snapshot.businessDate,
-                    style: const TextStyle(color: Colors.white, fontSize: 18),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 1.75,
-            children: [
-              for (final status in cards)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          _icon(status),
-                          color: _color(status, Theme.of(context).colorScheme),
-                        ),
-                        Text(
-                          '${snapshot.count(status)}',
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(
-                                color: _color(
-                                  status,
-                                  Theme.of(context).colorScheme,
-                                ),
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                        Text(
-                          _label(status),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          Card(
-            child: ListTile(
-              leading: Icon(
-                _icon(WorkerStatus.notRecorded),
-                color: _color(
-                  WorkerStatus.notRecorded,
-                  Theme.of(context).colorScheme,
-                ),
-              ),
-              title: Text(_label(WorkerStatus.notRecorded)),
-              trailing: Text(
-                '${snapshot.count(WorkerStatus.notRecorded)}',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-            ),
-          ),
-          if (conflictCount > 0)
-            Card(
-              color: const Color(0xfffff7ed),
-              child: ListTile(
-                leading: const Icon(
-                  Icons.error_outline,
-                  color: Color(0xffb45309),
-                ),
-                title: Text(
-                  arabic ? 'تعارضات تحتاج مراجعة' : 'Conflicts to review',
-                ),
-                trailing: Text('$conflictCount'),
-              ),
-            ),
-          if (unknown.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsetsDirectional.only(top: 16, bottom: 4),
-              child: Text(
-                arabic ? 'عمال غير معلومين' : 'Unknown workers',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-            ),
-            for (final result in unknown)
-              Card(
-                child: ListTile(
-                  leading: Icon(
-                    result.isSlaBreached
-                        ? Icons.timer_off_outlined
-                        : Icons.help_outline,
-                    color: result.isSlaBreached
-                        ? const Color(0xffb91c1c)
-                        : const Color(0xffb45309),
-                  ),
-                  title: Text(
-                    '${result.worker.fullName} • ${result.worker.code}',
-                  ),
-                  subtitle: Text(
-                    result.isSlaBreached
-                        ? (arabic ? 'تجاوز مهلة المتابعة' : 'SLA exceeded')
-                        : (arabic
-                              ? 'غياب سكن دون تبرير'
-                              : 'Housing absence without justification'),
-                  ),
-                  trailing: result.flags.isEmpty
-                      ? null
-                      : const Icon(Icons.warning_amber_rounded),
-                ),
-              ),
-          ],
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.lock_outline, color: Color(0xff15803d)),
-              title: Text(
-                arabic
-                    ? 'بيانات مشفرة ومحفوظة على الجهاز'
-                    : 'Encrypted data stored on this device',
-              ),
-            ),
-          ),
-        ],
-      );
-    },
-  );
 }
 
 class _Workers extends StatefulWidget {

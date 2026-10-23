@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:radar_labor/core/database/app_database.dart';
+import 'package:radar_labor/core/database/app_setting_keys.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/core/status/status_engine.dart';
 import 'package:radar_labor/core/status/status_models.dart' as model;
@@ -26,7 +27,10 @@ final class StatusSnapshotRepository {
   final Clock _clock;
   final StatusEngine _engine;
 
-  Stream<model.StatusSnapshot> watch({required bool arabic}) {
+  Stream<model.StatusSnapshot> watch({
+    required bool arabic,
+    String? businessDate,
+  }) {
     late StreamController<model.StatusSnapshot> controller;
     StreamSubscription<List<Employee>>? employeeSubscription;
     StreamSubscription<List<EmploymentPeriod>>? periodSubscription;
@@ -64,7 +68,7 @@ final class StatusSnapshotRepository {
         );
       });
       final configuredSla = settings
-          ?.where((setting) => setting.key == 'sla_minutes')
+          ?.where((setting) => setting.key == AppSettingKeys.slaMinutes)
           .firstOrNull
           ?.value;
       final slaMinutes = int.tryParse(configuredSla ?? '') ?? 120;
@@ -73,7 +77,7 @@ final class StatusSnapshotRepository {
         _engine.evaluate(
           workers: workers,
           events: events!,
-          businessDate: businessDateFor(now),
+          businessDate: businessDate ?? businessDateFor(now),
           nowUtc: now,
           slaMinutes: slaMinutes,
         ),

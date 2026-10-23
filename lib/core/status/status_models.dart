@@ -12,6 +12,25 @@ enum EventType {
 
 enum EventAction { set, clear }
 
+enum ResolutionKind {
+  confirmPresentLeftEarly('confirm_present_left_early'),
+  movedDuringDay('moved_during_day'),
+  housingError('housing_error'),
+  siteError('site_error'),
+  officialErrand('official_errand');
+
+  const ResolutionKind(this.key);
+  final String key;
+
+  static ResolutionKind? fromKey(Object? value) {
+    if (value is! String) return null;
+    for (final kind in values) {
+      if (kind.key == value) return kind;
+    }
+    return null;
+  }
+}
+
 /// Cloud delivery state is retained in the local schema for future migration,
 /// but the current owner-approved build never starts a sync client.
 enum EventDelivery { pending, sent, acked, rejected }
@@ -74,6 +93,7 @@ final class LocalEvent {
     this.deviceTimeUtc,
     this.delivery = EventDelivery.pending,
     this.isLate = false,
+    this.resolutionKind,
   });
 
   final String eventId;
@@ -88,6 +108,7 @@ final class LocalEvent {
   final DateTime? deviceTimeUtc;
   final EventDelivery delivery;
   final bool isLate;
+  final ResolutionKind? resolutionKind;
 }
 
 final class WorkerStatusResult {

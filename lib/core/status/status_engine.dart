@@ -5,7 +5,7 @@ final RegExp _isoDatePattern = RegExp(r'^\d{4}-\d{2}-\d{2}$');
 /// Pure Dart evaluator for the worker status rules in PRD §6.
 ///
 /// No Flutter, database, file-system, clock, or network dependency is allowed
-  /// here. Inputs are immutable snapshots; the result preserves roster order.
+/// here. Inputs are immutable snapshots; the result preserves roster order.
 final class StatusEngine {
   const StatusEngine();
 
@@ -18,7 +18,11 @@ final class StatusEngine {
   }) {
     if (!_isoDatePattern.hasMatch(businessDate) ||
         DateTime.tryParse(businessDate) == null) {
-      throw ArgumentError.value(businessDate, 'businessDate', 'must be YYYY-MM-DD');
+      throw ArgumentError.value(
+        businessDate,
+        'businessDate',
+        'must be YYYY-MM-DD',
+      );
     }
     if (slaMinutes < 0) {
       throw ArgumentError.value(slaMinutes, 'slaMinutes', 'cannot be negative');
@@ -46,7 +50,9 @@ final class StatusEngine {
       if (workerEvents.any((event) => event.isLate)) {
         flags.add(StatusFlag.lateEvent);
       }
-      if (workerEvents.any((event) => event.delivery == EventDelivery.rejected)) {
+      if (workerEvents.any(
+        (event) => event.delivery == EventDelivery.rejected,
+      )) {
         flags.add(StatusFlag.rejectedEvent);
       }
 
@@ -69,6 +75,10 @@ final class StatusEngine {
       final hasJustification = activeWorkerEvents.any(
         (event) => event.type == EventType.justification,
       );
+      final hasResolution = activeWorkerEvents.any(
+        (event) =>
+            event.type == EventType.resolution && event.resolutionKind != null,
+      );
       final check = effectiveEvents
           .where(
             (event) =>
@@ -78,14 +88,14 @@ final class StatusEngine {
           )
           .firstOrNull;
 
-      if (absentEvents.isNotEmpty && siteEvents.isNotEmpty) {
+      if (!hasResolution && absentEvents.isNotEmpty && siteEvents.isNotEmpty) {
         flags.add(StatusFlag.housingSiteConflict);
       }
       final activeTeams = siteEvents
           .map((event) => event.teamId)
           .whereType<String>()
           .toSet();
-      if (activeTeams.length > 1) {
+      if (!hasResolution && activeTeams.length > 1) {
         flags.add(StatusFlag.multipleSiteTeams);
       }
 
@@ -104,8 +114,11 @@ final class StatusEngine {
           : WorkerStatus.notRecorded;
 
       final checkAt = check?.receivedAtUtc ?? check?.deviceTimeUtc;
-      final elapsed = checkAt == null ? null : nowUtc.toUtc().difference(checkAt.toUtc());
-      final breached = eligible &&
+      final elapsed = checkAt == null
+          ? null
+          : nowUtc.toUtc().difference(checkAt.toUtc());
+      final breached =
+          eligible &&
           isUnknown &&
           elapsed != null &&
           elapsed > Duration(minutes: slaMinutes);
@@ -132,7 +145,9 @@ final class StatusEngine {
 
   List<LocalEvent> _effectiveEvents(List<LocalEvent> events) {
     final latestByKey = <String, LocalEvent>{};
-    for (final event in events.where((event) => event.delivery != EventDelivery.rejected)) {
+    for (final event in events.where(
+      (event) => event.delivery != EventDelivery.rejected,
+    )) {
       final key = [
         event.employeeUid ?? '',
         event.type.name,

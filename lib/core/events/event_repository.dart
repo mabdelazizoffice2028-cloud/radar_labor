@@ -94,6 +94,7 @@ final class EventRepository {
           housingId: draft.housingId,
           deviceTimeUtc: now,
           isLate: isLate[index],
+          resolutionKind: ResolutionKind.fromKey(draft.payload['kind']),
         );
         await _database
             .into(_database.events)
@@ -166,7 +167,14 @@ final class EventRepository {
     deviceTimeUtc: row.deviceTime.toUtc(),
     delivery: EventDelivery.values.byName(row.syncStatus),
     isLate: row.late,
+    resolutionKind: _resolutionKind(row.payload),
   );
+
+  ResolutionKind? _resolutionKind(String payload) {
+    final Object? decoded = jsonDecode(payload);
+    if (decoded is! Map<String, Object?>) return null;
+    return ResolutionKind.fromKey(decoded['kind']);
+  }
 
   void _validateDraft(EventDraft draft) {
     if (!_isValidDate(draft.businessDate)) {
