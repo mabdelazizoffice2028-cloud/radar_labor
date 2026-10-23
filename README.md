@@ -26,16 +26,17 @@
 ### ما يعمل حاليًا
 
 - شاشة تشغيل واضحة بحالات التحميل والخطأ وإعادة المحاولة؛ لا يبدأ التطبيق بواجهة بيضاء صامتة.
-- لوحة رئيسية تعرض التاريخ التشغيلي وعدد العمال النشطين.
+- لوحة حالات تحسب العامل بالموقع، وفي السكن فقط، وغير المعلوم، والمبرر، وغير المسجل من سجل اليوم؛ وتعرض مجهولي الحالة وتجاوز SLA والتعارضات.
 - إنشاء الفرق ومساكن العمال بأسماء عربية وإنجليزية.
 - تسجيل العامل برقم فريد واسمين عربي/إنجليزي وإسناده إلى فريق وسكن.
-- البحث في قائمة العمال وتسجيل حدث «في الموقع» أو «غياب في السكن» للعامل المسند؛ تُرفض الحالة عند غياب الإسناد المطلوب.
-- سجل أحداث محلي متزايد التسلسل، وتاريخ يوم العمل وفق توقيت الرياض والحد اليومي المحدد.
+- فحص السكن: تحديد الغائبين أو تأكيد «لا يوجد غائبون»، مراجعة الأسماء، الحفظ المحلي، تراجع يسجل أحداثًا عكسية، وإنشاء ملخص واتساب قابل للنسخ.
+- تسجيل الموقع حسب الفريق، تأكيد الحاضرين وإرسال سجل الفريق حتى عند صفر حضور؛ التصحيح والتراجع يحتفظان بسجل الأحداث.
+- سجل أحداث محلي متزايد التسلسل والكتابة الجماعية الذرية، وتاريخ يوم العمل وفق توقيت الرياض والحد اليومي المحدد.
 - حفظ اللغة والتفضيلات محليًا، وتخزين مفتاح التشفير في التخزين الآمن للنظام.
 
 ### قيود النسخة الحالية
 
-هذه نسخة تطبيق محلي أولية، وليست اكتمالًا لكل النطاق التشغيلي في PRD. لا تشمل بعد شاشة تسجيل الدخول، تعديل السجلات المرجعية، إدارة فترات العمل، التبريرات والحسم، عروض تفاصيل الحالات الكاملة، تصدير التقارير، أو المزامنة السحابية. المزامنة مؤجلة بقرار المالك إلى مرحلة لاحقة. راجع [خارطة الطريق](docs/ROADMAP.md) و[سجل العيوب](docs/BUGS.md) للحالة الدقيقة.
+هذه نسخة تطبيق محلي قيد الإكمال وليست إصدارًا نهائيًا لكل النطاق التشغيلي في PRD. استيراد ملفات Excel/CSV غير متاح حاليًا؛ إضافة العمال يدوية. لا تشمل بعد شاشة تسجيل الدخول، تعديل السجلات المرجعية، إدارة فترات العمل، التبريرات والحسم، اختيار تاريخ لوحة الحالات، عروض كل شرائط التنبيه، أو تصدير التقارير. المزامنة السحابية مؤجلة بقرار المالك. راجع [خارطة الطريق](docs/ROADMAP.md) و[سجل العيوب](docs/BUGS.md) للحالة الدقيقة.
 
 ### البناء والتشغيل
 
@@ -74,16 +75,17 @@ This is a daily status tool, not a time clock, payroll system, or GPS tracker.
 ### Available now
 
 - Visible loading, startup failure, and retry states instead of an empty white screen.
-- A dashboard with the Riyadh business date and active worker count.
+- A live status dashboard that evaluates on-site, housing-only, unknown, justified, and unrecorded workers, and highlights unknown workers, SLA breaches, and conflicts.
 - Create teams and housing locations with Arabic and English names.
 - Add workers with a unique code, bilingual names, team, and housing assignment.
-- Search workers and record on-site or housing-absence events; required assignments are validated.
-- Locally sequenced event records and Riyadh business-day calculation.
+- Run housing checks, confirm no-absence days, review names, save locally, undo through inverse events, and copy a local WhatsApp summary.
+- Record a team's site attendance, confirm selected workers, submit even when zero workers are present, and correct through the append-only event ledger.
+- Atomically append ordered event batches and calculate the Riyadh business date.
 - Persisted language preference and a database key stored with the platform secure storage.
 
 ### Current scope
 
-This is an early local app build, not the complete operational scope in the PRD. Sign-in, editing reference data, employment-period management, justifications/resolutions, full status-detail views, report export, and cloud synchronization remain outstanding. Cloud synchronization is deferred by the owner. See the [roadmap](docs/ROADMAP.md) and [defect register](docs/BUGS.md).
+This is a local app under active completion, not a final release for the entire PRD. Excel/CSV import is not currently available; workers are entered manually. Sign-in, editing reference data, employment-period management, justifications/resolutions, date selection, all warning banners, and report export remain outstanding. Cloud synchronization is deferred by the owner. See the [roadmap](docs/ROADMAP.md) and [defect register](docs/BUGS.md).
 
 ### Build
 

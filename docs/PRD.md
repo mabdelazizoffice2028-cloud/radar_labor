@@ -640,3 +640,11 @@ assets available inside the installed app. This amendment takes precedence over
 cloud-runtime or single-language expectations below; preserve the original data
 and status rules unless this note explicitly changes them.
 
+The local replacement for S4/S5 is a single-device workflow: select a local
+housing/team, confirm the workers, append events atomically, and correct by
+appending inverse events. Cross-device visibility and interrupted-network
+sync acceptance tests do not apply while cloud sync is deferred. Excel/CSV
+import remains a requested question from the owner, not an implemented PRD
+feature; the original spreadsheet mechanism was a server SQL function, so a
+local mobile file import requires a separate product/dependency decision.
+

@@ -11,8 +11,6 @@ import 'package:radar_labor/core/time/clock.dart';
 
 /// Adapts the local Drift ledger into immutable dashboard snapshots.
 final class StatusSnapshotRepository {
-  // Public constructor names keep the stored dependencies private.
-  // ignore: prefer_initializing_formals
   const StatusSnapshotRepository({
     required AppDatabase database,
     required EventRepository events,

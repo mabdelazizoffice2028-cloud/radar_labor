@@ -34,8 +34,6 @@ final class EventDraft {
 
 /// The sole write path for immutable daily status events.
 final class EventRepository {
-  // Public constructor names keep the stored dependencies private.
-  // ignore: prefer_initializing_formals
   EventRepository({
     required AppDatabase database,
     required String deviceId,

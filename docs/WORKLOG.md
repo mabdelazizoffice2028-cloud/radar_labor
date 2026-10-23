@@ -3,6 +3,87 @@
 Append one newest-first handoff entry for each model/session. Keep prior entries
 so the next model can understand decisions and recoveries.
 
+## 2026-10-23 — Housing/site workflows, live status dashboard, and owner device check
+
+### What changed
+
+- Added `EventRepository.appendBatch()`: validates every draft before writing,
+  reserves monotonically increasing device sequence values, and inserts all
+  events plus the sequence update in one Drift transaction. Added `watchAll()`
+  for consumers that need the append-only event ledger across dates.
+- Added `features/operations/data/operations_repository.dart` as the boundary
+  between operation screens and Drift. It maps database rows to display models,
+  queries active housing/team workers, saves a complete daily check, and builds
+  inverse-event undo operations without editing or deleting history.
+- Added the daily operations screen with housing and site tabs. Housing checks
+  support absent-worker marking, explicit confirmation, an explicit zero-absence
+  save, eight-second undo, and a locally generated summary that can be copied
+  for WhatsApp. Site attendance supports a team roster, a selected-present list,
+  explicit zero-present submission, and append-only corrections/undo.
+- Connected the home dashboard to the pure `StatusEngine` via
+  `StatusSnapshotRepository`. It now calculates four worker status counts,
+  unrecorded count, unknown-worker list, SLA warning, and event flags for the
+  current Riyadh business date; it refreshes each minute and reacts to Drift
+  streams.
+- Updated bilingual README scope and roadmap to describe these workflows and
+  explicitly disclose that Excel/CSV import does not exist yet.
+
+### Owner evidence and status
+
+- The owner confirmed the installed APK opens and provided six phone captures
+  at 08:36–08:37 on 23 October. They show home, empty worker list, add-worker
+  dialog with team/housing selectors, empty teams, empty housing, and settings.
+  Empty reference lists are expected for a fresh local database. B-001 is moved
+  to resolved based on these real-device captures.
+- The captures predate the operations/dashboard code in this entry. The updated
+  release APK below contains the new workflows; the owner was given its path to
+  install and verify them.
+- Owner asked whether CSV/Excel import was available. It is not currently
+  implemented; worker entry is manual. PRD's original Excel import path used a
+  server-side SQL function, but cloud use is deferred. A local file-picker
+  workflow would need an added package, which `CLAUDE.md` requires the owner to
+  approve first. Do not claim import exists.
+
+### Verification and failures
+
+- `dart format` completed on app, event repository, dashboard repository, new
+  operation data/presentation files, and the new repository test.
+- Whole-project `dart analyze`: **No issues found**.
+- Full Flutter test suite: **61 tests passed** (architecture, encrypted DB and
+  migration, status engine, business date, and new operations repository cases).
+- First architecture run found operation widgets importing Drift; fixed by
+  extracting queries/writes to `OperationsRepository`, after which all five
+  architecture tests passed.
+- First operation fixture attempted encryption on an in-memory SQLite DB;
+  sqlite3mc correctly rejects `PRAGMA key` for temporary/in-memory DBs. The
+  repository fixture now uses an in-memory DB without the encryption hook; the
+  separate encrypted database suite still tests cipher activation, migration,
+  and encrypted persistence. Full suite then passed.
+- Initial test compile attempted to use the host's inaccessible Windows temp
+  folder. Setting `TEMP`/`TMP` to the ignored project scratch path
+  `work/flutter-profile/tmp` resolved it. This changes only the build/test
+  process environment.
+- A new release APK built successfully at 08:45:53 local:
+  `build/app/outputs/flutter-apk/app-release.apk`, 60,242,354 bytes (57.5 MB),
+  SHA-256 `2FE4C803D84FEFEDD7A5E6B9BB0F063D3DFF18BD9EEFA72889A8EAA5AD1`. The
+  exact copyable path is `C:\my_apps\radar_labor\build\app\outputs\flutter-apk\app-release.apk`.
+- `aapt dump badging` confirms label `رادار ليبور`, package
+  `com.example.radar_labor`, and no `INTERNET` or `ACCESS_NETWORK_STATE`
+  permissions. The APK remains debug-signed and the package id is still the
+  Flutter placeholder; it is for owner testing, not store publishing.
+
+### Still open
+
+- Install and exercise the new housing/site screens, verify undo and persistence
+  after relaunch, then run in airplane mode.
+- CSV import is still missing. Confirm package approval before adding a file
+  picker or CSV dependency.
+- Dashboard still lacks arbitrary date selection, missing-housing/team banners,
+  dedicated contradiction review/resolution/justification screens, and export.
+- Continue reference-data editing/deactivation, employment periods, persistent
+  backup/restore, identity/login and role workflows as scope decisions permit.
+- Update `NEXT_AGENT.md` with exact artifact/check evidence.
+
 ## 2026-10-23 — Release build completed
 
 - Fresh release APK built successfully after latest UI, Manifest, and VS Code
