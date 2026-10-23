@@ -1,4 +1,12 @@
-# CLAUDE.md — Radar Labor V1 (رادار ليبور)
+# CLAUDE.md — Radar Labour V1 (رادار ليبور)
+
+> **Required project context:** First read the repository-wide [`AGENTS.md`](AGENTS.md),
+> then [`docs/README.md`](docs/README.md) and [`docs/DEVICE_AND_MODEL_HANDOFF.md`](docs/DEVICE_AND_MODEL_HANDOFF.md).
+> Those files carry the current owner decisions, actual workstation state, and
+> handoff evidence. This file preserves Claude-specific engineering conventions.
+> If an older slice, cloud, or release instruction below conflicts with the
+> latest explicit owner direction or dated handoff, follow the newer direction
+> and update the docs. Current V1 is local-only; Supabase/sync are deferred.
 
 Offline-first Android app (Flutter) that records where each worker is each day, so management sees "unknown" workers every morning. Not an attendance/payroll/GPS system.
 

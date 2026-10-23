@@ -1,16 +1,20 @@
 # Project documentation
 
 This folder is the durable handoff point for every coding model working on
-Radar Labor. Read these files before changing the application:
+Radar Labour. Start with the repository-level [agent instructions](../AGENTS.md).
+Read these files before changing the application:
 
-1. [Current handoff](NEXT_AGENT.md) — exact current state, constraints, and next
+1. [Current handoff](NEXT_AGENT.md) — concise status, owner direction, and next
    steps.
-2. [Roadmap](ROADMAP.md) — scope and completion status by slice.
-3. [Work log](WORKLOG.md) — dated record of what each model changed and
+2. [Device and model handoff](DEVICE_AND_MODEL_HANDOFF.md) — detailed device
+   setup, architecture, completed work, verification evidence, issue history,
+   and safe continuation guide.
+3. [Decisions](DECISIONS.md) — locked owner and technical decisions.
+4. [Roadmap](ROADMAP.md) — scope and completion status by slice.
+5. [Work log](WORKLOG.md) — dated record of what each model changed and
    verified.
-4. [Bug register](BUGS.md) — symptoms, causes, fixes, and verification.
-5. [Decisions](DECISIONS.md) — owner decisions and technical decisions.
-6. [Product requirements](PRD.md) and [design system](DESIGN.md).
+6. [Bug register](BUGS.md) — symptoms, causes, workarounds/fixes, and evidence.
+7. [Product requirements](PRD.md) and [design system](DESIGN.md).
 
 For a post-S6 proposal on local authentication, role permissions, starter
 passwords, and safe workforce spreadsheet use, see the
@@ -20,6 +24,8 @@ passwords, and safe workforce spreadsheet use, see the
 
 - Read `NEXT_AGENT.md`, `DECISIONS.md`, and the relevant roadmap and PRD sections
   before editing.
+- Follow the root `AGENTS.md`. If a model does not auto-load it, provide it as
+  project/system instructions. Then read the detailed handoff above.
 - Append a dated entry to `WORKLOG.md` after meaningful work. Record what
   changed, what was discovered, what commands actually passed, and what remains.
 - For each new defect, add an entry to `BUGS.md` with a stable ID, reproduction

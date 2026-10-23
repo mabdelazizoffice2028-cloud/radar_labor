@@ -1,7 +1,8 @@
 # تسليم العمل للموديل التالي
 
-**آخر تحديث:** 23 أكتوبر 2026. ابدأ بقراءة `README.md` و`DECISIONS.md` وهذا
-الملف ثم `WORKLOG.md` و`BUGS.md` و`ROADMAP.md` وأقسام PRD/DESIGN ذات الصلة.
+**آخر تحديث:** 23 أكتوبر 2026. ابدأ من `AGENTS.md` في جذر المشروع، ثم اقرأ
+`README.md` و`docs/README.md` و`DEVICE_AND_MODEL_HANDOFF.md` و`DECISIONS.md` وهذا
+الملف. بعد ذلك راجع `WORKLOG.md` و`BUGS.md` و`ROADMAP.md` وأقسام PRD/DESIGN ذات الصلة.
 
 ## توجيه المالك
 
@@ -17,11 +18,16 @@
 
 ## الحالة الحالية
 
+- GitHub remote branch يشير إلى commit `307025d04bf9e6e8c927db67982fb424f05299d7`
+  حسب آخر تحقق، والمالك أكد الرفع. تحديثات التوثيق الحالية لم تُدفع بعد.
+
 - المستودع `C:\my_apps\radar_labor`، الفرع `slice/s6-dashboard-resolution`.
   لا تستخدم force push أو تغييرات خصوصية GitHub. قارن remote قبل أي نشر.
 - Flutter 3.47.7 / Dart 3.13.5، Android SDK `C:\Android\Sdk`، JDK 17، Pub
   cache `C:\devcache\pub` وGradle cache `C:\devcache\gradle`.
-- APK Release الحالي موجود في `outputs/Radar Labour.apk`، SHA-256`n  `B8822F50D0BC9546BDD1D0EB3B101B1316AC03F177D1C64654DB6A6AE878AC41`؛`n  حجمه 62,815,890 بايت. إنه للتجربة وغير موقع لمتجر Play.
+- APK Release الحالي موجود في `outputs/Radar Labour.apk`، SHA-256
+  `B8822F50D0BC9546BDD1D0EB3B101B1316AC03F177D1C64654DB6A6AE878AC41`؛
+  حجمه 62,815,890 بايت. إنه للتجربة وغير موقع لمتجر Play.
 - التحقق الأحدث: `flutter analyze --no-pub` نظيف، و`flutter test --no-pub` اجتاز 73/73، وبناء Release اكتمل.
 - S6 يتضمن لوحة الحالات وعمليات السكن/الموقع والملخصات؛ أحدث تغييرات فصلت
   التنسيق/الحفظ في controller وعقود domain. راجع WORKLOG وBUGS للتحقق الحالي.
@@ -34,7 +40,7 @@
 
 ## العمل المتبقي
 
-الميزات المحلية الأساسية V1 اكتملت. الخطوة التالية للمالك تثبيت `outputs/Radar Labour.apk` وتجربة الأدوار والاستيراد واستمرار البيانات والعمل دون إنترنت. بعد الملاحظات، واصل مراحل تقارير التصدير والنسخ الاحتياطي وإدارة فترات التوظيف.
+الميزات المحلية الأساسية V1 اكتملت. المالك يراجع تحديثات التوثيق الحالية ويعمل لها commit ويرفعها بنفسه؛ لا تدفعها نيابة عنه. بعد ذلك يثبت `outputs/Radar Labour.apk` ويجرب الأدوار والاستيراد واستمرار البيانات والعمل دون إنترنت. بعد ملاحظاته، واصل مراحل تقارير التصدير والنسخ الاحتياطي وإدارة فترات التوظيف.
 
 التحقق من الهاتف/ADB غير مثبت. لا تدّع وضع الطيران أو التثبيت الناجح بلا دليل.
 لا ترفع APK أو roster أو أسرار. إذا تعذر Flutter بسبب startup lock سجّل ذلك

@@ -11,6 +11,8 @@
 
 [العربية](#العربية) · [English](#english) · [الوثائق](docs/README.md)
 
+**الحالة:** V1 جاهز للتجربة على Android · **النسخة:** 1.0.0 · **البيانات:** محلية ومشفّرة
+
 </div>
 
 ---
@@ -19,7 +21,7 @@
 
 ### عن التطبيق
 
-«رادار ليبور» أداة للمشرفين والإدارة لمتابعة حالة العمال اليومية من الهاتف. الواجهة الإنجليزية افتراضيًا مع خيار العربية وRTL. التطبيق لا يحتاج إلى الإنترنت أثناء التشغيل: قاعدة البيانات مشفّرة ومحلية، وخط Cairo وأيقونات Material مضمّنان مع التطبيق. لا توجد خدمة سحابية أو تحميل أصول عند التشغيل.
+«رادار ليبور» أداة للمشرفين والإدارة لمتابعة حالة العمال اليومية من الهاتف. الواجهة الإنجليزية افتراضيًا مع خيار العربية وRTL. التطبيق لا يحتاج إلى الإنترنت أثناء التشغيل: قاعدة البيانات مشفّرة ومحلية، وخط Cairo وأيقونات Material مضمّنان مع التطبيق. لا توجد خدمة سحابية أو أصول تُحمّل عند التشغيل.
 
 هذا النظام لتسجيل الحالة اليومية؛ ليس جهاز حضور وانصراف، ولا نظام رواتب، ولا أداة تتبّع GPS.
 
@@ -42,7 +44,11 @@
 
 ### قيود النسخة الحالية
 
-هذه نسخة V1 محلية للتجربة. بيانات الموظفين والمستخدمين لا تغادر الجهاز. استيراد الملف يتجاهل رقم الهوية تمامًا؛ أسماء القوى تبقى داخل قاعدة SQLite المشفّرة. ملف القوى لا يحتوي تعيين الفريق/السكن، لذلك يجب على مدير المشروع إسناد كل مشرف يدويًا من شاشة إدارة المستخدمين. التطبيق يطلب الإنترنت؟ لا؛ لا يحتاج الإنترنت ولا يتصل بخدمة سحابية. لا تزال إدارة فترات التوظيف المتقدمة، تصدير التقارير، والنسخ الاحتياطي/الاسترجاع خارج التسليم الحالي. راجع [خارطة الطريق](docs/ROADMAP.md) و[سجل العيوب](docs/BUGS.md) قبل التوسعة.
+هذه نسخة V1 محلية للتجربة. بيانات الموظفين والمستخدمين لا تغادر الجهاز. استيراد الملف يتجاهل رقم الهوية تمامًا؛ أسماء القوى تبقى داخل قاعدة SQLite المشفّرة. ملف القوى لا يحتوي تعيين الفريق/السكن، لذلك يجب على مدير المشروع إسناد كل مشرف يدويًا من شاشة إدارة المستخدمين. لا يتصل التطبيق بخدمة سحابية. إدارة فترات التوظيف المتقدمة، تصدير التقارير، والنسخ الاحتياطي/الاسترجاع خارج نطاق التسليم الحالي. راجع [خارطة الطريق](docs/ROADMAP.md) و[سجل العيوب](docs/BUGS.md) قبل التوسعة.
+
+### الاستيراد الأولي
+
+يدعم التطبيق ملفات `.xlsx` و`.csv` بحد أقصى 25 MB. يحتاج الاستيراد `S/O` و`Name`، ويقرأ اختياريًا `Designation` و`Supplier`، ويتجاهل `ID No.`. عند استخدام CSV من LibreOffice اختر `Unicode (UTF-8)`، وفاصل الحقول comma `,`، ومحدد النص double quote `"`. يصدر CSV الورقة النشطة فقط؛ اختر ورقة القوى الكاملة قبل الحفظ. التفاصيل في [دليل التسليم](docs/DEVICE_AND_MODEL_HANDOFF.md).
 
 ### البناء والتشغيل
 
@@ -55,14 +61,16 @@ flutter test
 flutter build apk --release
 ```
 
-يُنشأ ملف البناء في `build/app/outputs/flutter-apk/app-release.apk` ثم ينسخ باسم `outputs/Radar Labour.apk` لتسهيل نقله للهاتف. يوقّع قالب Flutter المحلي نسخة التجربة بمفتاح debug؛ لا تنشرها على المتجر قبل إعداد معرّف تطبيق نهائي ومفتاح توقيع إنتاجي. في جهاز التطوير غير المتصل، يجب أن تكون الحزم وأدوات Android المطلوبة موجودة مسبقًا في الكاش. لا تحذف `.dart_tool` أو كاش Flutter/Pub/Gradle ولا تشغّل `flutter clean` في بيئة المالك دون حاجة مثبتة.
+يُنشأ ملف البناء في `build/app/outputs/flutter-apk/app-release.apk` ثم ينسخ باسم `outputs/Radar Labour.apk` لتسهيل نقله للهاتف. APK التجربة الحالي في `outputs/Radar Labour.apk`، وموقع بمفتاح debug؛ لا تنشره على المتجر قبل إعداد معرّف تطبيق نهائي ومفتاح توقيع إنتاجي. على جهاز المالك، شغّل أولًا `work/flutter-profile/android-env.cmd` في PowerShell ثم استخدم أوامر Flutter مع `--no-pub` للاستفادة من الإعداد والكاش المحليين. في أي جهاز تطوير غير متصل، يجب أن تكون الحزم وأدوات Android المطلوبة موجودة مسبقًا في الكاش. لا تحذف `.dart_tool` أو كاش Flutter/Pub/Gradle ولا تشغّل `flutter clean` في بيئة المالك دون حاجة مثبتة.
 
 ### المستودع والوثائق
 
-- [مركز الوثائق](docs/README.md): نقطة البدء لكل موديل أو مساهم.
+- [تعليمات النماذج والمساهمين](AGENTS.md): ملف التعليمات العام الذي يبدأ منه كل موديل.
+- [مركز الوثائق](docs/README.md): فهرس الحالة والتسليم والسجلات.
+- [تقرير البيئة والتسليم](docs/DEVICE_AND_MODEL_HANDOFF.md): ما تم، وأخطاء الجهاز، والتحقق، وما يجب أن يكمله الموديل التالي.
 - [متطلبات المنتج](docs/PRD.md) · [التصميم](docs/DESIGN.md) · [القرارات](docs/DECISIONS.md)
 - [خارطة الطريق](docs/ROADMAP.md) · [سجل العمل وتسليم النماذج](docs/WORKLOG.md) · [سجل الأخطاء](docs/BUGS.md)
-- [تقرير التنفيذ](docs/PROJECT_REPORT.md) · [تعليمات المساهمة للموديلات](CLAUDE.md)
+- [تقرير التنفيذ](docs/PROJECT_REPORT.md) · [تعليمات Claude الإضافية](CLAUDE.md)
 
 ### الخصوصية والترخيص
 
@@ -97,7 +105,11 @@ This is a daily status tool, not a time clock, payroll system, or GPS tracker.
 
 ### Current scope
 
-This is the local V1 test build. Worker and account records remain on-device. The import flow discards identity numbers; roster names stay in the encrypted SQLite database. The provided roster does not assign supervisors to teams or housing, so a project manager must assign each scope from account settings. The app does not need or contact a cloud service. Advanced employment-period management, report export, and backup/restore remain outside this delivery. See the [roadmap](docs/ROADMAP.md) and [defect register](docs/BUGS.md).
+This is the local V1 test build. Worker and account records remain on-device. The import flow discards identity numbers; roster names stay in the encrypted SQLite database. The provided roster does not assign supervisors to teams or housing, so a project manager must assign each scope from account settings. The app does not contact a cloud service. Advanced employment-period management, report export, and backup/restore remain outside this delivery. See the [roadmap](docs/ROADMAP.md) and [defect register](docs/BUGS.md).
+
+### First roster import
+
+The app accepts `.xlsx` and `.csv` files up to 25 MB. `S/O` and `Name` are required; `Designation` and `Supplier` are optional; `ID No.` is ignored. For LibreOffice CSV export, choose `Unicode (UTF-8)`, comma `,` as the field delimiter, and double quote `"` as the string delimiter. CSV exports only the active sheet, so select the complete workforce sheet first. See the [device and model handoff](docs/DEVICE_AND_MODEL_HANDOFF.md) for details.
 
 ### Build
 
@@ -110,11 +122,11 @@ flutter test
 flutter build apk --release
 ```
 
-The build output is `build/app/outputs/flutter-apk/app-release.apk`; the handoff copy is `outputs/Radar Labour.apk`. The local Flutter template signs verification builds with its debug key; configure a final application ID and production signing key before store distribution. Offline work requires dependencies and Android tools to be cached in advance. Preserve `.dart_tool` and Flutter/Pub/Gradle caches; do not run `flutter clean` without a demonstrated need.
+The build output is `build/app/outputs/flutter-apk/app-release.apk`; the handoff copy is `outputs/Radar Labour.apk`. The current test APK is in `outputs/Radar Labour.apk` and uses a debug key. Configure a final application ID and production signing key before store distribution. On the owner's workstation, run `work/flutter-profile/android-env.cmd` first and use Flutter commands with `--no-pub` to use its local setup and caches. Offline work requires dependencies and Android tools to be cached in advance. Preserve `.dart_tool` and Flutter/Pub/Gradle caches; do not run `flutter clean` without a demonstrated need.
 
 ### Project documents
 
-Start with the [documentation index](docs/README.md), then consult the [PRD](docs/PRD.md), [design specification](docs/DESIGN.md), [decision log](docs/DECISIONS.md), [roadmap](docs/ROADMAP.md), [model handoff log](docs/WORKLOG.md), [defect register](docs/BUGS.md), and [implementation report](docs/PROJECT_REPORT.md).
+For coding agents, start with [`AGENTS.md`](AGENTS.md), then the [documentation index](docs/README.md) and [detailed device/model handoff](docs/DEVICE_AND_MODEL_HANDOFF.md). Consult the [PRD](docs/PRD.md), [design specification](docs/DESIGN.md), [decision log](docs/DECISIONS.md), [roadmap](docs/ROADMAP.md), [work log](docs/WORKLOG.md), [defect register](docs/BUGS.md), and [implementation report](docs/PROJECT_REPORT.md) as relevant.
 
 ### Privacy and font license
 

@@ -1,7 +1,29 @@
 # Work log
 
-Append one newest-first handoff entry for each model/session. Keep prior entries
-so the next model can understand decisions and recoveries.
+Append one dated handoff entry for each model/session. Keep prior entries so the
+next model can understand decisions and recoveries. The newest handoff is at the
+top of the log.
+
+## 2026-10-23 — تعليمات الموديلات وتقرير البيئة
+
+### التوثيق الذي أضيف
+
+- أضيف `AGENTS.md` في جذر المشروع كتعليمات عامة للنماذج، مع ترتيب القراءة،
+  وحدود المنتج، وقواعد الطبقات والخصوصية والتحقق والتسليم.
+- أضيف `docs/DEVICE_AND_MODEL_HANDOFF.md` ليجمع حالة التطبيق التفصيلية، إعداد
+  جهاز Windows، نتائج الفحوص والبناء، الأخطاء وأسبابها ومعالجتها، وما لم يُختبر.
+- رُبط دليل التسليم من فهرس docs و`NEXT_AGENT.md`، وأضيفت إحالة إليه في
+  `CLAUDE.md` حتى لا تتغلب تعليمات قديمة عن المزامنة على قرار V1 المحلي.
+- سُجل B-009 الخاص برسالة التحقق عند كلمة مرور أقصر من الحد وB-010 الخاص بترميز
+  CSV ضمن الأخطاء المفتوحة. لا تغيير على التطبيق بناءً على طلب المالك.
+- عُدّل تقرير الحالة ليذكر أن GitHub مرفوع حسب تأكيد المالك، وأن توثيق هذه
+  الجلسة لم يُرفع. المالك سيتولى المراجعة والـcommit والرفع.
+
+### التحقق
+
+- فُحصت ملفات التسليم وسجل الأخطاء وREADME وCLAUDE.md يدويًا.
+- **لم تُشغّل اختبارات أو بناء APK**؛ لم يتغير كود التطبيق، وهذه جلسة توثيق.
+- بقيت تغييرات التوثيق محلية، بلا commit أو push.
 
 ## 2026-10-23 — V1 local login, roster import, and release handoff
 
@@ -359,3 +381,11 @@ so the next model can understand decisions and recoveries.
 - **Package inspection:** `aapt` confirms label `Radar Labour`, application id `com.example.radar_labor`, version `1.0.0`. No INTERNET or ACCESS_NETWORK_STATE permission is present. APK stays local and is ignored by Git.
 - **Device check:** no install/runtime test on the owner's phone was performed in this session. The owner should install the handoff APK and test role access, roster import, persistence after restart, and airplane-mode operation.
 - **GitHub:** source/docs push is the remaining handoff action for this session; do not include APKs, employee roster data, local credentials, or signing files.
+
+## 2026-10-23 — تفصيل سجل الجهاز وتسليم الموديلات
+
+- أُضيف `DEVICE_AND_MODEL_HANDOFF.md` ليجمع وصفًا تفصيليًا للتطبيق والبنية والبيئة والأمان والأدوار والاستيراد، وسجل أسباب الأخطاء وطرق منع تكرارها.
+- وُثق أن CSV المصدر كان بأعمدة سليمة لكنه Windows-1256 بدل UTF-8، وأُضيفت خطوات LibreOffice وملاحظة أن التصدير يقتصر على الورقة الحالية.
+- وُثق حد كلمة المرور 8 أحرف، وأن الرفض الحالي لا يعرض feedback واضحًا. لم يبق تعديل كود؛ المالك طلب عدم التعديل وأفاد أن الدخول اشتغل.
+- سُجل أن محاولة بناء APK بعد محاولة UX أُلغيت بطلب المالك، وأن النسخة المعتمدة تبقى `outputs/Radar Labour.apk` ببصمتها السابقة. لم يُعد تشغيل تحليل أو اختبارات لأن هذا التسليم توثيق فقط ولم يتغير كود التطبيق.
+- فحص GitHub الأخير أظهر remote branch على commit `307025d04bf9e6e8c927db67982fb424f05299d7`، كما أكد المالك أنه رفع المشروع.
