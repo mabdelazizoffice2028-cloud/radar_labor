@@ -18,8 +18,12 @@
 
 - المستودع المحلي: `C:\my_apps\radar_labor`، الفرع `main`، الريموت
   `https://github.com/mabdelazizoffice2028-cloud/radar_labor.git`. لا تغير
-  خصوصية المستودع. راجع Git status قبل العمل: كانت آخر قراءة `main` متقدمًا
-  على `origin/main` باثنين، وفيه تغييرات توثيق وحدثيات غير مدفوعة.
+  خصوصية المستودع. آخر دفعة نُشرت على `main` عبر اتصال GitHub الموثق بعد فشل
+  Git Credential Manager في بيئة Windows. قد يظل `origin/main` المحلي عند
+  commit القديم؛ افحص `git status` وSHA للفرعين قبل أي commit/push لاحق،
+  وقارن الشجرة المنشورة. لا تستخدم force push. احتُفظ بسجل الأحداث محليًا.
+  فُحصت شجرة GitHub بعد الرفع، وأُصلح نقل خط Cairo في commit متابعة؛ بصمة
+  الخط النهائية `25641b1c828857698457bcd9f5a102616b4e8033` والحجم 599,548 بايت.
 - Flutter 3.47.7 / Dart 3.13.5، Android SDK `C:\Android\Sdk`، JDK 17، Pub
   cache `C:\devcache\pub`، Gradle cache `C:\devcache\gradle`.
 - المالك ثبّت APK السابق وأرسل ست لقطات بتاريخ 23 أكتوبر: الرئيسية، العمال

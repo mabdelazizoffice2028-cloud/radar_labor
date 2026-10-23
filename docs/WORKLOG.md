@@ -71,6 +71,22 @@ so the next model can understand decisions and recoveries.
   `com.example.radar_labor`, and no `INTERNET` or `ACCESS_NETWORK_STATE`
   permissions. The APK remains debug-signed and the package id is still the
   Flutter placeholder; it is for owner testing, not store publishing.
+- The owner had previously authorized publishing the project to GitHub.
+  `git push origin main` failed because the Windows/MSYS Git Credential Manager
+  child process could not start and Git had no terminal username prompt. I
+  verified the authenticated GitHub connector had push permission, confirmed
+  remote `main` was still at `a4708320801d085513863a0fd581b3e7ffb89dbb`, then
+  published the reviewed source/docs snapshot to `main` through the GitHub
+  Git-data API. No APK, local environment file, key, or build cache was
+  included. The local `origin/main` tracking ref may still be stale; read
+  `NEXT_AGENT.md` before further Git writes.
+- A post-upload content comparison caught that the first Git CLI-to-API transfer
+  had truncated the 599,548-byte Cairo font at the shell output limit. I
+  reconstructed it in 67 bounded chunks, verified the complete Git blob SHA
+  against the local file, then published a follow-up commit replacing the
+  incomplete blob. Final GitHub `main` inspection reports the expected font blob
+  SHA and exactly 599,548 bytes. The incomplete version was temporary and is not
+  the current branch head.
 
 ### Still open
 
