@@ -6,10 +6,15 @@
 
 ## توجيه المالك
 
+- **تحديث 23 أكتوبر 2026:** طلب المالك إعداد Supabase بالمفتاح Publishable
+  وتأسيس RBAC/RLS. هذا الطلب يحل محل قرار تأجيل Supabase ضمن هذا النطاق. راجع
+  `supabase_integration_log.md`. العميل يبدأ بعد فتح Drift ولا يجب أن يمنع
+  التشغيل المحلي. ترحيل SQL موجود لكنه **لم يُطبق** على المشروع المستضاف؛ لا
+  تدّعِ اتصالًا أو نشرًا أو مزامنة. لا تضع Service Role key في التطبيق.
 - التوجيه الأحدث يطلب إكمال كل نطاق V1 الآن، ويلغي شرط التوقف بعد S6 وانتظار
   تجربة الهاتف.
-- التطبيق محلي دون إنترنت وقت التشغيل، بقاعدة مشفرة وأصول وخطوط محلية. لا تهيئ
-  Supabase ولا تنفذ مزامنة.
+- البيانات وسير العمل الحاليان محليان، بقاعدة مشفرة وأصول وخطوط محلية. عميل
+  Supabase مهيأ اختياريًا؛ المزامنة وتسجيل الدخول السحابي لم يُنفذا.
 - الإنجليزية افتراضية، والعربية اختيارية مع RTL. اجعل الواجهات بسيطة.
 - ملخصات WhatsApp محلية قابلة للنسخ فقط؛ لا ترسل تلقائيًا.
 - كلمة المرور الابتدائية 123456 مؤقتة ويجب تغييرها في أول دخول؛ تبقى إمكانية
@@ -20,14 +25,18 @@
 
 - GitHub remote مربوط بـ `https://github.com/mabdelazizoffice2028-cloud/radar_labor.git`.
   الفرع `origin/slice/s6-dashboard-resolution` يشير إلى commit `35389a246247516cd51bedbe1b76d078a825b071`.
-- المستودع `C:\\my_apps\\radar_labor`، الفرع `slice/s6-dashboard-resolution`.
+- المستودع `C:\\my_apps\\radar_labor`، والفرع المحلي الذي ظهر في فحص جلسة
+  الأيقونة والبناء هو `main`؛ لم يُفحص remote في تلك الجلسة.
   لا تستخدم force push أو تغييرات خصوصية GitHub. قارن remote قبل أي نشر.
 - Flutter 3.47.7 / Dart 3.13.5، Android SDK `C:\\Android\\Sdk`، JDK 17، Pub
   cache `C:\\devcache\\pub` وGradle cache `C:\\devcache\\gradle`.
-- APK Release مبني بعد إنجاز المراحل 1+2+3، موجود في `outputs/Radar Labour.apk`، SHA-256
-  `7D1870F86E1FD0BE6FFB1944B2D64C37E78BE6F4AFD3A38607CD165F0C2FDEE6`؛
-  حجمه 65,224,742 بايت. إنه للتجربة وغير موقع لمتجر Play.
-- التحقق الأحدث: `flutter analyze --no-pub` **نظيف تماماً (0 issues)**، و`flutter test --no-pub` اجتاز **94/94** بنجاح تام.
+- APK Release حديث بأيقونة Radar Labour الجديدة في `outputs/Radar Labour.apk`،
+  SHA-256 `39007DAEF137228E3F3A873F0E25AC1C03659A21ADBEB8B2237F9C562040D630`؛
+  حجمه 68,077,931 بايت. بناء محلي للتجربة وموقّع بإعداد debug الحالي، وليس
+  جاهزًا لمتجر Play. لم يُثبت على هاتف.
+- التحقق: `flutter analyze --no-pub` نجح بعد إضافة Supabase؛ أحدث `flutter build
+  apk --release --no-pub` نجح بعد إضافة الأيقونة. نتيجة `flutter test --no-pub`
+  المسجلة 94/94 سابقة ولم تُعد لهذا البناء.
 - **المراحل 1+2+3 مكتملة:**
   - توحيد `MaterialApp`، تفكيك `radar_labor_app.dart` إلى ملفات أصغر.
   - واجهة تسجيل الدخول بدون اختيار دور يدوي، شاشة الإعداد الأولي.

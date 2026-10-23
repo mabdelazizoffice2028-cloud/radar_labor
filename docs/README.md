@@ -16,6 +16,9 @@ Read these files before changing the application:
 6. [Bug register](BUGS.md) — symptoms, causes, workarounds/fixes, and evidence.
 7. [Product requirements](PRD.md) and [design system](DESIGN.md).
 
+For the owner-approved Supabase client/RLS setup and its deployment status, see
+the [Supabase integration log](supabase_integration_log.md).
+
 For a post-S6 proposal on local authentication, role permissions, starter
 passwords, and safe workforce spreadsheet use, see the
 [authentication and roles draft](drafts/authentication-and-roles-prd-draft.md).

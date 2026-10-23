@@ -21,7 +21,7 @@
 
 ### عن التطبيق
 
-«رادار ليبور» أداة للمشرفين والإدارة لمتابعة حالة العمال اليومية من الهاتف. الواجهة الإنجليزية افتراضيًا مع خيار العربية وRTL. التطبيق لا يحتاج إلى الإنترنت أثناء التشغيل: قاعدة البيانات مشفّرة ومحلية، وخط Cairo وأيقونات Material مضمّنان مع التطبيق. لا توجد خدمة سحابية أو أصول تُحمّل عند التشغيل.
+«رادار ليبور» أداة للمشرفين والإدارة لمتابعة حالة العمال اليومية من الهاتف. الواجهة الإنجليزية افتراضيًا مع خيار العربية وRTL. قاعدة البيانات مشفّرة ومحلية، وخط Cairo وأيقونات Material مضمّنان مع التطبيق. جرى إعداد عميل Supabase اختياري؛ سير العمل الحالي لا يعتمد على الشبكة ولا يزامن البيانات السحابية حتى الآن.
 
 هذا النظام لتسجيل الحالة اليومية؛ ليس جهاز حضور وانصراف، ولا نظام رواتب، ولا أداة تتبّع GPS.
 
@@ -44,7 +44,7 @@
 
 ### قيود النسخة الحالية
 
-هذه نسخة V1 محلية للتجربة. بيانات الموظفين والمستخدمين لا تغادر الجهاز. استيراد الملف يتجاهل رقم الهوية تمامًا؛ أسماء القوى تبقى داخل قاعدة SQLite المشفّرة. ملف القوى لا يحتوي تعيين الفريق/السكن، لذلك يجب على مدير المشروع إسناد كل مشرف يدويًا من شاشة إدارة المستخدمين. لا يتصل التطبيق بخدمة سحابية. إدارة فترات التوظيف المتقدمة، تصدير التقارير، والنسخ الاحتياطي/الاسترجاع خارج نطاق التسليم الحالي. راجع [خارطة الطريق](docs/ROADMAP.md) و[سجل العيوب](docs/BUGS.md) قبل التوسعة.
+إجراءات V1 الحالية تستخدم بيانات محلية في قاعدة SQLite المشفّرة. استيراد الملف يتجاهل رقم الهوية تمامًا. ملف القوى لا يحتوي تعيين الفريق/السكن، لذلك يجب على مدير المشروع إسناد كل مشرف يدويًا من شاشة إدارة المستخدمين. إعداد Supabase وملف RLS مبدئي لا يعني تشغيل دخول سحابي أو مزامنة؛ راجع [سجل تكامل Supabase](docs/supabase_integration_log.md). إدارة فترات التوظيف المتقدمة، تصدير التقارير، والنسخ الاحتياطي/الاسترجاع خارج نطاق التسليم الحالي.
 
 ### الاستيراد الأولي
 
@@ -82,7 +82,7 @@ flutter build apk --release
 
 ### About
 
-Radar Labour is an Arabic/English field app for recording workers' daily status. English is the default; Arabic is selectable with RTL. Runtime operation is local and offline: records live in an encrypted on-device database, while the Cairo font and Material icons ship with the app. No cloud service or remote asset is loaded at runtime.
+Radar Labour is an Arabic/English field app for recording workers' daily status. English is the default; Arabic is selectable with RTL. Current workflows use an encrypted on-device database, and the Cairo font and Material icons ship with the app. An optional Supabase client is configured, but cloud login and sync are not yet wired into the workflows.
 
 This is a daily status tool, not a time clock, payroll system, or GPS tracker.
 

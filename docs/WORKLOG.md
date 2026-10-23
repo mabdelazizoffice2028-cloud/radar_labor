@@ -4,6 +4,53 @@ Append one dated handoff entry for each model/session. Keep prior entries so the
 next model can understand decisions and recoveries. The newest handoff is at the
 top of the log.
 
+## 2026-10-23 — App icon and Android Release APK
+
+- Replaced the default Flutter launcher mark with a Radar Labour icon: a hardhat
+  over radar arcs, with a small amber signal point. Added Android adaptive icon
+  resources and regenerated legacy launcher PNGs at mdpi through xxxhdpi.
+- Built Release with `flutter build apk --release --no-pub` via the local
+  `android-env.cmd` helper. Gradle completed successfully in 256.7 seconds.
+- Copied the artifact to `outputs/Radar Labour.apk`: 68,077,931 bytes,
+  SHA-256 `39007DAEF137228E3F3A873F0E25AC1C03659A21ADBEB8B2237F9C562040D630`.
+- `aapt dump badging` confirmed package `com.example.radar_labor`, label
+  `Radar Labour`, and INTERNET permission. `aapt dump resources` showed the
+  adaptive foreground/background and launcher density resources in the APK.
+- No phone install or runtime test was performed. Release signing remains the
+  existing local debug signing configuration; this artifact is for testing.
+
+## 2026-10-23 — Supabase client and RBAC foundation
+
+- **Owner request:** configure the supplied Supabase project using the
+  publishable key, preserve local startup, prepare role-based authorization,
+  and record the SQL and file changes.
+- Added `supabase_flutter ^2.18.3`, client configuration, and optional startup
+  initialization after encrypted Drift opening. An initialization exception is
+  reported by type and does not prevent local startup. Android main manifest
+  allows INTERNET for cloud calls.
+- Existing local auth/navigation already routes Project Manager/HR to admin
+  tabs, Viewer to read-only dashboard, and supervisors to scoped operations.
+  `OperationsController` filters and guards assigned team/housing access. No
+  Drift schema or local business behavior changed.
+- Added `supabase/migrations/20261023000100_radar_labor_rbac.sql` defining
+  Auth-linked profiles, five roles, team/housing scopes, employees/events, and
+  RLS policies. This migration is a reviewable artifact only; it has **not**
+  been applied to the hosted project. Hosted Auth, PostgREST exposure, and
+  remote account provisioning remain unverified; app login and sync are still
+  local-only.
+- **Files:** `pubspec.yaml`, `pubspec.lock`, `lib/app/radar_labor_app.dart`,
+  `lib/core/constants/supabase_config.dart`,
+  `android/app/src/main/AndroidManifest.xml`, the SQL migration, and Supabase
+  status/handoff documents listed in `supabase_integration_log.md`.
+- **Checks observed:** `flutter pub get` completed with exit code 0 and resolved
+  `supabase_flutter 2.18.3`; `flutter analyze --no-pub` completed with
+  `No issues found!`. Read-only `GET /auth/v1/health` with the publishable key
+  returned HTTP 200. No tests, build, SQL deployment, or device validation were
+  run.
+- **Next bounded work:** review and apply SQL with authorized project access;
+  then design and implement Supabase Auth/session management and safe local-first
+  sync without storing an administrative key in the app.
+
 ## 2026-10-23 — إنجاز المرحلتين 2 و3: واجهة تسجيل الدخول، مستودع المصادقة، جداول AppUsers/UserScopes
 
 ### ما تم إنجازه

@@ -11,6 +11,7 @@ import 'package:radar_labor/app/app_providers.dart';
 import 'package:radar_labor/app/auth_gate.dart';
 import 'package:radar_labor/app/home_scaffold.dart';
 import 'package:radar_labor/core/constants/app_constants.dart';
+import 'package:radar_labor/core/constants/supabase_config.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/database/database_opener.dart';
 import 'package:radar_labor/core/database/local_settings_repository.dart';
@@ -18,6 +19,7 @@ import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
 import 'package:radar_labor/core/time/clock.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Root widget of the application, managing lifecycle, providers, and unified theme.
 final class RadarLaborApp extends StatefulWidget {
@@ -67,7 +69,25 @@ final class _RadarLaborAppState extends State<RadarLaborApp> {
       deviceId: deviceId,
       clock: const SystemClock(),
     );
+    await _initializeOptionalSupabase();
     return _AppStartupState(database, events);
+  }
+
+  Future<void> _initializeOptionalSupabase() async {
+    if (SupabaseConfig.projectUrl.isEmpty ||
+        SupabaseConfig.publishableKey.isEmpty ||
+        SupabaseConfig.publishableKey.contains('YOUR_')) {
+      return;
+    }
+    try {
+      await Supabase.initialize(
+        url: SupabaseConfig.projectUrl,
+        publishableKey: SupabaseConfig.publishableKey,
+      );
+    } on Exception catch (error) {
+      // Supabase is optional; preserve local startup if client setup fails.
+      debugPrint('Optional Supabase setup failed (${error.runtimeType}).');
+    }
   }
 
   @override

@@ -1,7 +1,14 @@
 # DECISIONS — Radar Labor V1
 
 ## Locked product decisions
-- 2026-10-23 — Owner requests a complete, usable offline-local app for now. No
+- 2026-10-23 — Owner explicitly changed the cloud decision and requested
+  Supabase project configuration and RBAC. The client may initialize Supabase
+  optionally after the encrypted local store opens; local workflows must still
+  launch without connectivity. The publishable key is client-only. This request
+  does not authorize putting a service-role secret in the app. Hosted RLS is
+  defined in a migration and must not be described as deployed until applied.
+- 2026-10-23 (superseded in part by the explicit request above) — Owner
+  requested a complete, usable offline-local app for now. No
   network call, Supabase initialization, remote font/image/icon, or online-only
   first-run requirement may block product use. Cloud sync is deferred.
 - 2026-10-23 — Owner requires Arabic and English UI, with bundled local fonts
