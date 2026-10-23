@@ -236,3 +236,4 @@ Do not pad the report. Do not praise your own work.
 ## 15. Absolute prohibitions
 
 Spaghetti, god files/classes, business logic in UI, cross-feature imports, a second write path, stored derived state, mutating or deleting events, silent catches, `flutter/material.dart` imports, codegen for Riverpod, adding or upgrading packages unasked, hardcoded colors/strings, secrets in the repo, worker data in logs, claiming unverified work is done.
+
