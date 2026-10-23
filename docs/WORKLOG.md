@@ -3,6 +3,26 @@
 Append one newest-first handoff entry for each model/session. Keep prior entries
 so the next model can understand decisions and recoveries.
 
+## 2026-10-23 — Release build completed
+
+- Fresh release APK built successfully after latest UI, Manifest, and VS Code
+  setting changes: `build/app/outputs/flutter-apk/app-release.apk`.
+- Size: 59,258,194 bytes (56.5 MB); timestamp 08:28:55 local. SHA-256:
+  `A2489A13A36F96017D75385D6CF95526F027D7B867A01B47BA0508DFEF4AE3F3`.
+- `aapt dump badging` confirms application label `رادار ليبور`, expected package,
+  and absence of INTERNET and ACCESS_NETWORK_STATE in Release. Flutter's debug
+  tooling can still request INTERNET in Debug.
+- Build error chain and recovery: resolved duplicate Android preference
+  variables; granted access to the cached Gradle lock, Flutter SDK/Git cwd and
+  Pub jni CMake output; redirected Kotlin TEMP/TMP and `java.io.tmpdir` into
+  project scratch after the sandbox's default temporary backup disappeared.
+- Owner will install and check the app on a phone. ADB install and launch remain
+  unverified here, so B-001 stays open pending the owner's result.
+- Whole-project `dart analyze`: **No issues found**. Previous 50 core tests
+  passed in an earlier session; tests were not rerun in this one.
+- Added `.vscode/settings.json` with the owner's settings, plus autosave after
+  1000 ms and Dart format-on-save.
+
 ## 2026-10-23 — Startup UI, local workflows, build recovery
 
 - **Changed:** replaced the empty `MaterialApp(home: Scaffold())` with startup

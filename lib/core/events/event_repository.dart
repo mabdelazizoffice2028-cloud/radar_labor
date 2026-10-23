@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_initializing_formals
+
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
@@ -32,13 +34,17 @@ final class EventDraft {
 
 /// The sole write path for immutable daily status events.
 final class EventRepository {
+  // Public constructor names keep the stored dependencies private.
+  // ignore: prefer_initializing_formals
   EventRepository({
-    required this._database,
-    required this._deviceId,
-    required this._clock,
+    required AppDatabase database,
+    required String deviceId,
+    required Clock clock,
     this._cutoffHour = 3,
     this._uuid = const Uuid(),
-  });
+  }) : _database = database,
+       _deviceId = deviceId,
+       _clock = clock;
 
   final AppDatabase _database;
   final String _deviceId;
@@ -47,11 +53,20 @@ final class EventRepository {
   final Uuid _uuid;
 
   Future<LocalEvent> append(EventDraft draft) async {
-    _validateDraft(draft);
+    return (await appendBatch([draft])).single;
+  }
+
+  /// Appends a related group of immutable events and sequence numbers atomically.
+  Future<List<LocalEvent>> appendBatch(List<EventDraft> drafts) async {
+    if (drafts.isEmpty) return const [];
+    for (final draft in drafts) {
+      _validateDraft(draft);
+    }
     final now = _clock.nowUtc().toUtc();
-    final eventId = _uuid.v7();
-    final isLate =
-        draft.businessDate != businessDateFor(now, cutoffHour: _cutoffHour);
+    final isLate = <bool>[
+      for (final draft in drafts)
+        draft.businessDate != businessDateFor(now, cutoffHour: _cutoffHour),
+    ];
 
     return _database.transaction(() async {
       final sequenceRow =
@@ -65,55 +80,64 @@ final class EventRepository {
       if (previousSequence == null) {
         throw StateError('The local event sequence is corrupted.');
       }
-      final deviceSeq = previousSequence + 1;
-
+      final result = <LocalEvent>[];
+      for (var index = 0; index < drafts.length; index++) {
+        final draft = drafts[index];
+        final eventId = _uuid.v7();
+        final deviceSeq = previousSequence + index + 1;
+        final event = LocalEvent(
+          eventId: eventId,
+          deviceSeq: deviceSeq,
+          type: draft.type,
+          action: draft.action,
+          businessDate: draft.businessDate,
+          employeeUid: draft.employeeUid,
+          teamId: draft.teamId,
+          housingId: draft.housingId,
+          deviceTimeUtc: now,
+          isLate: isLate[index],
+        );
+        await _database
+            .into(_database.events)
+            .insert(
+              EventsCompanion.insert(
+                eventId: eventId,
+                deviceId: _deviceId,
+                deviceSeq: deviceSeq,
+                type: draft.type.name,
+                action: draft.action.name,
+                businessDate: draft.businessDate,
+                employeeUid: Value(draft.employeeUid),
+                teamId: Value(draft.teamId),
+                housingId: Value(draft.housingId),
+                userId: Value(draft.userId),
+                payload: Value(jsonEncode(draft.payload)),
+                deviceTime: now,
+                receivedAt: const Value(null),
+                late: Value(isLate[index]),
+                eventSchemaVersion: const Value(1),
+                syncStatus: const Value('pending'),
+              ),
+            );
+        result.add(event);
+      }
       await _database
           .into(_database.settings)
           .insertOnConflictUpdate(
             SettingsCompanion.insert(
               key: AppSettingKeys.deviceSequence,
-              value: deviceSeq.toString(),
+              value: (previousSequence + drafts.length).toString(),
             ),
           );
-
-      final event = LocalEvent(
-        eventId: eventId,
-        deviceSeq: deviceSeq,
-        type: draft.type,
-        action: draft.action,
-        businessDate: draft.businessDate,
-        employeeUid: draft.employeeUid,
-        teamId: draft.teamId,
-        housingId: draft.housingId,
-        deviceTimeUtc: now,
-        isLate: isLate,
-      );
-
-      await _database
-          .into(_database.events)
-          .insert(
-            EventsCompanion.insert(
-              eventId: eventId,
-              deviceId: _deviceId,
-              deviceSeq: deviceSeq,
-              type: draft.type.name,
-              action: draft.action.name,
-              businessDate: draft.businessDate,
-              employeeUid: Value(draft.employeeUid),
-              teamId: Value(draft.teamId),
-              housingId: Value(draft.housingId),
-              userId: Value(draft.userId),
-              payload: Value(jsonEncode(draft.payload)),
-              deviceTime: now,
-              receivedAt: const Value(null),
-              late: Value(isLate),
-              eventSchemaVersion: const Value(1),
-              syncStatus: const Value('pending'),
-            ),
-          );
-      return event;
+      return List.unmodifiable(result);
     });
   }
+
+  /// Watches the append-only local event ledger across business dates.
+  Stream<List<LocalEvent>> watchAll() => _database
+      .select(_database.events)
+      .watch()
+      .map((rows) => List.unmodifiable(rows.map(_toDomain)));
 
   Future<List<LocalEvent>> readBusinessDate(String businessDate) async {
     final rows =

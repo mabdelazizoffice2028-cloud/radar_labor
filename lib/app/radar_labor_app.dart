@@ -3,7 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:drift/drift.dart' as drift;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -11,7 +11,13 @@ import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/database/database_opener.dart';
 import 'package:radar_labor/core/database/local_settings_repository.dart';
+import 'package:radar_labor/core/events/event_repository.dart';
+import 'package:radar_labor/core/status/status_models.dart';
 import 'package:radar_labor/core/time/business_date.dart';
+import 'package:radar_labor/core/time/clock.dart';
+import 'package:radar_labor/features/dashboard/data/status_snapshot_repository.dart';
+import 'package:radar_labor/features/operations/presentation/operations_screen.dart';
+import 'package:radar_labor/features/operations/data/operations_repository.dart';
 import 'package:uuid/uuid.dart';
 
 class RadarLaborApp extends StatefulWidget {
@@ -21,14 +27,14 @@ class RadarLaborApp extends StatefulWidget {
 }
 
 class _RadarLaborAppState extends State<RadarLaborApp> {
-  late Future<AppDatabase> _startup;
+  late Future<_AppSession> _startup;
   @override
   void initState() {
     super.initState();
     _startup = _open();
   }
 
-  Future<AppDatabase> _open() async {
+  Future<_AppSession> _open() async {
     const secure = FlutterSecureStorage();
     var key = await secure.read(key: DatabaseConstants.keyStorageName);
     if (key == null) {
@@ -43,8 +49,17 @@ class _RadarLaborAppState extends State<RadarLaborApp> {
       File(p.join(directory.path, DatabaseConstants.fileName)),
       key,
     );
-    await LocalSettingsRepository(database).seedDefaults(locale: 'ar');
-    return database;
+    final settings = LocalSettingsRepository(database);
+    await settings.seedDefaults(locale: 'ar');
+    final deviceId = await settings.ensureDeviceId();
+    return _AppSession(
+      database,
+      EventRepository(
+        database: database,
+        deviceId: deviceId,
+        clock: const SystemClock(),
+      ),
+    );
   }
 
   @override
@@ -60,7 +75,7 @@ class _RadarLaborAppState extends State<RadarLaborApp> {
         foregroundColor: Colors.white,
       ),
     ),
-    home: FutureBuilder<AppDatabase>(
+    home: FutureBuilder<_AppSession>(
       future: _startup,
       builder: (context, state) {
         if (state.hasError) {
@@ -100,15 +115,25 @@ class _RadarLaborAppState extends State<RadarLaborApp> {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        return _Home(database: state.data!);
+        return _Home(
+          database: state.data!.database,
+          events: state.data!.events,
+        );
       },
     ),
   );
 }
 
-class _Home extends StatefulWidget {
-  const _Home({required this.database});
+final class _AppSession {
+  const _AppSession(this.database, this.events);
   final AppDatabase database;
+  final EventRepository events;
+}
+
+class _Home extends StatefulWidget {
+  const _Home({required this.database, required this.events});
+  final AppDatabase database;
+  final EventRepository events;
   @override
   State<_Home> createState() => _HomeState();
 }
@@ -119,6 +144,15 @@ class _HomeState extends State<_Home> {
   bool get _ar => _locale == 'ar';
   String _t(String ar, String en) => _ar ? ar : en;
   late final _settings = LocalSettingsRepository(widget.database);
+  late final _dashboard = StatusSnapshotRepository(
+    database: widget.database,
+    events: widget.events,
+    clock: const SystemClock(),
+  );
+  late final _operations = OperationsRepository(
+    database: widget.database,
+    events: widget.events,
+  );
 
   @override
   void initState() {
@@ -131,10 +165,11 @@ class _HomeState extends State<_Home> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      _Dashboard(database: widget.database, arabic: _ar),
-      _Workers(database: widget.database, arabic: _ar),
+      _Dashboard(repository: _dashboard, arabic: _ar),
+      _Workers(database: widget.database, events: widget.events, arabic: _ar),
       _Entities(database: widget.database, arabic: _ar, teams: true),
       _Entities(database: widget.database, arabic: _ar, teams: false),
+      OperationsScreen(repository: _operations, arabic: _ar),
       _Preferences(
         arabic: _ar,
         locale: _locale,
@@ -149,6 +184,7 @@ class _HomeState extends State<_Home> {
       _t('العمال', 'Workers'),
       _t('الفرق', 'Teams'),
       _t('السكن', 'Housing'),
+      _t('التسجيل اليومي', 'Daily check-in'),
       _t('الإعدادات', 'Settings'),
     ];
     const icons = [
@@ -156,6 +192,7 @@ class _HomeState extends State<_Home> {
       Icons.people_alt_outlined,
       Icons.groups_2_outlined,
       Icons.apartment_outlined,
+      Icons.fact_check_outlined,
       Icons.settings_outlined,
     ];
     return Directionality(
@@ -166,7 +203,9 @@ class _HomeState extends State<_Home> {
           actions: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: Center(child: Text(businessDateFor(DateTime.now()))),
+              child: Center(
+                child: Text(businessDateFor(const SystemClock().nowUtc())),
+              ),
             ),
           ],
         ),
@@ -175,10 +214,10 @@ class _HomeState extends State<_Home> {
           selectedIndex: _tab,
           onDestinationSelected: (value) => setState(() => _tab = value),
           destinations: List.generate(
-            5,
+            labels.length,
             (i) =>
                 NavigationDestination(icon: Icon(icons[i]), label: labels[i]),
-          ),
+          ).take(labels.length).toList(),
         ),
       ),
     );
@@ -186,78 +225,209 @@ class _HomeState extends State<_Home> {
 }
 
 class _Dashboard extends StatelessWidget {
-  const _Dashboard({required this.database, required this.arabic});
-  final AppDatabase database;
+  const _Dashboard({required this.repository, required this.arabic});
+  final StatusSnapshotRepository repository;
   final bool arabic;
+
+  String _label(WorkerStatus status) => switch (status) {
+    WorkerStatus.onSite => arabic ? 'في الموقع' : 'On site',
+    WorkerStatus.housingOnly => arabic ? 'في السكن فقط' : 'Housing only',
+    WorkerStatus.unknown => arabic ? 'غير معلوم' : 'Unknown',
+    WorkerStatus.justified => arabic ? 'مبرر' : 'Justified',
+    WorkerStatus.notRecorded => arabic ? 'لم يسجل بعد' : 'Not recorded',
+  };
+
+  Color _color(WorkerStatus status, ColorScheme colors) => switch (status) {
+    WorkerStatus.onSite => const Color(0xff15803d),
+    WorkerStatus.housingOnly => const Color(0xffb45309),
+    WorkerStatus.unknown => const Color(0xffb91c1c),
+    WorkerStatus.justified => const Color(0xff0e7490),
+    WorkerStatus.notRecorded => colors.outline,
+  };
+
+  IconData _icon(WorkerStatus status) => switch (status) {
+    WorkerStatus.onSite => Icons.check_circle_outline,
+    WorkerStatus.housingOnly => Icons.home_outlined,
+    WorkerStatus.unknown => Icons.warning_amber_rounded,
+    WorkerStatus.justified => Icons.verified_outlined,
+    WorkerStatus.notRecorded => Icons.schedule_outlined,
+  };
+
   @override
-  Widget build(BuildContext context) => StreamBuilder<List<Employee>>(
-    stream: database.select(database.employees).watch(),
+  Widget build(BuildContext context) => StreamBuilder<StatusSnapshot>(
+    stream: repository.watch(arabic: arabic),
     builder: (context, state) {
-      final count = (state.data ?? [])
-          .where((worker) => worker.isActive)
-          .length;
+      if (state.hasError) {
+        return Center(
+          child: Text(
+            arabic
+                ? 'تعذر تحميل لوحة الحالات'
+                : 'Could not load status dashboard',
+          ),
+        );
+      }
+      if (!state.hasData) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      final snapshot = state.data!;
+      final active = snapshot.workers.where((row) => row.isEligible).toList();
+      final unknown = active
+          .where((row) => row.status == WorkerStatus.unknown)
+          .toList();
+      final conflictCount = active.where((row) => row.flags.isNotEmpty).length;
+      const cards = [
+        WorkerStatus.onSite,
+        WorkerStatus.housingOnly,
+        WorkerStatus.unknown,
+        WorkerStatus.justified,
+      ];
       return ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xff1d4ed8), Color(0xff2563eb)],
+          Card(
+            color: Theme.of(context).colorScheme.primary,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    arabic ? 'متابعة العمال اليوم' : 'Today at a glance',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    arabic
+                        ? 'محلي بالكامل • البيانات محفوظة على الجهاز'
+                        : 'Fully local • data stays on this device',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    snapshot.businessDate,
+                    style: const TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ],
               ),
-              borderRadius: BorderRadius.circular(22),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  arabic ? 'متابعة العمال اليوم' : 'Today at a glance',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+          ),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            childAspectRatio: 1.75,
+            children: [
+              for (final status in cards)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _icon(status),
+                          color: _color(status, Theme.of(context).colorScheme),
+                        ),
+                        Text(
+                          '${snapshot.count(status)}',
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                color: _color(
+                                  status,
+                                  Theme.of(context).colorScheme,
+                                ),
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        Text(
+                          _label(status),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                Text(
-                  arabic ? 'يعمل محليًا دون اتصال' : 'Local and offline',
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  businessDateFor(DateTime.now()),
-                  style: const TextStyle(color: Colors.white, fontSize: 18),
-                ),
-              ],
-            ),
+            ],
           ),
           Card(
             child: ListTile(
-              leading: const Icon(Icons.people, color: Color(0xff1d4ed8)),
-              title: Text(arabic ? 'العمال النشطون' : 'Active workers'),
-              trailing: Text(
-                '$count',
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
+              leading: Icon(
+                _icon(WorkerStatus.notRecorded),
+                color: _color(
+                  WorkerStatus.notRecorded,
+                  Theme.of(context).colorScheme,
                 ),
+              ),
+              title: Text(_label(WorkerStatus.notRecorded)),
+              trailing: Text(
+                '${snapshot.count(WorkerStatus.notRecorded)}',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
           ),
+          if (conflictCount > 0)
+            Card(
+              color: const Color(0xfffff7ed),
+              child: ListTile(
+                leading: const Icon(
+                  Icons.error_outline,
+                  color: Color(0xffb45309),
+                ),
+                title: Text(
+                  arabic ? 'تعارضات تحتاج مراجعة' : 'Conflicts to review',
+                ),
+                trailing: Text('$conflictCount'),
+              ),
+            ),
+          if (unknown.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsetsDirectional.only(top: 16, bottom: 4),
+              child: Text(
+                arabic ? 'عمال غير معلومين' : 'Unknown workers',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            for (final result in unknown)
+              Card(
+                child: ListTile(
+                  leading: Icon(
+                    result.isSlaBreached
+                        ? Icons.timer_off_outlined
+                        : Icons.help_outline,
+                    color: result.isSlaBreached
+                        ? const Color(0xffb91c1c)
+                        : const Color(0xffb45309),
+                  ),
+                  title: Text(
+                    '${result.worker.fullName} • ${result.worker.code}',
+                  ),
+                  subtitle: Text(
+                    result.isSlaBreached
+                        ? (arabic ? 'تجاوز مهلة المتابعة' : 'SLA exceeded')
+                        : (arabic
+                              ? 'غياب سكن دون تبرير'
+                              : 'Housing absence without justification'),
+                  ),
+                  trailing: result.flags.isEmpty
+                      ? null
+                      : const Icon(Icons.warning_amber_rounded),
+                ),
+              ),
+          ],
           Card(
             child: ListTile(
               leading: const Icon(Icons.lock_outline, color: Color(0xff15803d)),
               title: Text(
                 arabic
-                    ? 'بياناتك مشفرة ومحفوظة على الجهاز'
-                    : 'Your data is encrypted and stored locally',
+                    ? 'بيانات مشفرة ومحفوظة على الجهاز'
+                    : 'Encrypted data stored on this device',
               ),
             ),
-          ),
-          Text(
-            arabic
-                ? 'ابدأ بإضافة الفرق والسكن والعمال'
-                : 'Start by adding teams, housing, and workers',
-            style: const TextStyle(fontSize: 17),
           ),
         ],
       );
@@ -266,8 +436,13 @@ class _Dashboard extends StatelessWidget {
 }
 
 class _Workers extends StatefulWidget {
-  const _Workers({required this.database, required this.arabic});
+  const _Workers({
+    required this.database,
+    required this.events,
+    required this.arabic,
+  });
   final AppDatabase database;
+  final EventRepository events;
   final bool arabic;
   @override
   State<_Workers> createState() => _WorkersState();
@@ -528,30 +703,18 @@ class _WorkersState extends State<_Workers> {
       }
       return;
     }
-    await widget.database.transaction(() async {
-      final settings = LocalSettingsRepository(widget.database);
-      final sequence =
-          (int.tryParse(await settings.read('device_sequence') ?? '0') ?? 0) +
-          1;
-      await settings.write('device_sequence', '$sequence');
-      final device = await settings.ensureDeviceId();
-      await widget.database
-          .into(widget.database.events)
-          .insert(
-            EventsCompanion.insert(
-              eventId: const Uuid().v7(),
-              deviceId: device,
-              deviceSeq: sequence,
-              type: action == 'site' ? 'sitePresent' : 'housingAbsent',
-              action: 'set',
-              businessDate: businessDateFor(DateTime.now()),
-              employeeUid: drift.Value(worker.employeeUid),
-              teamId: drift.Value(worker.currentTeamId),
-              housingId: drift.Value(worker.housingId),
-              deviceTime: DateTime.now().toUtc(),
-            ),
-          );
-    });
+    await widget.events.append(
+      EventDraft(
+        type: action == 'site'
+            ? EventType.sitePresent
+            : EventType.housingAbsent,
+        action: EventAction.set,
+        businessDate: businessDateFor(const SystemClock().nowUtc()),
+        employeeUid: worker.employeeUid,
+        teamId: action == 'site' ? worker.currentTeamId : null,
+        housingId: action == 'absent' ? worker.housingId : null,
+      ),
+    );
   }
 }
 
