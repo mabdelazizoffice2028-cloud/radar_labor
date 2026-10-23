@@ -24,8 +24,9 @@
   لا تستخدم force push أو تغييرات خصوصية GitHub. قارن remote قبل أي نشر.
 - Flutter 3.47.7 / Dart 3.13.5، Android SDK `C:\\Android\\Sdk`، JDK 17، Pub
   cache `C:\\devcache\\pub` وGradle cache `C:\\devcache\\gradle`.
-- APK Release مبني بعد إنجاز المراحل 1+2+3، موجود في `outputs/Radar Labour.apk`.
-  إنه للتجربة وغير موقع لمتجر Play.
+- APK Release مبني بعد إنجاز المراحل 1+2+3، موجود في `outputs/Radar Labour.apk`، SHA-256
+  `7D1870F86E1FD0BE6FFB1944B2D64C37E78BE6F4AFD3A38607CD165F0C2FDEE6`؛
+  حجمه 65,224,742 بايت. إنه للتجربة وغير موقع لمتجر Play.
 - التحقق الأحدث: `flutter analyze --no-pub` **نظيف تماماً (0 issues)**، و`flutter test --no-pub` اجتاز **94/94** بنجاح تام.
 - **المراحل 1+2+3 مكتملة:**
   - توحيد `MaterialApp`، تفكيك `radar_labor_app.dart` إلى ملفات أصغر.
