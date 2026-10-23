@@ -9,6 +9,7 @@ class Employees extends Table {
   TextColumn get fullNameAr => text()();
   TextColumn get fullNameEn => text().nullable()();
   TextColumn get category => text()();
+  TextColumn get supplier => text().nullable()();
   TextColumn get currentTeamId => text().nullable()();
   TextColumn get housingId => text().nullable()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();

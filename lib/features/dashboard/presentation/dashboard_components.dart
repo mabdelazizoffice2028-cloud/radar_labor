@@ -171,7 +171,7 @@ class _ConflictSection extends StatelessWidget {
   });
   final List<WorkerStatusResult> rows;
   final bool arabic;
-  final ValueChanged<WorkerStatusResult> onResolve;
+  final ValueChanged<WorkerStatusResult>? onResolve;
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +193,7 @@ class _ConflictSection extends StatelessWidget {
               title: Text('${row.worker.fullName} • ${row.worker.code}'),
               subtitle: Text(_conflictLabel(row.flags, arabic)),
               trailing: TextButton(
-                onPressed: () => onResolve(row),
+                onPressed: onResolve == null ? null : () => onResolve!(row),
                 child: Text(arabic ? 'تسوية' : 'Resolve'),
               ),
             ),
@@ -224,7 +224,7 @@ class _UnknownSection extends StatelessWidget {
   });
   final List<WorkerStatusResult> rows;
   final bool arabic;
-  final ValueChanged<WorkerStatusResult> onJustify;
+  final ValueChanged<WorkerStatusResult>? onJustify;
 
   @override
   Widget build(BuildContext context) {
@@ -260,7 +260,7 @@ class _UnknownSection extends StatelessWidget {
               ),
               trailing: IconButton(
                 tooltip: arabic ? 'إضافة تبرير' : 'Add justification',
-                onPressed: () => onJustify(row),
+                onPressed: onJustify == null ? null : () => onJustify!(row),
                 icon: const Icon(Icons.note_add_outlined),
               ),
             ),

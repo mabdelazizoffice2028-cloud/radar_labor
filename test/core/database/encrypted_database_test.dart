@@ -63,7 +63,7 @@ void main() {
     expect(() => applyEncryption(raw, longKey), throwsArgumentError);
   });
 
-  test('schemaVersion_isTwo_onFreshDatabase', () async {
+  test('schemaVersion_isThree_onFreshDatabase', () async {
     final db = _open(file, _keyA);
     addTearDown(db.close);
     final row = await db.customSelect('PRAGMA user_version').getSingle();
@@ -93,7 +93,7 @@ void main() {
     expect(eventTable, hasLength(1));
   });
 
-  test('v1Database_migratesToV2AndPreservesSettings', () async {
+  test('v1Database_migratesToV3AndPreservesSettings', () async {
     final raw = sqlite3.open(file.path);
     applyEncryption(raw, _keyA);
     raw.execute(
@@ -116,6 +116,42 @@ void main() {
     expect(version.read<int>('user_version'), DatabaseConstants.schemaVersion);
     expect(setting.value, 'ar');
     expect(eventsTable, hasLength(1));
+  });
+
+  test('v2Database_addsSupplierWithoutChangingExistingEmployees', () async {
+    final raw = sqlite3.open(file.path);
+    applyEncryption(raw, _keyA);
+    raw.execute('''CREATE TABLE employees (
+      employee_uid TEXT NOT NULL PRIMARY KEY,
+      employee_code TEXT NOT NULL,
+      full_name_ar TEXT NOT NULL,
+      full_name_en TEXT NULL,
+      category TEXT NOT NULL,
+      current_team_id TEXT NULL,
+      housing_id TEXT NULL,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      row_version INTEGER NOT NULL DEFAULT 1
+    )''');
+    raw.execute(
+      'CREATE TABLE settings (key TEXT NOT NULL PRIMARY KEY, value TEXT NOT NULL)',
+    );
+    raw.execute(
+      "INSERT INTO employees (employee_uid, employee_code, full_name_ar, category) VALUES ('e-1', '1', 'Test', 'Worker')",
+    );
+    raw.execute('PRAGMA user_version = 2');
+    raw.close();
+
+    final db = await _openInBackground(file, _keyA);
+    addTearDown(db.close);
+    final employee = await db.select(db.employees).getSingle();
+    expect(employee.employeeUid, 'e-1');
+    expect(employee.supplier, isNull);
+    expect(
+      (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
+        'user_version',
+      ),
+      3,
+    );
   });
 
   test('storedData_isNotPlaintextOnDisk_andSurvivesReopen', () async {

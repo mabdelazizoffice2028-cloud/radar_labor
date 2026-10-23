@@ -15,6 +15,7 @@ class DashboardScreen extends StatefulWidget {
     required this.coverageRepository,
     required this.actionsRepository,
     required this.arabic,
+    this.canEdit = true,
     super.key,
   });
 
@@ -22,6 +23,7 @@ class DashboardScreen extends StatefulWidget {
   final DashboardCoverageRepository coverageRepository;
   final DashboardActionsRepository actionsRepository;
   final bool arabic;
+  final bool canEdit;
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -103,7 +105,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   row,
             ],
             arabic: _ar,
-            onResolve: _resolve,
+            onResolve: widget.canEdit ? _resolve : null,
           ),
           _UnknownSection(
             rows: [
@@ -111,7 +113,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 if (row.status == WorkerStatus.unknown) row,
             ],
             arabic: _ar,
-            onJustify: _justify,
+            onJustify: widget.canEdit ? _justify : null,
           ),
           _IntegritySection(
             rows: [

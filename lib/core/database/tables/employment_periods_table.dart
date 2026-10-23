@@ -7,11 +7,8 @@ import 'package:radar_labor/core/database/tables/employees_table.dart';
 )
 class EmploymentPeriods extends Table {
   TextColumn get periodId => text()();
-  TextColumn get employeeUid => text().references(
-    Employees,
-    #employeeUid,
-    onDelete: KeyAction.cascade,
-  )();
+  TextColumn get employeeUid =>
+      text().references(Employees, #employeeUid, onDelete: KeyAction.cascade)();
   TextColumn get startDate => text()();
   TextColumn get endDate => text().nullable()();
 

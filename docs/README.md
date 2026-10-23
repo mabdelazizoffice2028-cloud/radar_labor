@@ -12,6 +12,10 @@ Radar Labor. Read these files before changing the application:
 5. [Decisions](DECISIONS.md) — owner decisions and technical decisions.
 6. [Product requirements](PRD.md) and [design system](DESIGN.md).
 
+For a post-S6 proposal on local authentication, role permissions, starter
+passwords, and safe workforce spreadsheet use, see the
+[authentication and roles draft](drafts/authentication-and-roles-prd-draft.md).
+
 ## Handoff rules for every model
 
 - Read `NEXT_AGENT.md`, `DECISIONS.md`, and the relevant roadmap and PRD sections

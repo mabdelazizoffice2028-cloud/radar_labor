@@ -30,6 +30,9 @@ class AppDatabase extends _$AppDatabase {
         await migrator.createTable(employmentPeriods);
         await migrator.createTable(events);
       }
+      if (from >= 2 && from < 3) {
+        await migrator.addColumn(employees, employees.supplier);
+      }
     },
   );
 }

@@ -11,6 +11,9 @@ import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/database/database_opener.dart';
 import 'package:radar_labor/core/database/local_settings_repository.dart';
+import 'package:radar_labor/core/auth/auth_role.dart';
+import 'package:radar_labor/core/auth/local_account.dart';
+import 'package:radar_labor/core/auth/local_auth_repository.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/core/status/status_models.dart';
 import 'package:radar_labor/core/time/business_date.dart';
@@ -21,6 +24,9 @@ import 'package:radar_labor/features/dashboard/data/dashboard_coverage_repositor
 import 'package:radar_labor/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:radar_labor/features/operations/presentation/operations_screen.dart';
 import 'package:radar_labor/features/operations/data/operations_repository.dart';
+import 'package:radar_labor/features/operations/presentation/state/operations_controller.dart';
+import 'package:radar_labor/app/auth_gate.dart';
+import 'package:radar_labor/app/local_accounts_screen.dart';
 import 'package:uuid/uuid.dart';
 
 class RadarLaborApp extends StatefulWidget {
@@ -118,9 +124,14 @@ class _RadarLaborAppState extends State<RadarLaborApp> {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        return _Home(
+        return AuthGate(
           database: state.data!.database,
-          events: state.data!.events,
+          builder: (account, onLogout) => _Home(
+            database: state.data!.database,
+            events: state.data!.events,
+            account: account,
+            onLogout: onLogout,
+          ),
         );
       },
     ),
@@ -134,9 +145,16 @@ final class _AppSession {
 }
 
 class _Home extends StatefulWidget {
-  const _Home({required this.database, required this.events});
+  const _Home({
+    required this.database,
+    required this.events,
+    required this.account,
+    required this.onLogout,
+  });
   final AppDatabase database;
   final EventRepository events;
+  final LocalAccount account;
+  final VoidCallback onLogout;
   @override
   State<_Home> createState() => _HomeState();
 }
@@ -145,6 +163,9 @@ class _HomeState extends State<_Home> {
   int _tab = 0;
   String _locale = 'en';
   bool get _ar => _locale == 'ar';
+  bool get _isAdmin =>
+      widget.account.role == AuthRole.projectManager ||
+      widget.account.role == AuthRole.hr;
   String _t(String ar, String en) => _ar ? ar : en;
   late final _settings = LocalSettingsRepository(widget.database);
   late final _dashboard = StatusSnapshotRepository(
@@ -161,6 +182,13 @@ class _HomeState extends State<_Home> {
     database: widget.database,
     events: widget.events,
   );
+  late final _operationsController = OperationsController(
+    store: _operations,
+    clock: const SystemClock(),
+    role: widget.account.role,
+    allowedHousingIds: widget.account.housingIds,
+    allowedTeamIds: widget.account.teamIds,
+  );
 
   @override
   void initState() {
@@ -172,17 +200,22 @@ class _HomeState extends State<_Home> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = [
+    final allPages = [
       DashboardScreen(
         statusRepository: _dashboard,
         coverageRepository: _coverage,
         actionsRepository: _dashboardActions,
         arabic: _ar,
+        canEdit: _isAdmin,
       ),
       _Workers(database: widget.database, events: widget.events, arabic: _ar),
       _Entities(database: widget.database, arabic: _ar, teams: true),
       _Entities(database: widget.database, arabic: _ar, teams: false),
-      OperationsScreen(repository: _operations, arabic: _ar),
+      OperationsScreen(
+        controller: _operationsController,
+        arabic: _ar,
+        role: widget.account.role,
+      ),
       _Preferences(
         arabic: _ar,
         locale: _locale,
@@ -190,9 +223,13 @@ class _HomeState extends State<_Home> {
           await _settings.write('locale', value);
           setState(() => _locale = value);
         },
+        database: widget.database,
+        account: widget.account,
+        onLogout: widget.onLogout,
+        onChangePassword: _changePassword,
       ),
     ];
-    final labels = [
+    final allLabels = [
       _t('الرئيسية', 'Home'),
       _t('العمال', 'Workers'),
       _t('الفرق', 'Teams'),
@@ -200,7 +237,7 @@ class _HomeState extends State<_Home> {
       _t('التسجيل اليومي', 'Daily check-in'),
       _t('الإعدادات', 'Settings'),
     ];
-    const icons = [
+    const allIcons = [
       Icons.dashboard_outlined,
       Icons.people_alt_outlined,
       Icons.groups_2_outlined,
@@ -208,12 +245,26 @@ class _HomeState extends State<_Home> {
       Icons.fact_check_outlined,
       Icons.settings_outlined,
     ];
+    final visibleTabs = _isAdmin
+        ? [0, 1, 2, 3, 4, 5]
+        : widget.account.role == AuthRole.viewer
+        ? [0, 5]
+        : [4, 5];
+    final pages = visibleTabs.map((index) => allPages[index]).toList();
+    final labels = visibleTabs.map((index) => allLabels[index]).toList();
+    final icons = visibleTabs.map((index) => allIcons[index]).toList();
+    final selectedIndex = _tab.clamp(0, pages.length - 1);
     return Directionality(
       textDirection: _ar ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(_t('رادار ليبور', 'Radar Labor')),
+          title: Text(_t('رادار ليبور', 'Radar Labour')),
           actions: [
+            IconButton(
+              tooltip: _t('تسجيل الخروج', 'Sign out'),
+              onPressed: widget.onLogout,
+              icon: const Icon(Icons.logout),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               child: Center(
@@ -222,9 +273,9 @@ class _HomeState extends State<_Home> {
             ),
           ],
         ),
-        body: IndexedStack(index: _tab, children: pages),
+        body: IndexedStack(index: selectedIndex, children: pages),
         bottomNavigationBar: NavigationBar(
-          selectedIndex: _tab,
+          selectedIndex: selectedIndex,
           onDestinationSelected: (value) => setState(() => _tab = value),
           destinations: List.generate(
             labels.length,
@@ -234,6 +285,108 @@ class _HomeState extends State<_Home> {
         ),
       ),
     );
+  }
+
+  Future<void> _changePassword() async {
+    final current = TextEditingController();
+    final replacement = TextEditingController();
+    final confirmation = TextEditingController();
+    final values = await showDialog<(String, String, String)>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(_t('تغيير كلمة المرور', 'Change password')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: current,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: _t('الحالية', 'Current password'),
+              ),
+            ),
+            TextField(
+              controller: replacement,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: _t(
+                  'الجديدة (8 أحرف على الأقل)',
+                  'New (at least 8 characters)',
+                ),
+              ),
+            ),
+            TextField(
+              controller: confirmation,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: _t('تأكيد كلمة المرور', 'Confirm password'),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(_t('إلغاء', 'Cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, (
+              current.text,
+              replacement.text,
+              confirmation.text,
+            )),
+            child: Text(_t('حفظ', 'Save')),
+          ),
+        ],
+      ),
+    );
+    current.dispose();
+    replacement.dispose();
+    confirmation.dispose();
+    if (values == null || !mounted) return;
+    if (values.$2.length < 8 || values.$2 != values.$3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _t(
+              'تأكد من كلمة المرور الجديدة (8 أحرف على الأقل)',
+              'New passwords must match and contain at least 8 characters',
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+    try {
+      final auth = LocalAuthRepository(_settings);
+      final verified = await auth.signIn(
+        role: widget.account.role,
+        accountId: widget.account.id,
+        password: values.$1,
+      );
+      if (verified == null) throw StateError('Current password is incorrect');
+      await auth.changePassword(verified, values.$2);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_t('تم تغيير كلمة المرور', 'Password changed')),
+          ),
+        );
+      }
+    } on Exception {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _t(
+                'كلمة المرور الحالية غير صحيحة',
+                'Current password is incorrect',
+              ),
+            ),
+          ),
+        );
+      }
+    }
   }
 }
 
@@ -671,10 +824,18 @@ class _Preferences extends StatelessWidget {
     required this.arabic,
     required this.locale,
     required this.onLocale,
+    required this.database,
+    required this.account,
+    required this.onLogout,
+    required this.onChangePassword,
   });
   final bool arabic;
   final String locale;
   final ValueChanged<String> onLocale;
+  final AppDatabase database;
+  final LocalAccount account;
+  final VoidCallback onLogout;
+  final VoidCallback onChangePassword;
   @override
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.all(16),
@@ -697,6 +858,34 @@ class _Preferences extends StatelessWidget {
               if (value != null) onLocale(value);
             },
           ),
+        ),
+      ),
+      Card(
+        child: ListTile(
+          leading: const Icon(Icons.key_outlined),
+          title: Text(arabic ? 'تغيير كلمة المرور' : 'Change password'),
+          onTap: onChangePassword,
+        ),
+      ),
+      if (account.role == AuthRole.projectManager ||
+          account.role == AuthRole.hr)
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.manage_accounts_outlined),
+            title: Text(arabic ? 'إدارة المستخدمين' : 'Manage users'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) =>
+                    LocalAccountsScreen(database: database, arabic: arabic),
+              ),
+            ),
+          ),
+        ),
+      Card(
+        child: ListTile(
+          leading: const Icon(Icons.logout),
+          title: Text(arabic ? 'تسجيل الخروج' : 'Sign out'),
+          onTap: onLogout,
         ),
       ),
       Card(

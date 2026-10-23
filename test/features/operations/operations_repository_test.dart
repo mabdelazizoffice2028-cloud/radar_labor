@@ -4,6 +4,7 @@ import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/core/status/status_models.dart';
 import 'package:radar_labor/features/operations/data/operations_repository.dart';
+import 'package:radar_labor/features/operations/domain/operations_models.dart';
 
 import '../../support/fixed_clock.dart';
 

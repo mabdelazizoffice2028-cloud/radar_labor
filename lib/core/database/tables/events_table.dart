@@ -10,10 +10,7 @@ import 'package:drift/drift.dart';
   name: 'events_employee_business_date',
   columns: {#employeeUid, #businessDate},
 )
-@TableIndex(
-  name: 'events_sync_sequence',
-  columns: {#syncStatus, #deviceSeq},
-)
+@TableIndex(name: 'events_sync_sequence', columns: {#syncStatus, #deviceSeq})
 class Events extends Table {
   TextColumn get eventId => text()();
   TextColumn get deviceId => text()();
@@ -32,8 +29,7 @@ class Events extends Table {
   BoolColumn get late => boolean().withDefault(const Constant(false))();
   IntColumn get eventSchemaVersion =>
       integer().withDefault(const Constant(1))();
-  TextColumn get syncStatus =>
-      text().withDefault(const Constant('pending'))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
   TextColumn get rejectReason => text().nullable()();
 
   @override

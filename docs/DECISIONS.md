@@ -5,7 +5,29 @@
   network call, Supabase initialization, remote font/image/icon, or online-only
   first-run requirement may block product use. Cloud sync is deferred.
 - 2026-10-23 — Owner requires Arabic and English UI, with bundled local fonts
-  and assets. Arabic is the initial language; language switching is user-owned.
+  and assets. English is the default; Arabic is selectable with RTL.
+- 2026-10-23 — Keep supervisor flows deliberately simple (open → mark → save),
+  and generate copyable WhatsApp summaries for housing absences and site
+  presence. Copy locally; never auto-send or require connectivity.
+- 2026-10-23 — Keep attendance message formatting in the operations domain and
+  its user-facing labels in `core/l10n/`; screens display the result and handle
+  the copy interaction. Reason: keep business formatting out of widget code.
+- 2026-10-23 — Keep operations persistence behind the `OperationsStore` domain
+  contract and orchestrate daily workflows in `OperationsController`; screens
+  do not import the data repository. Reason: preserve inward dependency flow and
+  keep save/date rules out of widgets.
+- 2026-10-23 — V1 local accounts are stored in the encrypted SQLite settings
+  store; passwords use salted Argon2id hashes, never plaintext. Initial manager
+  and HR passwords are temporary `123456` and must be changed on first login.
+- 2026-10-23 — Import roster locally through Android Storage Access Framework.
+  Store code, name, designation, and supplier; ignore ID No. completely, and
+  reject duplicate codes before commit. Existing housing/team assignments are
+  preserved when roster rows are updated.
+- 2026-10-23 — Schema v3 adds nullable employee supplier and preserves existing
+  v2 rows through a forward migration. Local account data stays in the encrypted
+  database, so no credentials or personal data are committed.
+- 2026-10-23 — Launcher display name is `Radar Labour`; retain the existing
+  Android applicationId until an owner-approved production identity is chosen.
 - Still pending: final Android applicationId and any production signing identity.
 
 ## Agent decisions

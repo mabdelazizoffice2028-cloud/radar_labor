@@ -1,17 +1,16 @@
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:radar_labor/core/time/business_date.dart';
-import 'package:radar_labor/core/time/clock.dart';
-import 'package:radar_labor/features/operations/data/operations_repository.dart';
+import 'package:radar_labor/features/operations/domain/operations_models.dart';
+import 'package:radar_labor/features/operations/presentation/state/operations_controller.dart';
 
 final class HousingCheckScreen extends StatefulWidget {
   const HousingCheckScreen({
-    required this.repository,
+    required this.controller,
     required this.arabic,
     super.key,
   });
 
-  final OperationsRepository repository;
+  final OperationsController controller;
   final bool arabic;
 
   @override
@@ -27,7 +26,7 @@ final class _HousingCheckScreenState extends State<HousingCheckScreen> {
 
   @override
   Widget build(BuildContext context) => StreamBuilder<List<EntityOption>>(
-    stream: widget.repository.watchHousings(),
+    stream: widget.controller.watchHousings(),
     builder: (context, housingState) {
       final housings = housingState.data ?? const <EntityOption>[];
       final selected = housings
@@ -47,9 +46,7 @@ final class _HousingCheckScreenState extends State<HousingCheckScreen> {
                   .map(
                     (row) => DropdownMenuItem(
                       value: row.id,
-                      child: Text(
-                        widget.arabic ? row.nameAr : row.nameEn ?? row.nameAr,
-                      ),
+                      child: Text(row.displayName(arabic: widget.arabic)),
                     ),
                   )
                   .toList(),
@@ -70,7 +67,7 @@ final class _HousingCheckScreenState extends State<HousingCheckScreen> {
                     ),
                   )
                 : StreamBuilder<List<WorkerOption>>(
-                    stream: widget.repository.watchHousingWorkers(selected.id),
+                    stream: widget.controller.watchHousingWorkers(selected.id),
                     builder: (context, state) {
                       final workers = state.data ?? const <WorkerOption>[];
                       if (workers.isEmpty) {
@@ -103,9 +100,7 @@ final class _HousingCheckScreenState extends State<HousingCheckScreen> {
                                 }
                               }),
                               title: Text(
-                                widget.arabic
-                                    ? worker.nameAr
-                                    : worker.nameEn ?? worker.nameAr,
+                                worker.displayName(arabic: widget.arabic),
                               ),
                               subtitle: Text(
                                 '${t('الكود', 'Code')}: ${worker.code}',
@@ -174,26 +169,24 @@ final class _HousingCheckScreenState extends State<HousingCheckScreen> {
   );
 
   Future<void> _save(EntityOption housing) async {
-    final workers = await widget.repository
-        .watchHousingWorkers(housing.id)
-        .first;
-    final names = workers
-        .where((worker) => _absent.contains(worker.id))
-        .map(
-          (worker) =>
-              '${widget.arabic ? worker.nameAr : worker.nameEn ?? worker.nameAr} (${worker.code})',
-        )
-        .toList();
+    final PreparedHousingCheck check;
+    try {
+      check = await widget.controller.prepareHousingCheck(
+        housing: housing,
+        absentIds: Set.unmodifiable(_absent),
+        arabic: widget.arabic,
+      );
+    } on Exception {
+      _showSaveError();
+      return;
+    }
+    final summary = check.summary;
     if (!mounted) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(t('تأكيد فحص السكن', 'Confirm housing check')),
-        content: Text(
-          names.isEmpty
-              ? t('تأكيد عدم وجود غائبين؟', 'Confirm that nobody is absent?')
-              : names.join('\n'),
-        ),
+        content: Text(summary.confirmationText),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -208,22 +201,16 @@ final class _HousingCheckScreenState extends State<HousingCheckScreen> {
     );
     if (confirmed != true || !mounted) return;
     setState(() => _saving = true);
-    final date = businessDateFor(const SystemClock().nowUtc());
     try {
-      final undo = await widget.repository.saveHousingCheck(
-        date: date,
-        housing: housing,
-        absentIds: _absent,
-      );
+      final undo = await widget.controller.saveHousingCheck(check);
       if (!mounted) return;
-      final summary = _summary(housing, date, names);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(t('تم حفظ الفحص محليًا', 'Check saved locally')),
           duration: const Duration(seconds: 8),
           action: SnackBarAction(
             label: t('تراجع', 'Undo'),
-            onPressed: () => widget.repository.undoHousingCheck(undo),
+            onPressed: () => widget.controller.undoHousingCheck(undo),
           ),
         ),
       );
@@ -231,11 +218,13 @@ final class _HousingCheckScreenState extends State<HousingCheckScreen> {
         context: context,
         builder: (context) => AlertDialog(
           title: Text(t('ملخص واتساب', 'WhatsApp summary')),
-          content: SelectableText(summary),
+          content: SelectableText(summary.messageText),
           actions: [
             TextButton(
               onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: summary));
+                await Clipboard.setData(
+                  ClipboardData(text: summary.messageText),
+                );
                 if (context.mounted) Navigator.pop(context);
               },
               child: Text(t('نسخ النص', 'Copy text')),
@@ -248,32 +237,24 @@ final class _HousingCheckScreenState extends State<HousingCheckScreen> {
         ),
       );
       setState(() => _absent.clear());
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              t(
-                'تعذر حفظ الفحص. أعد المحاولة.',
-                'Could not save check. Please retry.',
-              ),
-            ),
-          ),
-        );
-      }
+    } on Exception {
+      _showSaveError();
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
-  String _summary(EntityOption housing, String date, List<String> names) {
-    final name = widget.arabic
-        ? housing.nameAr
-        : housing.nameEn ?? housing.nameAr;
-    final title = widget.arabic ? 'عدد الغائبين' : 'Absent workers';
-    final body = names.isEmpty
-        ? t('لا يوجد غائبون', 'No absences')
-        : names.join('\n');
-    return '$name\n$date\n$title: ${names.length}\n$body';
+  void _showSaveError() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          t(
+            'تعذر حفظ الفحص. أعد المحاولة.',
+            'Could not save check. Please retry.',
+          ),
+        ),
+      ),
+    );
   }
 }

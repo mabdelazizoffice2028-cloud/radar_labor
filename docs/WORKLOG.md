@@ -3,6 +3,168 @@
 Append one newest-first handoff entry for each model/session. Keep prior entries
 so the next model can understand decisions and recoveries.
 
+## 2026-10-23 — V1 local login, roster import, and release handoff
+
+### Implemented
+
+- Added mandatory local login with role-first/account-second selection. First
+  run imports a local XLSX/CSV roster, then creates project-manager and HR
+  accounts from selected roster entries. Their shared temporary password is
+  `123456` and first login requires a new password of at least eight characters.
+- Passwords are salted Argon2id hashes calculated in a Dart isolate and stored
+  only in the encrypted database. Added logout, password change, account creation,
+  and assignment of housing/team scopes. Viewer dashboards cannot change records;
+  supervisor navigation and operation controller saves are scoped to assignments.
+- Added Android document picker through Storage Access Framework without broad
+  file permissions. The parser accepts XLSX/CSV, reads code/name/designation/
+  supplier, ignores identity-number columns, rejects duplicate/invalid rows, and
+  preserves existing team/housing assignment on update. Files over 25 MB fail.
+- Added employee supplier column and Drift schema v3 migration from v2. Updated
+  Android launcher display name to `Radar Labour`. English remains first-install
+  default; saved language preference remains in effect.
+- Added a Gemini handoff document at `docs/SUPABASE_HANDOFF_FOR_GEMINI.md` per
+  owner request; it is guidance only and does not add cloud runtime or data sync.
+
+### Verification and recovery
+
+- `dart format lib test`: completed.
+- `flutter analyze --no-pub`: **No issues found**.
+- `flutter test --no-pub`: **73/73 passed**. First test run exposed two
+  architecture violations (presentation imported repositories from another
+  feature / Drift); moved the coordinator screens to the app composition layer.
+  It also exposed supplier being added twice during the v1→v3 upgrade; migration
+  now adds the column only for databases that started at v2, with a v2→v3 test.
+- Earlier terminal failures: default Windows Temp blocked Flutter's test
+  listener copy; using `work/flutter-profile/android-env.cmd` fixed file access.
+  The sandbox then denied local loopback sockets; granting local test-runner
+  access allowed the full suite to execute. No runtime network dependency was
+  added to the app.
+- `flutter build apk --release --no-pub` is running as of this entry; output,
+  APK path, size, SHA-256, and package inspection must be recorded after it exits.
+- No phone/ADB installation was performed in this environment; hand the owner
+  the APK for actual device validation after a successful build.
+
+## 2026-10-23 — Follow-up verification before phone handoff
+
+### What changed and what was checked
+
+- Moved the daily-operation value models from `data/` into `domain/` so both
+  presentation and the repository use the same typed models.
+- Added the `OperationsStore` domain contract and `OperationsController` under
+  `presentation/state/`. Screens now call the controller for roster streams,
+  Riyadh business dates, preparation, save, and undo; the data repository
+  implements the contract. Screens no longer import or call the data layer.
+- Moved Arabic/English worker selection, summary counts, confirmation text, and
+  WhatsApp message composition to `features/operations/domain/attendance_summary.dart`.
+  The widgets display the prepared text and handle the local copy action.
+- Added the message labels to `core/l10n/attendance_message_strings.dart`; the
+  domain formatter has no Flutter dependency. The selected worker IDs used for
+  persistence now come from the same resolved summary as the displayed count,
+  avoiding a mismatch if the live roster changes.
+- Added focused unit cases for selected English attendance, zero-presence
+  Arabic attendance, and zero-absence English housing summaries.
+- Found an untracked `docs/database.csv` containing a workforce roster with
+  identity-number and name columns. Removed that copied roster from `docs` and
+  recorded the issue without retaining or logging worker values.
+- The owner said the APK files were deleted from the output path. The previously
+  recorded APK hash therefore does not describe a file currently available to
+  transfer and must not be used as the current handoff artifact.
+- `dart format` completed for all changed Dart files. Direct `dart analyze` —
+  **No issues found**.
+- A direct Dart smoke check of the pure domain formatter passed for a selected
+  English site worker and verified the message count and persisted worker ID.
+- Attempted the full Flutter test suite through the Flutter tool snapshot. It
+  stopped at `Waiting for another flutter command to release the startup lock…`
+  and was cancelled. No new test or APK build result is claimed for the latest
+  domain/message changes. Earlier S6 results (66 tests and an APK build) remain
+  historical evidence only.
+
+### Errors encountered and fixed
+
+- The first formatter run found a missing closing brace left while removing an
+  old presentation-local formatter. Fixed the source structure.
+- Analyzer then found that the new selected-worker records were passed through
+  an old `List<String>` parameter. Changed the domain API to carry typed
+  `(id, label)` records; the final analyzer run is clean. See B-006.
+
+### Handoff
+
+- Rebuild and rerun Flutter tests when the Flutter startup lock is available;
+  then update this log, `BUGS.md`, `PROJECT_REPORT.md`, `ROADMAP.md`, and
+  `NEXT_AGENT.md` with the observed results and actual APK hash/path.
+- Keep S7 stopped until the owner tests the current S6 build and reviews the
+  authentication/roles draft.
+
+## 2026-10-23 — S6 completed and prepared for owner testing
+
+### What changed
+
+- Finished the dashboard date picker and date-scoped coverage warnings for active
+  housing locations and teams without a submission. The most recent set/clear
+  event determines coverage, and rejected events do not falsely count as
+  submitted.
+- Added local administrator justification and typed conflict resolution. A
+  resolution only hides conflict flags when its kind is recognized; status
+  calculation remains unchanged. Text controllers are disposed after sheets.
+- Added the fifth dashboard status card, “Not recorded”, alongside on-site,
+  housing-only, unknown, and justified.
+- Switched the default locale to English for new installs. Existing saved locale
+  preferences remain intact; users can switch to Arabic/RTL in Settings.
+- Added a selectable, copyable WhatsApp summary after site attendance, showing
+  team, business date, present count, and present names/codes. Zero-present
+  submissions get an explicit empty message. Housing check already had an
+  equivalent absence/no-absence summary. Copying is local; no auto-send or
+  network is used.
+- Added `docs/drafts/authentication-and-roles-prd-draft.md` per owner's request
+  for the next phase. It defines local roles, the initial-password proposal,
+  roster import boundaries, privacy constraints, UI flow, tests, and open
+  decisions. No sign-in or role code was started in this S6 delivery.
+- Reviewed the supplied workforce workbook structure without adding its data
+  to the repository. The active-labour sheet includes an ID-number column and
+  has no housing/team assignment column; the PRD draft explicitly excludes
+  personal identity numbers and calls out the missing assignment source.
+- Updated README in Arabic/English, PRD owner amendment, DECISIONS, ROADMAP,
+  PROJECT_REPORT, NEXT_AGENT, and this log to reflect S6 and the required but
+  not-yet-implemented local login roles.
+
+### Verification
+
+- `dart format` on changed Dart files completed. Dart CLI emitted a telemetry
+  temp-file permission warning in this host, but formatting succeeded; Flutter
+  commands run through `work/flutter-profile/android-env.cmd` avoid it.
+- `flutter analyze --no-pub`: **No issues found**.
+- `flutter test --no-pub`: **66 tests passed**, including two new dashboard
+  repository tests for coverage transitions and locally persisted resolution/
+  justification.
+- `flutter build apk --release --no-pub`: succeeded in 86.3 s. APK is
+  61,160,446 bytes; SHA-256
+  `8478E3023A00493987ECEBA134938E6EC466DBB502D92F710166ABB8BFB18453`.
+- Android `aapt` confirmed app label `رادار ليبور`, package
+  `com.example.radar_labor`, and no INTERNET/ACCESS_NETWORK_STATE permissions.
+  This is a debug-signed test APK, not a store release.
+- Phone testing of this APK remains with the owner; existing screenshots only
+  prove the previous APK opened.
+
+### Errors encountered and fixed
+
+- A dashboard file placed Dart `part` directives after a class; moved them
+  before declarations, then formatter and analyzer ran clean.
+- Analyzer found missing event-model import and several collection/control-flow
+  lint issues. Added the import and fixed the lints; final analyzer has zero
+  issues.
+- New Drift companion test fixtures initially used `const` constructors that
+  are not const. Removed `const`; both new tests passed and the full suite
+  finished 66/66.
+- An initial unconstrained test run was interrupted after the compilation
+  failure; rerunning the focused tests and full suite succeeded. No product bug
+  remains from these build/test issues.
+
+### Handoff
+
+- Stop at S6 and wait for the owner's phone-test feedback. Do not start the
+  authentication/roles implementation until the owner has tested/reviewed the
+  S6 APK and the draft. See `docs/NEXT_AGENT.md`.
+
 ## 2026-10-23 — Housing/site workflows, live status dashboard, and owner device check
 
 ### What changed
@@ -188,3 +350,12 @@ so the next model can understand decisions and recoveries.
 - **Open risk:** ADB currently reports that its default `\.android` directory
   cannot be created in this execution environment. This is a host/sandbox issue,
   not yet evidence of an app defect. Do not claim a device install was verified.
+
+## 2026-10-23 — V1 release verification and handoff
+
+- **Test result:** `flutter test --no-pub` passed **73/73** (exit 0). This includes local auth/password handling, roster parser/duplicate rejection, schema migration, attendance summaries, and architecture checks. An earlier run had 3 failures; the causes were the migration adding `supplier` twice on the v1→v3 path and presentation imports crossing feature/database boundaries. Both were fixed, a migration fixture was corrected to include Settings, and the full suite then passed.
+- **Static analysis:** `flutter analyze --no-pub` returned `No issues found!` (exit 0).
+- **Release:** `flutter build apk --release --no-pub` completed (exit 0). Copy: `outputs/Radar Labour.apk`; size 62,815,890 bytes; SHA-256 `B8822F50D0BC9546BDD1D0EB3B101B1316AC03F177D1C64654DB6A6AE878AC41`.
+- **Package inspection:** `aapt` confirms label `Radar Labour`, application id `com.example.radar_labor`, version `1.0.0`. No INTERNET or ACCESS_NETWORK_STATE permission is present. APK stays local and is ignored by Git.
+- **Device check:** no install/runtime test on the owner's phone was performed in this session. The owner should install the handoff APK and test role access, roster import, persistence after restart, and airplane-mode operation.
+- **GitHub:** source/docs push is the remaining handoff action for this session; do not include APKs, employee roster data, local credentials, or signing files.

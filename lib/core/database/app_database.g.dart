@@ -269,6 +269,17 @@ class $EmployeesTable extends Employees
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _supplierMeta = const VerificationMeta(
+    'supplier',
+  );
+  @override
+  late final GeneratedColumn<String> supplier = GeneratedColumn<String>(
+    'supplier',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _currentTeamIdMeta = const VerificationMeta(
     'currentTeamId',
   );
@@ -325,6 +336,7 @@ class $EmployeesTable extends Employees
     fullNameAr,
     fullNameEn,
     category,
+    supplier,
     currentTeamId,
     housingId,
     isActive,
@@ -392,6 +404,12 @@ class $EmployeesTable extends Employees
     } else if (isInserting) {
       context.missing(_categoryMeta);
     }
+    if (data.containsKey('supplier')) {
+      context.handle(
+        _supplierMeta,
+        supplier.isAcceptableOrUnknown(data['supplier']!, _supplierMeta),
+      );
+    }
     if (data.containsKey('current_team_id')) {
       context.handle(
         _currentTeamIdMeta,
@@ -448,6 +466,10 @@ class $EmployeesTable extends Employees
         DriftSqlType.string,
         data['${effectivePrefix}category'],
       )!,
+      supplier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}supplier'],
+      ),
       currentTeamId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}current_team_id'],
@@ -479,6 +501,7 @@ class Employee extends DataClass implements Insertable<Employee> {
   final String fullNameAr;
   final String? fullNameEn;
   final String category;
+  final String? supplier;
   final String? currentTeamId;
   final String? housingId;
   final bool isActive;
@@ -489,6 +512,7 @@ class Employee extends DataClass implements Insertable<Employee> {
     required this.fullNameAr,
     this.fullNameEn,
     required this.category,
+    this.supplier,
     this.currentTeamId,
     this.housingId,
     required this.isActive,
@@ -504,6 +528,9 @@ class Employee extends DataClass implements Insertable<Employee> {
       map['full_name_en'] = Variable<String>(fullNameEn);
     }
     map['category'] = Variable<String>(category);
+    if (!nullToAbsent || supplier != null) {
+      map['supplier'] = Variable<String>(supplier);
+    }
     if (!nullToAbsent || currentTeamId != null) {
       map['current_team_id'] = Variable<String>(currentTeamId);
     }
@@ -524,6 +551,9 @@ class Employee extends DataClass implements Insertable<Employee> {
           ? const Value.absent()
           : Value(fullNameEn),
       category: Value(category),
+      supplier: supplier == null && nullToAbsent
+          ? const Value.absent()
+          : Value(supplier),
       currentTeamId: currentTeamId == null && nullToAbsent
           ? const Value.absent()
           : Value(currentTeamId),
@@ -546,6 +576,7 @@ class Employee extends DataClass implements Insertable<Employee> {
       fullNameAr: serializer.fromJson<String>(json['fullNameAr']),
       fullNameEn: serializer.fromJson<String?>(json['fullNameEn']),
       category: serializer.fromJson<String>(json['category']),
+      supplier: serializer.fromJson<String?>(json['supplier']),
       currentTeamId: serializer.fromJson<String?>(json['currentTeamId']),
       housingId: serializer.fromJson<String?>(json['housingId']),
       isActive: serializer.fromJson<bool>(json['isActive']),
@@ -561,6 +592,7 @@ class Employee extends DataClass implements Insertable<Employee> {
       'fullNameAr': serializer.toJson<String>(fullNameAr),
       'fullNameEn': serializer.toJson<String?>(fullNameEn),
       'category': serializer.toJson<String>(category),
+      'supplier': serializer.toJson<String?>(supplier),
       'currentTeamId': serializer.toJson<String?>(currentTeamId),
       'housingId': serializer.toJson<String?>(housingId),
       'isActive': serializer.toJson<bool>(isActive),
@@ -574,6 +606,7 @@ class Employee extends DataClass implements Insertable<Employee> {
     String? fullNameAr,
     Value<String?> fullNameEn = const Value.absent(),
     String? category,
+    Value<String?> supplier = const Value.absent(),
     Value<String?> currentTeamId = const Value.absent(),
     Value<String?> housingId = const Value.absent(),
     bool? isActive,
@@ -584,6 +617,7 @@ class Employee extends DataClass implements Insertable<Employee> {
     fullNameAr: fullNameAr ?? this.fullNameAr,
     fullNameEn: fullNameEn.present ? fullNameEn.value : this.fullNameEn,
     category: category ?? this.category,
+    supplier: supplier.present ? supplier.value : this.supplier,
     currentTeamId: currentTeamId.present
         ? currentTeamId.value
         : this.currentTeamId,
@@ -606,6 +640,7 @@ class Employee extends DataClass implements Insertable<Employee> {
           ? data.fullNameEn.value
           : this.fullNameEn,
       category: data.category.present ? data.category.value : this.category,
+      supplier: data.supplier.present ? data.supplier.value : this.supplier,
       currentTeamId: data.currentTeamId.present
           ? data.currentTeamId.value
           : this.currentTeamId,
@@ -625,6 +660,7 @@ class Employee extends DataClass implements Insertable<Employee> {
           ..write('fullNameAr: $fullNameAr, ')
           ..write('fullNameEn: $fullNameEn, ')
           ..write('category: $category, ')
+          ..write('supplier: $supplier, ')
           ..write('currentTeamId: $currentTeamId, ')
           ..write('housingId: $housingId, ')
           ..write('isActive: $isActive, ')
@@ -640,6 +676,7 @@ class Employee extends DataClass implements Insertable<Employee> {
     fullNameAr,
     fullNameEn,
     category,
+    supplier,
     currentTeamId,
     housingId,
     isActive,
@@ -654,6 +691,7 @@ class Employee extends DataClass implements Insertable<Employee> {
           other.fullNameAr == this.fullNameAr &&
           other.fullNameEn == this.fullNameEn &&
           other.category == this.category &&
+          other.supplier == this.supplier &&
           other.currentTeamId == this.currentTeamId &&
           other.housingId == this.housingId &&
           other.isActive == this.isActive &&
@@ -666,6 +704,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
   final Value<String> fullNameAr;
   final Value<String?> fullNameEn;
   final Value<String> category;
+  final Value<String?> supplier;
   final Value<String?> currentTeamId;
   final Value<String?> housingId;
   final Value<bool> isActive;
@@ -677,6 +716,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
     this.fullNameAr = const Value.absent(),
     this.fullNameEn = const Value.absent(),
     this.category = const Value.absent(),
+    this.supplier = const Value.absent(),
     this.currentTeamId = const Value.absent(),
     this.housingId = const Value.absent(),
     this.isActive = const Value.absent(),
@@ -689,6 +729,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
     required String fullNameAr,
     this.fullNameEn = const Value.absent(),
     required String category,
+    this.supplier = const Value.absent(),
     this.currentTeamId = const Value.absent(),
     this.housingId = const Value.absent(),
     this.isActive = const Value.absent(),
@@ -704,6 +745,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
     Expression<String>? fullNameAr,
     Expression<String>? fullNameEn,
     Expression<String>? category,
+    Expression<String>? supplier,
     Expression<String>? currentTeamId,
     Expression<String>? housingId,
     Expression<bool>? isActive,
@@ -716,6 +758,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
       if (fullNameAr != null) 'full_name_ar': fullNameAr,
       if (fullNameEn != null) 'full_name_en': fullNameEn,
       if (category != null) 'category': category,
+      if (supplier != null) 'supplier': supplier,
       if (currentTeamId != null) 'current_team_id': currentTeamId,
       if (housingId != null) 'housing_id': housingId,
       if (isActive != null) 'is_active': isActive,
@@ -730,6 +773,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
     Value<String>? fullNameAr,
     Value<String?>? fullNameEn,
     Value<String>? category,
+    Value<String?>? supplier,
     Value<String?>? currentTeamId,
     Value<String?>? housingId,
     Value<bool>? isActive,
@@ -742,6 +786,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
       fullNameAr: fullNameAr ?? this.fullNameAr,
       fullNameEn: fullNameEn ?? this.fullNameEn,
       category: category ?? this.category,
+      supplier: supplier ?? this.supplier,
       currentTeamId: currentTeamId ?? this.currentTeamId,
       housingId: housingId ?? this.housingId,
       isActive: isActive ?? this.isActive,
@@ -767,6 +812,9 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
     }
     if (category.present) {
       map['category'] = Variable<String>(category.value);
+    }
+    if (supplier.present) {
+      map['supplier'] = Variable<String>(supplier.value);
     }
     if (currentTeamId.present) {
       map['current_team_id'] = Variable<String>(currentTeamId.value);
@@ -794,6 +842,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
           ..write('fullNameAr: $fullNameAr, ')
           ..write('fullNameEn: $fullNameEn, ')
           ..write('category: $category, ')
+          ..write('supplier: $supplier, ')
           ..write('currentTeamId: $currentTeamId, ')
           ..write('housingId: $housingId, ')
           ..write('isActive: $isActive, ')
@@ -3035,6 +3084,7 @@ typedef $$EmployeesTableCreateCompanionBuilder = EmployeesCompanion Function({
   required String fullNameAr,
   Value<String?> fullNameEn,
   required String category,
+  Value<String?> supplier,
   Value<String?> currentTeamId,
   Value<String?> housingId,
   Value<bool> isActive,
@@ -3047,6 +3097,7 @@ typedef $$EmployeesTableUpdateCompanionBuilder = EmployeesCompanion Function({
   Value<String> fullNameAr,
   Value<String?> fullNameEn,
   Value<String> category,
+  Value<String?> supplier,
   Value<String?> currentTeamId,
   Value<String?> housingId,
   Value<bool> isActive,
@@ -3116,6 +3167,11 @@ class $$EmployeesTableFilterComposer
 
   ColumnFilters<String> get category => $composableBuilder(
     column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get supplier => $composableBuilder(
+    column: $table.supplier,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3199,6 +3255,11 @@ class $$EmployeesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get supplier => $composableBuilder(
+    column: $table.supplier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get currentTeamId => $composableBuilder(
     column: $table.currentTeamId,
     builder: (column) => ColumnOrderings(column),
@@ -3251,6 +3312,9 @@ class $$EmployeesTableAnnotationComposer
 
   GeneratedColumn<String> get category =>
       $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get supplier =>
+      $composableBuilder(column: $table.supplier, builder: (column) => column);
 
   GeneratedColumn<String> get currentTeamId => $composableBuilder(
     column: $table.currentTeamId,
@@ -3328,6 +3392,7 @@ class $$EmployeesTableTableManager
                 Value<String> fullNameAr = const Value.absent(),
                 Value<String?> fullNameEn = const Value.absent(),
                 Value<String> category = const Value.absent(),
+                Value<String?> supplier = const Value.absent(),
                 Value<String?> currentTeamId = const Value.absent(),
                 Value<String?> housingId = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
@@ -3339,6 +3404,7 @@ class $$EmployeesTableTableManager
                 fullNameAr: fullNameAr,
                 fullNameEn: fullNameEn,
                 category: category,
+                supplier: supplier,
                 currentTeamId: currentTeamId,
                 housingId: housingId,
                 isActive: isActive,
@@ -3352,6 +3418,7 @@ class $$EmployeesTableTableManager
                 required String fullNameAr,
                 Value<String?> fullNameEn = const Value.absent(),
                 required String category,
+                Value<String?> supplier = const Value.absent(),
                 Value<String?> currentTeamId = const Value.absent(),
                 Value<String?> housingId = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
@@ -3363,6 +3430,7 @@ class $$EmployeesTableTableManager
                 fullNameAr: fullNameAr,
                 fullNameEn: fullNameEn,
                 category: category,
+                supplier: supplier,
                 currentTeamId: currentTeamId,
                 housingId: housingId,
                 isActive: isActive,

@@ -3,7 +3,7 @@ abstract final class DatabaseConstants {
   static const String fileName = 'radar_labor.sqlite';
   static const int keyByteLength = 32;
   static const String keyStorageName = 'radar_labor.db_key';
-  static const int schemaVersion = 2;
+  static const int schemaVersion = 3;
 }
 
 abstract final class TimeConstants {

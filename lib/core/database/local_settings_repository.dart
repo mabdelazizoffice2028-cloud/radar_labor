@@ -8,9 +8,9 @@ final class LocalSettingsRepository {
   final AppDatabase _database;
 
   Future<String?> read(String key) async {
-    final row = await (_database.select(_database.settings)
-          ..where((setting) => setting.key.equals(key)))
-        .getSingleOrNull();
+    final row = await (_database.select(
+      _database.settings,
+    )..where((setting) => setting.key.equals(key))).getSingleOrNull();
     return row?.value;
   }
 
@@ -21,9 +21,11 @@ final class LocalSettingsRepository {
           .map((rows) => rows.firstOrNull?.value);
 
   Future<void> write(String key, String value) async {
-    await _database.into(_database.settings).insertOnConflictUpdate(
-      SettingsCompanion.insert(key: key, value: value),
-    );
+    await _database
+        .into(_database.settings)
+        .insertOnConflictUpdate(
+          SettingsCompanion.insert(key: key, value: value),
+        );
   }
 
   Future<String> ensureDeviceId() async {

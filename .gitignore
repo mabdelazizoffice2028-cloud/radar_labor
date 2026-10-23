@@ -60,3 +60,6 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Local handoff APKs (keep out of source history)
+/outputs/*.apk

@@ -2,65 +2,17 @@ import 'package:drift/drift.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/core/status/status_models.dart';
-
-/// Small display models keep Drift row types outside presentation widgets.
-final class EntityOption {
-  const EntityOption({required this.id, required this.nameAr, this.nameEn});
-  final String id;
-  final String nameAr;
-  final String? nameEn;
-}
-
-final class WorkerOption {
-  const WorkerOption({
-    required this.id,
-    required this.code,
-    required this.nameAr,
-    this.nameEn,
-  });
-  final String id;
-  final String code;
-  final String nameAr;
-  final String? nameEn;
-}
-
-final class HousingCheckUndo {
-  const HousingCheckUndo({
-    required this.date,
-    required this.housingId,
-    required this.previousAbsences,
-    required this.currentAbsences,
-    required this.wasChecked,
-  });
-  final String date;
-  final String housingId;
-  final Set<String> previousAbsences;
-  final Set<String> currentAbsences;
-  final bool wasChecked;
-}
-
-final class SiteAttendanceUndo {
-  const SiteAttendanceUndo({
-    required this.date,
-    required this.teamId,
-    required this.previousPresent,
-    required this.currentPresent,
-    required this.wasSubmitted,
-  });
-  final String date;
-  final String teamId;
-  final Set<String> previousPresent;
-  final Set<String> currentPresent;
-  final bool wasSubmitted;
-}
+import 'package:radar_labor/features/operations/domain/operations_models.dart';
+import 'package:radar_labor/features/operations/domain/operations_store.dart';
 
 /// Owns local reference queries and daily event transactions for operations.
-final class OperationsRepository {
+final class OperationsRepository implements OperationsStore {
   const OperationsRepository({required this.database, required this.events});
 
   final AppDatabase database;
   final EventRepository events;
 
+  @override
   Stream<List<EntityOption>> watchHousings() =>
       (database.select(
         database.housings,
@@ -76,6 +28,7 @@ final class OperationsRepository {
         ),
       );
 
+  @override
   Stream<List<EntityOption>> watchTeams() =>
       (database.select(
         database.teams,
@@ -91,6 +44,7 @@ final class OperationsRepository {
         ),
       );
 
+  @override
   Stream<List<WorkerOption>> watchHousingWorkers(String housingId) =>
       (database.select(database.employees)..where(
             (row) =>
@@ -99,6 +53,7 @@ final class OperationsRepository {
           .watch()
           .map(_toWorkers);
 
+  @override
   Stream<List<WorkerOption>> watchTeamWorkers(String teamId) =>
       (database.select(database.employees)..where(
             (row) =>
@@ -107,6 +62,7 @@ final class OperationsRepository {
           .watch()
           .map(_toWorkers);
 
+  @override
   Future<HousingCheckUndo> saveHousingCheck({
     required String date,
     required EntityOption housing,
@@ -153,6 +109,7 @@ final class OperationsRepository {
     );
   }
 
+  @override
   Future<void> undoHousingCheck(HousingCheckUndo undo) => events.appendBatch([
     EventDraft(
       type: EventType.housingCheck,
@@ -172,6 +129,7 @@ final class OperationsRepository {
       ),
   ]);
 
+  @override
   Future<SiteAttendanceUndo> saveSiteAttendance({
     required String date,
     required EntityOption team,
@@ -217,6 +175,7 @@ final class OperationsRepository {
     );
   }
 
+  @override
   Future<void> undoSiteAttendance(SiteAttendanceUndo undo) =>
       events.appendBatch([
         for (final id in {...undo.previousPresent, ...undo.currentPresent})

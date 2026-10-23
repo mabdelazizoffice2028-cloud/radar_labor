@@ -1,16 +1,16 @@
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:radar_labor/core/time/business_date.dart';
-import 'package:radar_labor/core/time/clock.dart';
-import 'package:radar_labor/features/operations/data/operations_repository.dart';
+import 'package:radar_labor/features/operations/domain/operations_models.dart';
+import 'package:radar_labor/features/operations/presentation/state/operations_controller.dart';
 
 final class SiteAttendanceScreen extends StatefulWidget {
   const SiteAttendanceScreen({
-    required this.repository,
+    required this.controller,
     required this.arabic,
     super.key,
   });
 
-  final OperationsRepository repository;
+  final OperationsController controller;
   final bool arabic;
 
   @override
@@ -26,7 +26,7 @@ final class _SiteAttendanceScreenState extends State<SiteAttendanceScreen> {
 
   @override
   Widget build(BuildContext context) => StreamBuilder<List<EntityOption>>(
-    stream: widget.repository.watchTeams(),
+    stream: widget.controller.watchTeams(),
     builder: (context, teamState) {
       final teams = teamState.data ?? const <EntityOption>[];
       final selected = teams.where((row) => row.id == _teamId).firstOrNull;
@@ -44,9 +44,7 @@ final class _SiteAttendanceScreenState extends State<SiteAttendanceScreen> {
                   .map(
                     (row) => DropdownMenuItem(
                       value: row.id,
-                      child: Text(
-                        widget.arabic ? row.nameAr : row.nameEn ?? row.nameAr,
-                      ),
+                      child: Text(row.displayName(arabic: widget.arabic)),
                     ),
                   )
                   .toList(),
@@ -64,7 +62,7 @@ final class _SiteAttendanceScreenState extends State<SiteAttendanceScreen> {
                     ),
                   )
                 : StreamBuilder<List<WorkerOption>>(
-                    stream: widget.repository.watchTeamWorkers(selected.id),
+                    stream: widget.controller.watchTeamWorkers(selected.id),
                     builder: (context, state) {
                       final workers = state.data ?? const <WorkerOption>[];
                       if (workers.isEmpty) {
@@ -96,9 +94,7 @@ final class _SiteAttendanceScreenState extends State<SiteAttendanceScreen> {
                                 }
                               }),
                               title: Text(
-                                widget.arabic
-                                    ? worker.nameAr
-                                    : worker.nameEn ?? worker.nameAr,
+                                worker.displayName(arabic: widget.arabic),
                               ),
                               subtitle: Text(
                                 '${t('الكود', 'Code')}: ${worker.code}',
@@ -154,27 +150,24 @@ final class _SiteAttendanceScreenState extends State<SiteAttendanceScreen> {
   );
 
   Future<void> _save(EntityOption team) async {
-    final workers = await widget.repository.watchTeamWorkers(team.id).first;
-    final names = workers
-        .where((worker) => _present.contains(worker.id))
-        .map(
-          (worker) =>
-              '${widget.arabic ? worker.nameAr : worker.nameEn ?? worker.nameAr} (${worker.code})',
-        )
-        .toList();
+    final PreparedSiteAttendance attendance;
+    try {
+      attendance = await widget.controller.prepareSiteAttendance(
+        team: team,
+        presentIds: Set.unmodifiable(_present),
+        arabic: widget.arabic,
+      );
+    } on Exception {
+      _showSaveError();
+      return;
+    }
+    final summary = attendance.summary;
     if (!mounted) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(t('تأكيد تسجيل الموقع', 'Confirm site attendance')),
-        content: Text(
-          names.isEmpty
-              ? t(
-                  'لم تحدد عمالًا. هل تسجل الفريق بصفر حضور؟',
-                  'No workers selected. Submit zero present?',
-                )
-              : names.join('\n'),
-        ),
+        content: Text(summary.confirmationText),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -190,11 +183,7 @@ final class _SiteAttendanceScreenState extends State<SiteAttendanceScreen> {
     if (confirmed != true || !mounted) return;
     setState(() => _saving = true);
     try {
-      final undo = await widget.repository.saveSiteAttendance(
-        date: businessDateFor(const SystemClock().nowUtc()),
-        team: team,
-        presentIds: _present,
-      );
+      final undo = await widget.controller.saveSiteAttendance(attendance);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -204,26 +193,52 @@ final class _SiteAttendanceScreenState extends State<SiteAttendanceScreen> {
           duration: const Duration(seconds: 8),
           action: SnackBarAction(
             label: t('تراجع', 'Undo'),
-            onPressed: () => widget.repository.undoSiteAttendance(undo),
+            onPressed: () => widget.controller.undoSiteAttendance(undo),
           ),
         ),
       );
-      setState(() => _present.clear());
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              t(
-                'تعذر حفظ التسجيل. أعد المحاولة.',
-                'Could not save attendance. Please retry.',
-              ),
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(t('رسالة واتساب للحاضرين', 'WhatsApp message')),
+          content: SelectableText(summary.messageText),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await Clipboard.setData(
+                  ClipboardData(text: summary.messageText),
+                );
+                if (context.mounted) Navigator.pop(context);
+              },
+              child: Text(t('نسخ النص', 'Copy text')),
             ),
-          ),
-        );
-      }
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(t('إغلاق', 'Close')),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      setState(() => _present.clear());
+    } on Exception {
+      _showSaveError();
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  void _showSaveError() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          t(
+            'تعذر حفظ التسجيل. أعد المحاولة.',
+            'Could not save attendance. Please retry.',
+          ),
+        ),
+      ),
+    );
   }
 }
