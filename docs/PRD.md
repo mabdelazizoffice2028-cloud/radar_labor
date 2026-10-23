@@ -629,3 +629,14 @@ where (employees.full_name_ar, employees.category, employees.job_title)
 **بلا مكتبة عمداً (الأدوات الجاهزة تكفي):** نسخ نص الواتساب عبر `Clipboard` المضمّنة؛ الحسابات الثقيلة عبر `Isolate.run`؛ التواريخ بلا حزمة مناطق زمنية؛ النماذج بـ sealed classes في Dart بدل freezed.
 
 **مؤجّلة:** workmanager وexcel (V1.1).
+# Owner scope amendment — 2026-10-23
+
+The owner now requires the current app to be usable entirely offline with local
+data and bundled assets. Do not initialize Supabase or require internet during
+setup or use. The originally specified cloud synchronization slice is deferred;
+replace it for this delivery with robust local persistence and complete local
+workflows. The owner also requires Arabic and English UI with font and icon
+assets available inside the installed app. This amendment takes precedence over
+cloud-runtime or single-language expectations below; preserve the original data
+and status rules unless this note explicitly changes them.
+

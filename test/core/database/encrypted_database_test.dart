@@ -63,7 +63,7 @@ void main() {
     expect(() => applyEncryption(raw, longKey), throwsArgumentError);
   });
 
-  test('schemaVersion_isOne_onFreshDatabase', () async {
+  test('schemaVersion_isTwo_onFreshDatabase', () async {
     final db = _open(file, _keyA);
     addTearDown(db.close);
     final row = await db.customSelect('PRAGMA user_version').getSingle();
@@ -81,10 +81,41 @@ void main() {
           "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'settings'",
         )
         .get();
+    final eventTable = await db
+        .customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'events'",
+        )
+        .get();
 
     expect(cipherRows, isNotEmpty);
     expect(version.read<int>('user_version'), DatabaseConstants.schemaVersion);
     expect(settingsTable, hasLength(1));
+    expect(eventTable, hasLength(1));
+  });
+
+  test('v1Database_migratesToV2AndPreservesSettings', () async {
+    final raw = sqlite3.open(file.path);
+    applyEncryption(raw, _keyA);
+    raw.execute(
+      'CREATE TABLE settings (key TEXT NOT NULL PRIMARY KEY, value TEXT NOT NULL)',
+    );
+    raw.execute("INSERT INTO settings (key, value) VALUES ('language', 'ar')");
+    raw.execute('PRAGMA user_version = 1');
+    raw.close();
+
+    final db = await _openInBackground(file, _keyA);
+    addTearDown(db.close);
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    final setting = await db.select(db.settings).getSingle();
+    final eventsTable = await db
+        .customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'events'",
+        )
+        .get();
+
+    expect(version.read<int>('user_version'), DatabaseConstants.schemaVersion);
+    expect(setting.value, 'ar');
+    expect(eventsTable, hasLength(1));
   });
 
   test('storedData_isNotPlaintextOnDisk_andSurvivesReopen', () async {

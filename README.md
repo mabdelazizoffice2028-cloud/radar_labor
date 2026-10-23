@@ -2,14 +2,14 @@
 
 # رادار ليبور · Radar Labor
 
-**أساس تطبيق أندرويد عربي لمتابعة حالة العمال اليومية، يعمل دون اتصال أولًا ويحفظ بياناته محليًا بتشفير.**
-
-[العربية](#العربية) · [English](#english) · [متطلبات المشروع](docs/PRD.md) · [التصميم](docs/DESIGN.md) · [سجل القرارات](docs/DECISIONS.md) · [تعليمات التطوير](CLAUDE.md) · [تقرير التنفيذ](docs/PROJECT_REPORT.md)
+**تطبيق ميداني عربي/إنجليزي لتسجيل حالة العمال اليومية. يعمل دون اتصال، ويخزن بياناته محليًا في قاعدة مشفّرة.**
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.47.7-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13.5-0175C2?logo=dart&logoColor=white)
-![Platform](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)
-![Stage](https://img.shields.io/badge/stage-S0%20Foundation-1D4ED8)
+![Android](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)
+![Mode](https://img.shields.io/badge/Runtime-Local%20%26%20Offline-15803D)
+
+[العربية](#العربية) · [English](#english) · [الوثائق](docs/README.md)
 
 </div>
 
@@ -17,133 +17,99 @@
 
 ## العربية
 
-### ما هو المشروع؟
+### عن التطبيق
 
-«رادار ليبور» تطبيق أندرويد موجّه للإدارة والمشرفين لتوضيح حالة العامل خلال يوم العمل: في الموقع، في السكن فقط، غائب يحتاج إلى متابعة، لديه تبرير، أو لم تُسجّل حالته بعد. صُمّم للاستخدام الميداني بالعربية، مع مزامنة تتحمل انقطاع الإنترنت.
+«رادار ليبور» أداة للمشرفين والإدارة لمتابعة حالة العمال اليومية من الهاتف. الواجهة عربية افتراضيًا مع خيار الإنجليزية، وتدعم RTL. التطبيق لا يحتاج إلى الإنترنت أثناء التشغيل: قاعدة البيانات مشفّرة ومحلية، وخط Cairo وأيقونات Material مضمّنان مع التطبيق. لا توجد خدمة سحابية أو تحميل أصول عند التشغيل.
 
-**هذا المستودع في مرحلة الأساس التقني S0.** يحتوي على تهيئة Flutter وقاعدة بيانات محلية مشفّرة واختباراتها. شاشات العمل والعمال والمزامنة ولوحة الإدارة لم تُنفّذ بعد؛ لذلك لا يمثّل التطبيق الحالي إصدارًا تشغيليًا.
+هذا النظام لتسجيل الحالة اليومية؛ ليس جهاز حضور وانصراف، ولا نظام رواتب، ولا أداة تتبّع GPS.
 
-> هذا النظام لتسجيل الحالة اليومية، وليس جهاز حضور وانصراف أو نظام رواتب أو تتبّع GPS.
+### ما يعمل حاليًا
 
-### حالة التنفيذ
+- شاشة تشغيل واضحة بحالات التحميل والخطأ وإعادة المحاولة؛ لا يبدأ التطبيق بواجهة بيضاء صامتة.
+- لوحة رئيسية تعرض التاريخ التشغيلي وعدد العمال النشطين.
+- إنشاء الفرق ومساكن العمال بأسماء عربية وإنجليزية.
+- تسجيل العامل برقم فريد واسمين عربي/إنجليزي وإسناده إلى فريق وسكن.
+- البحث في قائمة العمال وتسجيل حدث «في الموقع» أو «غياب في السكن» للعامل المسند؛ تُرفض الحالة عند غياب الإسناد المطلوب.
+- سجل أحداث محلي متزايد التسلسل، وتاريخ يوم العمل وفق توقيت الرياض والحد اليومي المحدد.
+- حفظ اللغة والتفضيلات محليًا، وتخزين مفتاح التشفير في التخزين الآمن للنظام.
 
-| الجزء | الحالة | التفاصيل |
-| --- | --- | --- |
-| S0 — الأساس | مكتمل | بنية Flutter، Drift وSQLite المشفّرة، تفعيل cipher، مخطط قاعدة الإصدار 1، واختبارات فتح القاعدة والترحيل |
-| S1 — الأحداث ومحرك الحالة | لم يبدأ | مستودع الأحداث، تاريخ العمل بتوقيت الرياض، ومحرك الحالات واختباراته |
-| S2 — المزامنة | لم يبدأ | طابور الإرسال، التعامل مع التكرار والرفض والانقطاع، وSupabase |
-| S3–S7 — التطبيق والتجربة | لم تبدأ | الدخول والبيانات المرجعية والشاشات والإدارة والتجربة الميدانية |
+### قيود النسخة الحالية
 
-### التقنية
+هذه نسخة تطبيق محلي أولية، وليست اكتمالًا لكل النطاق التشغيلي في PRD. لا تشمل بعد شاشة تسجيل الدخول، تعديل السجلات المرجعية، إدارة فترات العمل، التبريرات والحسم، عروض تفاصيل الحالات الكاملة، تصدير التقارير، أو المزامنة السحابية. المزامنة مؤجلة بقرار المالك إلى مرحلة لاحقة. راجع [خارطة الطريق](docs/ROADMAP.md) و[سجل العيوب](docs/BUGS.md) للحالة الدقيقة.
 
-- Flutter وDart مع دعم RTL وواجهات عربية.
-- Drift فوق SQLite3MultipleCiphers كقاعدة محلية مشفّرة.
-- Riverpod لإدارة الحالة، مع فصل طبقات العرض والمنطق والبيانات.
-- Supabase للمزامنة المستقبلية؛ غير موصول في مرحلة S0.
-- تخزين آمن للمفتاح والمصادقة الحيوية ضمن نطاق الخطة؛ لم يُربط تدفق الدخول بعد.
+### البناء والتشغيل
 
-### بدء العمل
+المتطلبات: Flutter 3.47.x، Dart 3.13.x، Android SDK وJDK 17.
 
-يتطلب المشروع Flutter 3.47.x وDart 3.13.x وAndroid SDK وJDK 17. في بيئة التطوير المتصلة، احصل على الحزم أولًا، ثم شغّل فحوصات التنسيق والتحليل والاختبارات قبل بناء Android.
-
-في بيئة صاحب المشروع المعزولة عن الإنترنت، تعتمد SQLite الأصلية على ملفات موجودة في كاش Pub وملفات المشروع المولّدة. لا تحذف كاشات البيئة ولا مجلد `.dart_tool` عند العمل دون اتصال؛ راجع [تقرير التنفيذ](docs/PROJECT_REPORT.md) وملف قرارات المشروع قبل تعديل إعداداتها.
-
-### التحقق من الأساس
-
-تم التحقق محليًا في بيئة المشروع من التنسيق، والتحليل الثابت، والاختبارات، وبناء APK للتطوير والإصدار. اجتازت الاختبارات الخمسة عشر في مرحلة S0. بناء الإصدار المحلي موقّع بمفتاح تصحيح لأغراض التحقق، **ولا يصلح للنشر في المتجر**.
-
-تشمل اختبارات قاعدة البيانات تفعيل cipher، ومخطط الإصدار 1، وإنشاء جدول الإعدادات، ورفض المفتاح غير الصحيح، وحفظ قاعدة مشفّرة وإعادة فتحها.
-
-### بنية المستودع
-
-```text
-lib/
-  app/                    تهيئة التطبيق
-  core/
-    constants/            ثوابت المشروع
-    database/             Drift، التشفير، الفتح والترحيلات
-    errors/               أنواع الإخفاقات
-    time/                 ساعة قابلة للحقن
-docs/
-  PRD.md                  متطلبات المنتج ومعايير القبول
-  DESIGN.md               مواصفات التصميم والواجهة
-  DECISIONS.md            القرارات المقفلة وقرارات التنفيذ
-  PROJECT_REPORT.md       تقرير الإنجاز والأخطاء والحلول
-test/                     اختبارات معمارية وقاعدة البيانات والوقت
+```powershell
+flutter pub get --offline
+flutter analyze
+flutter test
+flutter build apk --release
 ```
 
-### الأمان والبيانات
+ينتج APK الإصدار في `build/app/outputs/flutter-apk/app-release.apk`. يوقّع قالب Flutter المحلي نسخة التحقق بمفتاح debug؛ لا تنشرها على المتجر قبل إعداد معرّف تطبيق نهائي ومفتاح توقيع إنتاجي. في جهاز التطوير غير المتصل، يجب أن تكون الحزم وأدوات Android المطلوبة موجودة مسبقًا في الكاش. لا تحذف `.dart_tool` أو كاش Flutter/Pub/Gradle ولا تشغّل `flutter clean` في بيئة المالك دون حاجة مثبتة.
 
-- قاعدة البيانات المحلية مشفّرة، ويُرفض فتحها إن لم تتوفر واجهة cipher أو كان المفتاح خاطئًا.
-- تعطيل النسخ الاحتياطي لتطبيق Android.
-- لا تضع مفاتيح Supabase أو كلمات مرور أو مفاتيح توقيع في المستودع. إعدادات الاتصال المستقبلية تُمرّر وقت البناء؛ مفتاح `service_role` لا يدخل التطبيق مطلقًا.
-- لا تُخزّن أرقام هوية أو إقامة العامل على أجهزة المشرفين وفق متطلبات المنتج.
-- لم يُحسم بعد معرّف التطبيق النهائي أو إعداد التوقيع الإنتاجي.
+### المستودع والوثائق
 
-### وثائق المشروع
+- [مركز الوثائق](docs/README.md): نقطة البدء لكل موديل أو مساهم.
+- [متطلبات المنتج](docs/PRD.md) · [التصميم](docs/DESIGN.md) · [القرارات](docs/DECISIONS.md)
+- [خارطة الطريق](docs/ROADMAP.md) · [سجل العمل وتسليم النماذج](docs/WORKLOG.md) · [سجل الأخطاء](docs/BUGS.md)
+- [تقرير التنفيذ](docs/PROJECT_REPORT.md) · [تعليمات المساهمة للموديلات](CLAUDE.md)
 
-- [وثيقة متطلبات المنتج](docs/PRD.md)
-- [مواصفات التصميم](docs/DESIGN.md)
-- [قرارات المشروع](docs/DECISIONS.md)
-- [تعليمات التطوير](CLAUDE.md)
-- [تقرير التنفيذ والمشكلات](docs/PROJECT_REPORT.md)
+### الخصوصية والترخيص
+
+قاعدة البيانات المحلية مشفرة بمفتاح عشوائي محفوظ في التخزين الآمن. النسخ الاحتياطي لتطبيق Android معطّل. لا تضف مفاتيح أو بيانات حقيقية أو أسرار توقيع للمستودع. الخط Cairo مرخّص بـ SIL Open Font License؛ نص الترخيص والإسناد موجودان بجانب ملف الخط في `assets/fonts/`.
 
 ---
 
 ## English
 
-### Overview
+### About
 
-Radar Labor is an Arabic-first, offline-first Android app planned to help supervisors and management record each worker's daily status: on site, at housing only, unknown, justified, or not recorded. It is a daily status tool, not a time clock, payroll system, or GPS tracker.
+Radar Labor is an Arabic/English field app for recording workers' daily status. Arabic is the default and the layout supports RTL. Runtime operation is local and offline: records live in an encrypted on-device database, while the Cairo font and Material icons ship with the app. No cloud service or remote asset is loaded at runtime.
 
-**The repository currently contains S0, the engineering foundation only.** It includes the Flutter setup, encrypted local database, schema version 1, and foundation tests. Worker workflows, screens, sync, and the management dashboard have not been implemented. This is not an operational release.
+This is a daily status tool, not a time clock, payroll system, or GPS tracker.
 
-### Project status
+### Available now
 
-| Milestone | Status | Scope |
-| --- | --- | --- |
-| S0 — Foundation | Complete | Flutter base, Drift with encrypted SQLite, cipher verification, schema v1 and tests |
-| S1 — Events and status engine | Not started | Event repository, Riyadh business date and pure status engine |
-| S2 — Synchronization | Not started | Outbox, retry and conflict handling, Supabase integration |
-| S3–S7 — Product workflows | Not started | Sign-in, reference data, field screens, dashboard and pilot |
+- Visible loading, startup failure, and retry states instead of an empty white screen.
+- A dashboard with the Riyadh business date and active worker count.
+- Create teams and housing locations with Arabic and English names.
+- Add workers with a unique code, bilingual names, team, and housing assignment.
+- Search workers and record on-site or housing-absence events; required assignments are validated.
+- Locally sequenced event records and Riyadh business-day calculation.
+- Persisted language preference and a database key stored with the platform secure storage.
 
-### Technology
+### Current scope
 
-- Flutter 3.47.x and Dart 3.13.x.
-- Drift with SQLite3MultipleCiphers for encrypted local storage.
-- Riverpod for state management and a layered architecture.
-- Supabase is planned for synchronization; it is not connected in S0.
+This is an early local app build, not the complete operational scope in the PRD. Sign-in, editing reference data, employment-period management, justifications/resolutions, full status-detail views, report export, and cloud synchronization remain outstanding. Cloud synchronization is deferred by the owner. See the [roadmap](docs/ROADMAP.md) and [defect register](docs/BUGS.md).
 
-### Development
+### Build
 
-Use Flutter 3.47.x, Dart 3.13.x, Android SDK and JDK 17. Resolve dependencies in a connected environment, then run formatting, static analysis and tests before building Android.
+Requirements: Flutter 3.47.x, Dart 3.13.x, Android SDK, and JDK 17.
 
-The owner's offline workstation relies on cached Pub packages and generated SQLite native assets. Avoid deleting those caches or `.dart_tool` when working offline. See [the implementation report](docs/PROJECT_REPORT.md) and [decision log](docs/DECISIONS.md) before changing the setup.
+```powershell
+flutter pub get --offline
+flutter analyze
+flutter test
+flutter build apk --release
+```
 
-### Verification and release status
-
-Formatting, static analysis, all 15 foundation tests, and debug and release APK builds passed locally. The release build uses a debug signing key for verification and is **not suitable for store distribution**. The final Android application ID and production signing configuration remain undecided.
-
-### Security notes
-
-- Database startup fails closed if encryption is unavailable or the key is rejected.
-- Android backup is disabled.
-- Never commit Supabase credentials, passwords, or signing keys. The Supabase `service_role` key must never be shipped in the app.
-- Worker identity numbers are excluded from supervisor devices by the product requirements.
+The release APK is written to `build/app/outputs/flutter-apk/app-release.apk`. The local Flutter template signs verification builds with its debug key; configure a final application ID and production signing key before store distribution. Offline work requires dependencies and Android tools to be cached in advance. Preserve `.dart_tool` and Flutter/Pub/Gradle caches; do not run `flutter clean` without a demonstrated need.
 
 ### Project documents
 
-- [Product requirements](docs/PRD.md)
-- [Design specification](docs/DESIGN.md)
-- [Decision log](docs/DECISIONS.md)
-- [Development instructions](CLAUDE.md)
-- [Implementation report](docs/PROJECT_REPORT.md)
+Start with the [documentation index](docs/README.md), then consult the [PRD](docs/PRD.md), [design specification](docs/DESIGN.md), [decision log](docs/DECISIONS.md), [roadmap](docs/ROADMAP.md), [model handoff log](docs/WORKLOG.md), [defect register](docs/BUGS.md), and [implementation report](docs/PROJECT_REPORT.md).
+
+### Privacy and font license
+
+The local database is encrypted with a random key held in platform secure storage. Android backup is disabled. Never commit real worker records, credentials, or signing secrets. Cairo is distributed under the SIL Open Font License; the full license and attribution are in `assets/fonts/`.
 
 ---
 
-## Repository information
+## Repository metadata
 
-- **Suggested description:** Arabic-first, offline-first Flutter Android app for recording daily worker status, backed by encrypted local storage.
-- **Suggested topics:** `flutter`, `dart`, `android`, `offline-first`, `sqlite`, `drift`, `supabase`, `arabic`, `rtl`.
-- **Visibility recommendation:** private until the owner confirms that product requirements and operational details may be public.
-- No license has been selected; all rights remain with the project owner unless a license is added.
+- Suggested description: **Arabic/English offline Flutter app for daily worker status, with encrypted local storage.**
+- Suggested topics: `flutter`, `dart`, `android`, `offline-first`, `sqlite`, `drift`, `arabic`, `rtl`.
+- No project license has been selected. All rights remain with the project owner unless a license is added.

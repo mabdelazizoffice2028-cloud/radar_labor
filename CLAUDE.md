@@ -17,6 +17,8 @@ You are the sole implementer. The owner is a software architect who reviews your
 
 **Precedence on conflict:** `DECISIONS.md` > `docs/PRD.md` Part 1 > PRD Appendix > this file's technical defaults. This file always wins on *process and code quality*. Items marked `[مقترح]` in the Appendix are proposals: treat them as accepted unless `DECISIONS.md` overrides them.
 
+**Current owner overrides (2026-10-23):** complete the requested V1 as a local-first, fully usable offline app. Do not initialize or require Supabase/network at runtime; cloud sync is deferred. Support Arabic and English, bundle fonts/assets, and update `docs/WORKLOG.md`, `docs/BUGS.md`, `docs/ROADMAP.md`, and `docs/NEXT_AGENT.md` at every handoff so another model can continue safely.
+
 Never paste or re-read the whole PRD. Read the sections for the current slice, and grep for the rest.
 
 ---
