@@ -35,21 +35,38 @@ open it manually or paste it into that tool's project instructions.
   feedback is documented as B-009. Do not change authentication behavior unless
   the owner requests it or reports a new failure.
 
-## Engineering rules
+## Engineering rules & guidelines
 
-- Keep business rules in `domain`, persistence and file access in `data`,
-  orchestration in controllers/state, and rendering/input in `presentation`.
-  Widgets must not own business logic or access database/repository internals.
-- Follow existing feature boundaries, naming, localization, and test patterns.
-  Inspect architecture tests before introducing dependencies between layers.
-- Make the smallest coherent change for the requested outcome. Do not silently
-  expand product scope, alter stored data semantics, or change credentials.
-- Never run `flutter clean`, delete `.dart_tool`, remove Flutter/Pub/Gradle
-  caches, or delete files under `work/`; the Windows workstation depends on
-  these local assets for offline builds.
-- Never run destructive Git commands (`reset --hard`, `clean`, force push,
-  history rewrite) or replace/merge branches without explicit owner direction.
+### 1. Separation of Concerns (فصل المنطق عن الواجهة)
+- UI (Widgets) must be "dumb" and strictly focused on presentation.
+- Zero business logic, database queries, or state modifications inside the widget's `build` method.
+- All business logic, data processing, and state management must reside in Riverpod providers, controllers, or repositories.
+- Keep business rules in `domain`, persistence and file access in `data`, orchestration in controllers/state, and rendering/input in `presentation`. Widgets must not own business logic or access database/repository internals.
+
+### 2. File Size & Modularization (حجم الملفات والهيكلة)
+- Strict Limit: No single file (`.dart`) is allowed to exceed **300 lines of code** (excluding generated files like `*.g.dart`).
+- If a file grows past 300 lines, it must be proactively refactored and split into smaller, single-responsibility files.
+- Keep widget trees shallow; extract complex or reusable UI components into separate widgets.
+
+### 3. Clean Code & Best Practices (الكود النظيف)
+- **No Magic Numbers/Strings:** All constants, default values, paths, and fixed keys must be moved to a dedicated `core/constants` file or localized.
+- **Error Handling:** Empty `catch` blocks (`catch (_) {}` or `on Exception {}`) are strictly forbidden. Every error must be properly typed, caught, logged safely (without sensitive data like passwords or hashes), and surfaced via localized user messages.
+- **Null Safety:** Avoid unsafe assertions (`!`) in `fromJson` or state parsing. Handle nulls gracefully.
+
+### 4. Architecture & State Management (التعامل مع الحالة والبيانات)
+- State management must rely exclusively on **Riverpod**.
+- Avoid calling `setState` for complex business logic. `setState` is strictly for local, transient UI animations or ephemeral widget state only.
+- Database operations (Drift/SQLite) must be fully atomic, handled via proper transactions, and completely decoupled from UI widgets.
+
+### 5. Execution Discipline & Safety (سلوك الوكيل أثناء التنفيذ)
+- Do not modify database schemas, migration versions, or `pubspec.yaml` dependencies unless explicitly instructed.
+- Always write clean, self-documented code with clear naming conventions in English, while UI text uses the appropriate localization (RTL/Arabic support).
+- Follow existing feature boundaries, naming, localization, and test patterns. Inspect architecture tests before introducing dependencies between layers.
+- Make the smallest coherent change for the requested outcome. Do not silently expand product scope, alter stored data semantics, or change credentials.
+- Never run `flutter clean`, delete `.dart_tool`, remove Flutter/Pub/Gradle caches, or delete files under `work/`; the Windows workstation depends on these local assets for offline builds.
+- Never run destructive Git commands (`reset --hard`, `clean`, force push, history rewrite) or replace/merge branches without explicit owner direction.
 - Do not modify the app or rebuild APK when the task asks only for documentation.
+- After generating or modifying any code, ensure it aligns strictly with these rules without exceptions.
 
 ## Verification and handoff
 

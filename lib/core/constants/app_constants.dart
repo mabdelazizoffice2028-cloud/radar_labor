@@ -3,7 +3,7 @@ abstract final class DatabaseConstants {
   static const String fileName = 'radar_labor.sqlite';
   static const int keyByteLength = 32;
   static const String keyStorageName = 'radar_labor.db_key';
-  static const int schemaVersion = 3;
+  static const int schemaVersion = 4;
 }
 
 abstract final class TimeConstants {
@@ -14,4 +14,24 @@ abstract final class TimeConstants {
 
 abstract final class SettingsDefaults {
   static const int slaMinutes = 120;
+}
+
+abstract final class AuthConstants {
+  static const String temporaryPassword = '123456';
+  static const int minPasswordLength = 8;
+  static const int maxFailedAttempts = 5;
+  static const int saltByteLength = 16;
+  static const int argon2Memory = 19456;
+  static const int argon2Iterations = 2;
+  static const int argon2Parallelism = 1;
+  static const int hashByteLength = 32;
+
+  /// Progressive lockout delays in seconds based on failed attempts count.
+  static const List<Duration> lockoutDelays = [
+    Duration(seconds: 5),
+    Duration(seconds: 15),
+    Duration(seconds: 30),
+    Duration(minutes: 1),
+    Duration(minutes: 5),
+  ];
 }

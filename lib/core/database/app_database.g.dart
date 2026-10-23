@@ -2880,6 +2880,1032 @@ class EventsCompanion extends UpdateCompanion<Event> {
   }
 }
 
+class $AppUsersTable extends AppUsers with TableInfo<$AppUsersTable, AppUser> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AppUsersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _employeeUidMeta = const VerificationMeta(
+    'employeeUid',
+  );
+  @override
+  late final GeneratedColumn<String> employeeUid = GeneratedColumn<String>(
+    'employee_uid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _displayNameMeta = const VerificationMeta(
+    'displayName',
+  );
+  @override
+  late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
+    'display_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _roleMeta = const VerificationMeta('role');
+  @override
+  late final GeneratedColumn<String> role = GeneratedColumn<String>(
+    'role',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _activeMeta = const VerificationMeta('active');
+  @override
+  late final GeneratedColumn<bool> active = GeneratedColumn<bool>(
+    'active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _pwHashMeta = const VerificationMeta('pwHash');
+  @override
+  late final GeneratedColumn<String> pwHash = GeneratedColumn<String>(
+    'pw_hash',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pwSaltMeta = const VerificationMeta('pwSalt');
+  @override
+  late final GeneratedColumn<String> pwSalt = GeneratedColumn<String>(
+    'pw_salt',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kdfParamsMeta = const VerificationMeta(
+    'kdfParams',
+  );
+  @override
+  late final GeneratedColumn<String> kdfParams = GeneratedColumn<String>(
+    'kdf_params',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mustChangeMeta = const VerificationMeta(
+    'mustChange',
+  );
+  @override
+  late final GeneratedColumn<bool> mustChange = GeneratedColumn<bool>(
+    'must_change',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("must_change" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _failedAttemptsMeta = const VerificationMeta(
+    'failedAttempts',
+  );
+  @override
+  late final GeneratedColumn<int> failedAttempts = GeneratedColumn<int>(
+    'failed_attempts',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lockedUntilMeta = const VerificationMeta(
+    'lockedUntil',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lockedUntil = GeneratedColumn<DateTime>(
+    'locked_until',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    employeeUid,
+    displayName,
+    role,
+    active,
+    pwHash,
+    pwSalt,
+    kdfParams,
+    mustChange,
+    failedAttempts,
+    lockedUntil,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'app_users';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AppUser> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('employee_uid')) {
+      context.handle(
+        _employeeUidMeta,
+        employeeUid.isAcceptableOrUnknown(
+          data['employee_uid']!,
+          _employeeUidMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_employeeUidMeta);
+    }
+    if (data.containsKey('display_name')) {
+      context.handle(
+        _displayNameMeta,
+        displayName.isAcceptableOrUnknown(
+          data['display_name']!,
+          _displayNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_displayNameMeta);
+    }
+    if (data.containsKey('role')) {
+      context.handle(
+        _roleMeta,
+        role.isAcceptableOrUnknown(data['role']!, _roleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_roleMeta);
+    }
+    if (data.containsKey('active')) {
+      context.handle(
+        _activeMeta,
+        active.isAcceptableOrUnknown(data['active']!, _activeMeta),
+      );
+    }
+    if (data.containsKey('pw_hash')) {
+      context.handle(
+        _pwHashMeta,
+        pwHash.isAcceptableOrUnknown(data['pw_hash']!, _pwHashMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pwHashMeta);
+    }
+    if (data.containsKey('pw_salt')) {
+      context.handle(
+        _pwSaltMeta,
+        pwSalt.isAcceptableOrUnknown(data['pw_salt']!, _pwSaltMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pwSaltMeta);
+    }
+    if (data.containsKey('kdf_params')) {
+      context.handle(
+        _kdfParamsMeta,
+        kdfParams.isAcceptableOrUnknown(data['kdf_params']!, _kdfParamsMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kdfParamsMeta);
+    }
+    if (data.containsKey('must_change')) {
+      context.handle(
+        _mustChangeMeta,
+        mustChange.isAcceptableOrUnknown(data['must_change']!, _mustChangeMeta),
+      );
+    }
+    if (data.containsKey('failed_attempts')) {
+      context.handle(
+        _failedAttemptsMeta,
+        failedAttempts.isAcceptableOrUnknown(
+          data['failed_attempts']!,
+          _failedAttemptsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('locked_until')) {
+      context.handle(
+        _lockedUntilMeta,
+        lockedUntil.isAcceptableOrUnknown(
+          data['locked_until']!,
+          _lockedUntilMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AppUser map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AppUser(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      employeeUid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}employee_uid'],
+      )!,
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      )!,
+      role: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}role'],
+      )!,
+      active: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}active'],
+      )!,
+      pwHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pw_hash'],
+      )!,
+      pwSalt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pw_salt'],
+      )!,
+      kdfParams: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kdf_params'],
+      )!,
+      mustChange: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}must_change'],
+      )!,
+      failedAttempts: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}failed_attempts'],
+      )!,
+      lockedUntil: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}locked_until'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $AppUsersTable createAlias(String alias) {
+    return $AppUsersTable(attachedDatabase, alias);
+  }
+}
+
+class AppUser extends DataClass implements Insertable<AppUser> {
+  final String id;
+  final String employeeUid;
+  final String displayName;
+  final String role;
+  final bool active;
+  final String pwHash;
+  final String pwSalt;
+  final String kdfParams;
+  final bool mustChange;
+  final int failedAttempts;
+  final DateTime? lockedUntil;
+  final DateTime createdAt;
+  const AppUser({
+    required this.id,
+    required this.employeeUid,
+    required this.displayName,
+    required this.role,
+    required this.active,
+    required this.pwHash,
+    required this.pwSalt,
+    required this.kdfParams,
+    required this.mustChange,
+    required this.failedAttempts,
+    this.lockedUntil,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['employee_uid'] = Variable<String>(employeeUid);
+    map['display_name'] = Variable<String>(displayName);
+    map['role'] = Variable<String>(role);
+    map['active'] = Variable<bool>(active);
+    map['pw_hash'] = Variable<String>(pwHash);
+    map['pw_salt'] = Variable<String>(pwSalt);
+    map['kdf_params'] = Variable<String>(kdfParams);
+    map['must_change'] = Variable<bool>(mustChange);
+    map['failed_attempts'] = Variable<int>(failedAttempts);
+    if (!nullToAbsent || lockedUntil != null) {
+      map['locked_until'] = Variable<DateTime>(lockedUntil);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  AppUsersCompanion toCompanion(bool nullToAbsent) {
+    return AppUsersCompanion(
+      id: Value(id),
+      employeeUid: Value(employeeUid),
+      displayName: Value(displayName),
+      role: Value(role),
+      active: Value(active),
+      pwHash: Value(pwHash),
+      pwSalt: Value(pwSalt),
+      kdfParams: Value(kdfParams),
+      mustChange: Value(mustChange),
+      failedAttempts: Value(failedAttempts),
+      lockedUntil: lockedUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lockedUntil),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory AppUser.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AppUser(
+      id: serializer.fromJson<String>(json['id']),
+      employeeUid: serializer.fromJson<String>(json['employeeUid']),
+      displayName: serializer.fromJson<String>(json['displayName']),
+      role: serializer.fromJson<String>(json['role']),
+      active: serializer.fromJson<bool>(json['active']),
+      pwHash: serializer.fromJson<String>(json['pwHash']),
+      pwSalt: serializer.fromJson<String>(json['pwSalt']),
+      kdfParams: serializer.fromJson<String>(json['kdfParams']),
+      mustChange: serializer.fromJson<bool>(json['mustChange']),
+      failedAttempts: serializer.fromJson<int>(json['failedAttempts']),
+      lockedUntil: serializer.fromJson<DateTime?>(json['lockedUntil']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'employeeUid': serializer.toJson<String>(employeeUid),
+      'displayName': serializer.toJson<String>(displayName),
+      'role': serializer.toJson<String>(role),
+      'active': serializer.toJson<bool>(active),
+      'pwHash': serializer.toJson<String>(pwHash),
+      'pwSalt': serializer.toJson<String>(pwSalt),
+      'kdfParams': serializer.toJson<String>(kdfParams),
+      'mustChange': serializer.toJson<bool>(mustChange),
+      'failedAttempts': serializer.toJson<int>(failedAttempts),
+      'lockedUntil': serializer.toJson<DateTime?>(lockedUntil),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  AppUser copyWith({
+    String? id,
+    String? employeeUid,
+    String? displayName,
+    String? role,
+    bool? active,
+    String? pwHash,
+    String? pwSalt,
+    String? kdfParams,
+    bool? mustChange,
+    int? failedAttempts,
+    Value<DateTime?> lockedUntil = const Value.absent(),
+    DateTime? createdAt,
+  }) => AppUser(
+    id: id ?? this.id,
+    employeeUid: employeeUid ?? this.employeeUid,
+    displayName: displayName ?? this.displayName,
+    role: role ?? this.role,
+    active: active ?? this.active,
+    pwHash: pwHash ?? this.pwHash,
+    pwSalt: pwSalt ?? this.pwSalt,
+    kdfParams: kdfParams ?? this.kdfParams,
+    mustChange: mustChange ?? this.mustChange,
+    failedAttempts: failedAttempts ?? this.failedAttempts,
+    lockedUntil: lockedUntil.present ? lockedUntil.value : this.lockedUntil,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  AppUser copyWithCompanion(AppUsersCompanion data) {
+    return AppUser(
+      id: data.id.present ? data.id.value : this.id,
+      employeeUid: data.employeeUid.present
+          ? data.employeeUid.value
+          : this.employeeUid,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
+      role: data.role.present ? data.role.value : this.role,
+      active: data.active.present ? data.active.value : this.active,
+      pwHash: data.pwHash.present ? data.pwHash.value : this.pwHash,
+      pwSalt: data.pwSalt.present ? data.pwSalt.value : this.pwSalt,
+      kdfParams: data.kdfParams.present ? data.kdfParams.value : this.kdfParams,
+      mustChange: data.mustChange.present
+          ? data.mustChange.value
+          : this.mustChange,
+      failedAttempts: data.failedAttempts.present
+          ? data.failedAttempts.value
+          : this.failedAttempts,
+      lockedUntil: data.lockedUntil.present
+          ? data.lockedUntil.value
+          : this.lockedUntil,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppUser(')
+          ..write('id: $id, ')
+          ..write('employeeUid: $employeeUid, ')
+          ..write('displayName: $displayName, ')
+          ..write('role: $role, ')
+          ..write('active: $active, ')
+          ..write('pwHash: $pwHash, ')
+          ..write('pwSalt: $pwSalt, ')
+          ..write('kdfParams: $kdfParams, ')
+          ..write('mustChange: $mustChange, ')
+          ..write('failedAttempts: $failedAttempts, ')
+          ..write('lockedUntil: $lockedUntil, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    employeeUid,
+    displayName,
+    role,
+    active,
+    pwHash,
+    pwSalt,
+    kdfParams,
+    mustChange,
+    failedAttempts,
+    lockedUntil,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AppUser &&
+          other.id == this.id &&
+          other.employeeUid == this.employeeUid &&
+          other.displayName == this.displayName &&
+          other.role == this.role &&
+          other.active == this.active &&
+          other.pwHash == this.pwHash &&
+          other.pwSalt == this.pwSalt &&
+          other.kdfParams == this.kdfParams &&
+          other.mustChange == this.mustChange &&
+          other.failedAttempts == this.failedAttempts &&
+          other.lockedUntil == this.lockedUntil &&
+          other.createdAt == this.createdAt);
+}
+
+class AppUsersCompanion extends UpdateCompanion<AppUser> {
+  final Value<String> id;
+  final Value<String> employeeUid;
+  final Value<String> displayName;
+  final Value<String> role;
+  final Value<bool> active;
+  final Value<String> pwHash;
+  final Value<String> pwSalt;
+  final Value<String> kdfParams;
+  final Value<bool> mustChange;
+  final Value<int> failedAttempts;
+  final Value<DateTime?> lockedUntil;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const AppUsersCompanion({
+    this.id = const Value.absent(),
+    this.employeeUid = const Value.absent(),
+    this.displayName = const Value.absent(),
+    this.role = const Value.absent(),
+    this.active = const Value.absent(),
+    this.pwHash = const Value.absent(),
+    this.pwSalt = const Value.absent(),
+    this.kdfParams = const Value.absent(),
+    this.mustChange = const Value.absent(),
+    this.failedAttempts = const Value.absent(),
+    this.lockedUntil = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AppUsersCompanion.insert({
+    required String id,
+    required String employeeUid,
+    required String displayName,
+    required String role,
+    this.active = const Value.absent(),
+    required String pwHash,
+    required String pwSalt,
+    required String kdfParams,
+    this.mustChange = const Value.absent(),
+    this.failedAttempts = const Value.absent(),
+    this.lockedUntil = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       employeeUid = Value(employeeUid),
+       displayName = Value(displayName),
+       role = Value(role),
+       pwHash = Value(pwHash),
+       pwSalt = Value(pwSalt),
+       kdfParams = Value(kdfParams),
+       createdAt = Value(createdAt);
+  static Insertable<AppUser> custom({
+    Expression<String>? id,
+    Expression<String>? employeeUid,
+    Expression<String>? displayName,
+    Expression<String>? role,
+    Expression<bool>? active,
+    Expression<String>? pwHash,
+    Expression<String>? pwSalt,
+    Expression<String>? kdfParams,
+    Expression<bool>? mustChange,
+    Expression<int>? failedAttempts,
+    Expression<DateTime>? lockedUntil,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (employeeUid != null) 'employee_uid': employeeUid,
+      if (displayName != null) 'display_name': displayName,
+      if (role != null) 'role': role,
+      if (active != null) 'active': active,
+      if (pwHash != null) 'pw_hash': pwHash,
+      if (pwSalt != null) 'pw_salt': pwSalt,
+      if (kdfParams != null) 'kdf_params': kdfParams,
+      if (mustChange != null) 'must_change': mustChange,
+      if (failedAttempts != null) 'failed_attempts': failedAttempts,
+      if (lockedUntil != null) 'locked_until': lockedUntil,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AppUsersCompanion copyWith({
+    Value<String>? id,
+    Value<String>? employeeUid,
+    Value<String>? displayName,
+    Value<String>? role,
+    Value<bool>? active,
+    Value<String>? pwHash,
+    Value<String>? pwSalt,
+    Value<String>? kdfParams,
+    Value<bool>? mustChange,
+    Value<int>? failedAttempts,
+    Value<DateTime?>? lockedUntil,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return AppUsersCompanion(
+      id: id ?? this.id,
+      employeeUid: employeeUid ?? this.employeeUid,
+      displayName: displayName ?? this.displayName,
+      role: role ?? this.role,
+      active: active ?? this.active,
+      pwHash: pwHash ?? this.pwHash,
+      pwSalt: pwSalt ?? this.pwSalt,
+      kdfParams: kdfParams ?? this.kdfParams,
+      mustChange: mustChange ?? this.mustChange,
+      failedAttempts: failedAttempts ?? this.failedAttempts,
+      lockedUntil: lockedUntil ?? this.lockedUntil,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (employeeUid.present) {
+      map['employee_uid'] = Variable<String>(employeeUid.value);
+    }
+    if (displayName.present) {
+      map['display_name'] = Variable<String>(displayName.value);
+    }
+    if (role.present) {
+      map['role'] = Variable<String>(role.value);
+    }
+    if (active.present) {
+      map['active'] = Variable<bool>(active.value);
+    }
+    if (pwHash.present) {
+      map['pw_hash'] = Variable<String>(pwHash.value);
+    }
+    if (pwSalt.present) {
+      map['pw_salt'] = Variable<String>(pwSalt.value);
+    }
+    if (kdfParams.present) {
+      map['kdf_params'] = Variable<String>(kdfParams.value);
+    }
+    if (mustChange.present) {
+      map['must_change'] = Variable<bool>(mustChange.value);
+    }
+    if (failedAttempts.present) {
+      map['failed_attempts'] = Variable<int>(failedAttempts.value);
+    }
+    if (lockedUntil.present) {
+      map['locked_until'] = Variable<DateTime>(lockedUntil.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppUsersCompanion(')
+          ..write('id: $id, ')
+          ..write('employeeUid: $employeeUid, ')
+          ..write('displayName: $displayName, ')
+          ..write('role: $role, ')
+          ..write('active: $active, ')
+          ..write('pwHash: $pwHash, ')
+          ..write('pwSalt: $pwSalt, ')
+          ..write('kdfParams: $kdfParams, ')
+          ..write('mustChange: $mustChange, ')
+          ..write('failedAttempts: $failedAttempts, ')
+          ..write('lockedUntil: $lockedUntil, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserScopesTable extends UserScopes
+    with TableInfo<$UserScopesTable, UserScope> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserScopesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _scopeTypeMeta = const VerificationMeta(
+    'scopeType',
+  );
+  @override
+  late final GeneratedColumn<String> scopeType = GeneratedColumn<String>(
+    'scope_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _scopeIdMeta = const VerificationMeta(
+    'scopeId',
+  );
+  @override
+  late final GeneratedColumn<String> scopeId = GeneratedColumn<String>(
+    'scope_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, userId, scopeType, scopeId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_scopes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserScope> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('scope_type')) {
+      context.handle(
+        _scopeTypeMeta,
+        scopeType.isAcceptableOrUnknown(data['scope_type']!, _scopeTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_scopeTypeMeta);
+    }
+    if (data.containsKey('scope_id')) {
+      context.handle(
+        _scopeIdMeta,
+        scopeId.isAcceptableOrUnknown(data['scope_id']!, _scopeIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_scopeIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  UserScope map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserScope(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      scopeType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scope_type'],
+      )!,
+      scopeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scope_id'],
+      )!,
+    );
+  }
+
+  @override
+  $UserScopesTable createAlias(String alias) {
+    return $UserScopesTable(attachedDatabase, alias);
+  }
+}
+
+class UserScope extends DataClass implements Insertable<UserScope> {
+  final String id;
+  final String userId;
+  final String scopeType;
+  final String scopeId;
+  const UserScope({
+    required this.id,
+    required this.userId,
+    required this.scopeType,
+    required this.scopeId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['scope_type'] = Variable<String>(scopeType);
+    map['scope_id'] = Variable<String>(scopeId);
+    return map;
+  }
+
+  UserScopesCompanion toCompanion(bool nullToAbsent) {
+    return UserScopesCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      scopeType: Value(scopeType),
+      scopeId: Value(scopeId),
+    );
+  }
+
+  factory UserScope.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserScope(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      scopeType: serializer.fromJson<String>(json['scopeType']),
+      scopeId: serializer.fromJson<String>(json['scopeId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'scopeType': serializer.toJson<String>(scopeType),
+      'scopeId': serializer.toJson<String>(scopeId),
+    };
+  }
+
+  UserScope copyWith({
+    String? id,
+    String? userId,
+    String? scopeType,
+    String? scopeId,
+  }) => UserScope(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    scopeType: scopeType ?? this.scopeType,
+    scopeId: scopeId ?? this.scopeId,
+  );
+  UserScope copyWithCompanion(UserScopesCompanion data) {
+    return UserScope(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      scopeType: data.scopeType.present ? data.scopeType.value : this.scopeType,
+      scopeId: data.scopeId.present ? data.scopeId.value : this.scopeId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserScope(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('scopeType: $scopeType, ')
+          ..write('scopeId: $scopeId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, userId, scopeType, scopeId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserScope &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.scopeType == this.scopeType &&
+          other.scopeId == this.scopeId);
+}
+
+class UserScopesCompanion extends UpdateCompanion<UserScope> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> scopeType;
+  final Value<String> scopeId;
+  final Value<int> rowid;
+  const UserScopesCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.scopeType = const Value.absent(),
+    this.scopeId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserScopesCompanion.insert({
+    required String id,
+    required String userId,
+    required String scopeType,
+    required String scopeId,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       userId = Value(userId),
+       scopeType = Value(scopeType),
+       scopeId = Value(scopeId);
+  static Insertable<UserScope> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? scopeType,
+    Expression<String>? scopeId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (scopeType != null) 'scope_type': scopeType,
+      if (scopeId != null) 'scope_id': scopeId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserScopesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? userId,
+    Value<String>? scopeType,
+    Value<String>? scopeId,
+    Value<int>? rowid,
+  }) {
+    return UserScopesCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      scopeType: scopeType ?? this.scopeType,
+      scopeId: scopeId ?? this.scopeId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (scopeType.present) {
+      map['scope_type'] = Variable<String>(scopeType.value);
+    }
+    if (scopeId.present) {
+      map['scope_id'] = Variable<String>(scopeId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserScopesCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('scopeType: $scopeType, ')
+          ..write('scopeId: $scopeId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2890,6 +3916,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $EmploymentPeriodsTable employmentPeriods =
       $EmploymentPeriodsTable(this);
   late final $EventsTable events = $EventsTable(this);
+  late final $AppUsersTable appUsers = $AppUsersTable(this);
+  late final $UserScopesTable userScopes = $UserScopesTable(this);
   late final Index employeesEmployeeCode = Index(
     'employees_employee_code',
     'CREATE UNIQUE INDEX employees_employee_code ON employees (employee_code COLLATE NOCASE)',
@@ -2925,6 +3953,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     housings,
     employmentPeriods,
     events,
+    appUsers,
+    userScopes,
     employeesEmployeeCode,
     employmentPeriodEmployeeStart,
     eventsDeviceSequenceUnique,
@@ -4653,6 +5683,535 @@ typedef $$EventsTableProcessedTableManager =
       Event,
       PrefetchHooks Function()
     >;
+typedef $$AppUsersTableCreateCompanionBuilder = AppUsersCompanion Function({
+  required String id,
+  required String employeeUid,
+  required String displayName,
+  required String role,
+  Value<bool> active,
+  required String pwHash,
+  required String pwSalt,
+  required String kdfParams,
+  Value<bool> mustChange,
+  Value<int> failedAttempts,
+  Value<DateTime?> lockedUntil,
+  required DateTime createdAt,
+  Value<int> rowid,
+});
+typedef $$AppUsersTableUpdateCompanionBuilder = AppUsersCompanion Function({
+  Value<String> id,
+  Value<String> employeeUid,
+  Value<String> displayName,
+  Value<String> role,
+  Value<bool> active,
+  Value<String> pwHash,
+  Value<String> pwSalt,
+  Value<String> kdfParams,
+  Value<bool> mustChange,
+  Value<int> failedAttempts,
+  Value<DateTime?> lockedUntil,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+
+class $$AppUsersTableFilterComposer
+    extends Composer<_$AppDatabase, $AppUsersTable> {
+  $$AppUsersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get employeeUid => $composableBuilder(
+    column: $table.employeeUid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get role => $composableBuilder(
+    column: $table.role,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get active => $composableBuilder(
+    column: $table.active,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pwHash => $composableBuilder(
+    column: $table.pwHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pwSalt => $composableBuilder(
+    column: $table.pwSalt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kdfParams => $composableBuilder(
+    column: $table.kdfParams,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get mustChange => $composableBuilder(
+    column: $table.mustChange,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get failedAttempts => $composableBuilder(
+    column: $table.failedAttempts,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lockedUntil => $composableBuilder(
+    column: $table.lockedUntil,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AppUsersTableOrderingComposer
+    extends Composer<_$AppDatabase, $AppUsersTable> {
+  $$AppUsersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get employeeUid => $composableBuilder(
+    column: $table.employeeUid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get role => $composableBuilder(
+    column: $table.role,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get active => $composableBuilder(
+    column: $table.active,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pwHash => $composableBuilder(
+    column: $table.pwHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pwSalt => $composableBuilder(
+    column: $table.pwSalt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kdfParams => $composableBuilder(
+    column: $table.kdfParams,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get mustChange => $composableBuilder(
+    column: $table.mustChange,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get failedAttempts => $composableBuilder(
+    column: $table.failedAttempts,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lockedUntil => $composableBuilder(
+    column: $table.lockedUntil,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AppUsersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AppUsersTable> {
+  $$AppUsersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get employeeUid => $composableBuilder(
+    column: $table.employeeUid,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get role =>
+      $composableBuilder(column: $table.role, builder: (column) => column);
+
+  GeneratedColumn<bool> get active =>
+      $composableBuilder(column: $table.active, builder: (column) => column);
+
+  GeneratedColumn<String> get pwHash =>
+      $composableBuilder(column: $table.pwHash, builder: (column) => column);
+
+  GeneratedColumn<String> get pwSalt =>
+      $composableBuilder(column: $table.pwSalt, builder: (column) => column);
+
+  GeneratedColumn<String> get kdfParams =>
+      $composableBuilder(column: $table.kdfParams, builder: (column) => column);
+
+  GeneratedColumn<bool> get mustChange => $composableBuilder(
+    column: $table.mustChange,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get failedAttempts => $composableBuilder(
+    column: $table.failedAttempts,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lockedUntil => $composableBuilder(
+    column: $table.lockedUntil,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$AppUsersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AppUsersTable,
+          AppUser,
+          $$AppUsersTableFilterComposer,
+          $$AppUsersTableOrderingComposer,
+          $$AppUsersTableAnnotationComposer,
+          $$AppUsersTableCreateCompanionBuilder,
+          $$AppUsersTableUpdateCompanionBuilder,
+          (AppUser, BaseReferences<_$AppDatabase, $AppUsersTable, AppUser>),
+          AppUser,
+          PrefetchHooks Function()
+        > {
+  $$AppUsersTableTableManager(_$AppDatabase db, $AppUsersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AppUsersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AppUsersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AppUsersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> employeeUid = const Value.absent(),
+                Value<String> displayName = const Value.absent(),
+                Value<String> role = const Value.absent(),
+                Value<bool> active = const Value.absent(),
+                Value<String> pwHash = const Value.absent(),
+                Value<String> pwSalt = const Value.absent(),
+                Value<String> kdfParams = const Value.absent(),
+                Value<bool> mustChange = const Value.absent(),
+                Value<int> failedAttempts = const Value.absent(),
+                Value<DateTime?> lockedUntil = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AppUsersCompanion(
+                id: id,
+                employeeUid: employeeUid,
+                displayName: displayName,
+                role: role,
+                active: active,
+                pwHash: pwHash,
+                pwSalt: pwSalt,
+                kdfParams: kdfParams,
+                mustChange: mustChange,
+                failedAttempts: failedAttempts,
+                lockedUntil: lockedUntil,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String employeeUid,
+                required String displayName,
+                required String role,
+                Value<bool> active = const Value.absent(),
+                required String pwHash,
+                required String pwSalt,
+                required String kdfParams,
+                Value<bool> mustChange = const Value.absent(),
+                Value<int> failedAttempts = const Value.absent(),
+                Value<DateTime?> lockedUntil = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => AppUsersCompanion.insert(
+                id: id,
+                employeeUid: employeeUid,
+                displayName: displayName,
+                role: role,
+                active: active,
+                pwHash: pwHash,
+                pwSalt: pwSalt,
+                kdfParams: kdfParams,
+                mustChange: mustChange,
+                failedAttempts: failedAttempts,
+                lockedUntil: lockedUntil,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AppUsersTable, AppUser>(table),
+                  BaseReferences<_$AppDatabase, $AppUsersTable, AppUser>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AppUsersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AppUsersTable,
+      AppUser,
+      $$AppUsersTableFilterComposer,
+      $$AppUsersTableOrderingComposer,
+      $$AppUsersTableAnnotationComposer,
+      $$AppUsersTableCreateCompanionBuilder,
+      $$AppUsersTableUpdateCompanionBuilder,
+      (AppUser, BaseReferences<_$AppDatabase, $AppUsersTable, AppUser>),
+      AppUser,
+      PrefetchHooks Function()
+    >;
+typedef $$UserScopesTableCreateCompanionBuilder = UserScopesCompanion Function({
+  required String id,
+  required String userId,
+  required String scopeType,
+  required String scopeId,
+  Value<int> rowid,
+});
+typedef $$UserScopesTableUpdateCompanionBuilder = UserScopesCompanion Function({
+  Value<String> id,
+  Value<String> userId,
+  Value<String> scopeType,
+  Value<String> scopeId,
+  Value<int> rowid,
+});
+
+class $$UserScopesTableFilterComposer
+    extends Composer<_$AppDatabase, $UserScopesTable> {
+  $$UserScopesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get scopeType => $composableBuilder(
+    column: $table.scopeType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get scopeId => $composableBuilder(
+    column: $table.scopeId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$UserScopesTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserScopesTable> {
+  $$UserScopesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get scopeType => $composableBuilder(
+    column: $table.scopeType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get scopeId => $composableBuilder(
+    column: $table.scopeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$UserScopesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserScopesTable> {
+  $$UserScopesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get scopeType =>
+      $composableBuilder(column: $table.scopeType, builder: (column) => column);
+
+  GeneratedColumn<String> get scopeId =>
+      $composableBuilder(column: $table.scopeId, builder: (column) => column);
+}
+
+class $$UserScopesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UserScopesTable,
+          UserScope,
+          $$UserScopesTableFilterComposer,
+          $$UserScopesTableOrderingComposer,
+          $$UserScopesTableAnnotationComposer,
+          $$UserScopesTableCreateCompanionBuilder,
+          $$UserScopesTableUpdateCompanionBuilder,
+          (
+            UserScope,
+            BaseReferences<_$AppDatabase, $UserScopesTable, UserScope>,
+          ),
+          UserScope,
+          PrefetchHooks Function()
+        > {
+  $$UserScopesTableTableManager(_$AppDatabase db, $UserScopesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserScopesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserScopesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserScopesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String> scopeType = const Value.absent(),
+                Value<String> scopeId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserScopesCompanion(
+                id: id,
+                userId: userId,
+                scopeType: scopeType,
+                scopeId: scopeId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String userId,
+                required String scopeType,
+                required String scopeId,
+                Value<int> rowid = const Value.absent(),
+              }) => UserScopesCompanion.insert(
+                id: id,
+                userId: userId,
+                scopeType: scopeType,
+                scopeId: scopeId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$UserScopesTable, UserScope>(table),
+                  BaseReferences<_$AppDatabase, $UserScopesTable, UserScope>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$UserScopesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UserScopesTable,
+      UserScope,
+      $$UserScopesTableFilterComposer,
+      $$UserScopesTableOrderingComposer,
+      $$UserScopesTableAnnotationComposer,
+      $$UserScopesTableCreateCompanionBuilder,
+      $$UserScopesTableUpdateCompanionBuilder,
+      (UserScope, BaseReferences<_$AppDatabase, $UserScopesTable, UserScope>),
+      UserScope,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4669,4 +6228,8 @@ class $AppDatabaseManager {
       $$EmploymentPeriodsTableTableManager(_db, _db.employmentPeriods);
   $$EventsTableTableManager get events =>
       $$EventsTableTableManager(_db, _db.events);
+  $$AppUsersTableTableManager get appUsers =>
+      $$AppUsersTableTableManager(_db, _db.appUsers);
+  $$UserScopesTableTableManager get userScopes =>
+      $$UserScopesTableTableManager(_db, _db.userScopes);
 }

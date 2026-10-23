@@ -28,6 +28,9 @@
   database, so no credentials or personal data are committed.
 - 2026-10-23 — Launcher display name is `Radar Labour`; retain the existing
   Android applicationId until an owner-approved production identity is chosen.
+- 2026-10-23 — Explicit owner approval of `excel` package (local-only, offline
+  XLSX parser). Reason: Required for local Storage Access Framework XLSX workforce
+  import; contains no runtime network, telemetry, or cloud dependency.
 - Still pending: final Android applicationId and any production signing identity.
 
 ## Agent decisions
@@ -49,3 +52,26 @@
 - 2026-10-23 — Use repository-owned docs/WORKLOG.md, docs/BUGS.md,
   docs/ROADMAP.md, and docs/NEXT_AGENT.md as the required multi-model handoff.
   Reason: the owner explicitly needs every model to leave a reliable checkpoint.
+
+## ADR-001: حسم التعارض وتثبيت أسبقية الوثائق (Document Precedence & Scope Resolution)
+
+- **Date:** 2026-10-23
+- **Context:** وجود تعارض بين توجيه المالك الأحدث في مسودة العمل (`drafts.txt` بتاريخ 23 أكتوبر 2026) ووثيقة المتطلبات الأصلية (`docs/PRD.md` بتاريخ 9 أكتوبر 2026) حول البنية السحابية وإدارة الحسابات ونطاق المزامنة.
+- **Decision (قرار الحسم المعماري والتنفيذي):**
+  1. **أسبقية مسودة 23 أكتوبر على PRD في النطاق التشغيلي:**
+     - **لا Supabase ولا مزامنة سحابية ولا اتصال شبكي:** التطبيق محلي بالكامل (Offline-first / Local-only). أعمدة وجداول المزامنة (`sync_status` و`server_seq`) تظل في مخطط قاعدة البيانات لضمان استقرار الهيكل دون بناء أي منطق مزامنة أو استدعاء شبكي عليها في V1.
+     - **اللغة الافتراضية:** الإنجليزية هي الافتراضية عند التثبيت لأول مرة؛ العربية مدعومة بالكامل باتجاه RTL كخيار يمكن التبديل إليه وحفظه محلياً.
+     - **الحسابات والجلسات:** الحسابات محلية ومحفوظة في قاعدة البيانات المشفرة (باستخدام Argon2id + salt). الجلسة مؤقتة (Ephemeral Session) ولا تُحفظ بين مرات إغلاق وتشغيل التطبيق (البند 7 في مسودة المالك يلغي بند القبول رقم 3).
+     - **الاستيراد ومعرف العامل:** استيراد محلي لملفات XLSX/CSV عبر Android Storage Access Framework مع شاشة معاينة، ويعتمد عمود `S/O` ككود للموظف بعد فحص التكرار، مع تجاهل وحظر تخزين أرقام الهويات الوطنية.
+  2. **بنود PRD التي تظل ملزمة بشكل صارم ودائم:**
+     - سجل الأحداث المحلي غير القابل للتعديل (Immutable Append-only Event Log).
+     - قواعد محرك الحالات (StatusEngine) وحسابات SLA.
+     - الحد الأقصى الصارم لحجم الملفات (300 سطر لكل ملف كود `.dart`).
+     - إدارة الحالة الحصرية عبر **Riverpod** مع واجهات غبية (Dumb Presentation).
+     - توكنز التصميم والألوان والمسافات المشتقة حصرياً من `docs/DESIGN.md`.
+     - ملف ترجمة وسلاسل نصية موحد (`l10n`).
+     - حظر الاستيراد المباشر من `package:flutter/material.dart` داخل مكونات التطبيق.
+     - أهداف اللمس (Touch targets) لا تقل عن 56dp للأزرار و64dp لصفوف القوائم.
+     - مصفوفة الصلاحيات في ملحق PRD §1 (الإدارة = مدير المشروع ومسؤول HR بنفس الصلاحيات الإدارية الكاملة).
+  3. **تعليق بنود الشبكة والسحابة:**
+     - أي بند في PRD يخص الشبكة والسحابة (شريحة S2، قواعد RLS السحابية، دوال rpc، والنسخ الاحتياطي السحابي) يُعتبر **معلقاً رسمياً** وغير قابل للتنفيذ في إصدار V1 الحالي.

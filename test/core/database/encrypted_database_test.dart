@@ -147,10 +147,9 @@ void main() {
     expect(employee.employeeUid, 'e-1');
     expect(employee.supplier, isNull);
     expect(
-      (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
-        'user_version',
-      ),
-      3,
+      (await db.customSelect('PRAGMA user_version').getSingle())
+          .read<int>('user_version'),
+      DatabaseConstants.schemaVersion,
     );
   });
 

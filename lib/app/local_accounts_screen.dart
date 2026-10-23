@@ -3,7 +3,6 @@ import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
 import 'package:radar_labor/core/auth/local_auth_repository.dart';
 import 'package:radar_labor/core/database/app_database.dart';
-import 'package:radar_labor/core/database/local_settings_repository.dart';
 
 /// Local administrator screen for creating accounts and assigning scopes.
 final class LocalAccountsScreen extends StatefulWidget {
@@ -20,9 +19,7 @@ final class LocalAccountsScreen extends StatefulWidget {
 }
 
 final class _LocalAccountsScreenState extends State<LocalAccountsScreen> {
-  late final _auth = LocalAuthRepository(
-    LocalSettingsRepository(widget.database),
-  );
+  late final _auth = LocalAuthRepository(widget.database);
   List<LocalAccount> _accounts = const [];
   List<Employee> _employees = const [];
   List<Team> _teams = const [];

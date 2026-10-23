@@ -4,6 +4,107 @@ Append one dated handoff entry for each model/session. Keep prior entries so the
 next model can understand decisions and recoveries. The newest handoff is at the
 top of the log.
 
+## 2026-10-23 — إنجاز المرحلتين 2 و3: واجهة تسجيل الدخول، مستودع المصادقة، جداول AppUsers/UserScopes
+
+### ما تم إنجازه
+
+**المرحلة 2 — واجهة المصادقة:**
+- إعادة كتابة `lib/app/auth_gate.dart` بالكامل: إزالة الـ `MaterialApp` المتداخل، اختيار الحساب من قائمة منسدلة بدون اختيار دور يدوي، دعم إظهار/إخفاء كلمة المرور، معالجة حالات التحميل والأخطاء، دعم تغيير كلمة المرور المؤقتة، شاشة إعداد أولي لاستيراد كشف العمال وإنشاء حساب مدير المشروع وHR.
+- إنشاء `lib/app/widgets/auth_login_form.dart`: نموذج تسجيل الدخول التفاعلي مع أخطاء مضمّنة (176 سطراً).
+- إنشاء `lib/app/widgets/auth_setup_view.dart`: واجهة الإعداد الأولي باستيراد القائمة واختيار المديرين (160 سطراً).
+- إنشاء `lib/app/widgets/change_temporary_password_dialog.dart`: حوار استبدال كلمة المرور المؤقتة (120 سطراً).
+
+**المرحلة 3 — مستودع المصادقة والمخطط:**
+- إنشاء جداول `AppUsers` و`UserScopes` في Drift (`lib/core/database/tables/`).
+- رفع `schemaVersion` إلى 4 مع ترحيل يحوّل حسابات JSON القديمة إلى الجدول الجديد.
+- إضافة `PRAGMA foreign_keys = ON` في `beforeOpen` لتفعيل `ON DELETE CASCADE`.
+- كتابة `lib/core/auth/local_auth_repository.dart` من جديد: تخزين `failedAttempts` و`lockedUntil` في قاعدة البيانات (يصمد عند إعادة التشغيل)، تأخير تدريجي (`5^n` ثوانٍ)، رفض كلمة المرور الافتراضية والمتطابقة مع القديمة، إنشاء حسابات ابتدائية بكلمة مرور مؤقتة `123456`.
+- إنشاء `lib/core/auth/auth_session.dart`: جلسة آمنة للواجهة لا تحمل الهاش أو الملح.
+- إنشاء `lib/core/auth/auth_exceptions.dart`: استثناءات مكتوبة (`AccountLockedException`, `AccountDeactivatedException`, `AuthConflictException`).
+- إنشاء `lib/core/auth/password_hasher.dart`: لفّ Argon2id مع تخزين المعاملات مع الحساب.
+- توسيع `test/core/auth/local_auth_repository_test.dart` إلى 6 اختبارات (تسجيل دخول ناجح، قفل بعد 5 محاولات، تعطيل الحساب، تغيير كلمة المرور، إنشاء أولي، تحديث النطاقات).
+
+### إصلاح جلسة الاستمرار الحالية
+- إصلاح قوس زائد في `auth_gate.dart` كان يغلق الـ class مبكراً ويسبب 68 خطأ.
+- إضافة `library;` directive في `auth_exceptions.dart` لإصلاح تحذير `dangling_library_doc_comments`.
+
+### التحقق
+- `flutter analyze --no-pub`: **No issues found!** (0 issues).
+- `flutter test --no-pub`: **94/94 اختباراً** — جميعها ناجحة.
+- جميع الملفات الجديدة أقل من 300 سطر (`local_auth_repository.dart`: 283 سطراً).
+
+---
+
+## 2026-10-23 — إنجاز المرحلة 1: بنية الواجهة وتفكيك radar_labor_app وتوحيد Providers
+
+### ما تم إنجازه
+
+- **توحيد MaterialApp:** إزالة `MaterialApp` المتداخل و`Directionality` اليدوي من `AuthGate`، ودمج الثيم والألوان والتوطين (`localizationsDelegates`) في `MaterialApp` موحد في جذر التطبيق مع دعم اللغتين والـ RTL تلقائياً.
+- **إدارة الحالة ومزودات Riverpod:**
+  - إنشاء `lib/app/app_providers.dart` مع `Notifier` و`NotifierProvider` لإدارة اللغة (`appLocaleProvider`)، والجلسة الحالية (`currentSessionProvider`)، وتوفير مستودعات قاعدة البيانات والأحداث ولوحة المؤشرات عبر الـ DI النظيف.
+- **استخراج توكنز التصميم ونصوص الترجمة:**
+  - إنشاء `lib/core/ui/app_tokens.dart` بالقيم الدقيقة للألوان والمسافات وأهداف اللمس من `docs/DESIGN.md`.
+  - إنشاء `lib/core/l10n/app_strings.dart` لتوحيد النصوص الثنائية للواجهات ومنع النصوص المباشرة (Magic Strings).
+- **تفكيك `radar_labor_app.dart` (من 908 أسطر إلى ملفات أقل من 300 سطر):**
+  - `lib/app/radar_labor_app.dart`: جذر التطبيق وفتح قاعدة البيانات وإدارة دورة الحياة (155 سطراً).
+  - `lib/app/home_scaffold.dart`: شريط التنقل السفلي والتبويبات وتغيير كلمة المرور (248 سطراً).
+  - `lib/app/screens/workers_screen.dart`: شاشة وعمليات العمال والبحث (271 سطراً).
+  - `lib/app/screens/entities_screen.dart`: شاشة الفرق والسكن (144 سطراً).
+  - `lib/app/screens/preferences_screen.dart`: شاشة الإعدادات واللغة والتحكم (97 سطراً).
+- **إغلاق قاعدة البيانات:** إضافة معالج `dispose` في `RadarLaborApp` لإغلاق `AppDatabase` بأمان.
+
+### التحقق
+- `flutter analyze --no-pub`: نظيف تماماً (`No issues found!`).
+- `flutter test --no-pub`: نجح بالكامل (**89/89 اختباراً**).
+- فحص حجم الملفات: كافة الملفات الجديدة والمعدلة تحت سقف الـ 300 سطر بصرامة.
+
+## 2026-10-23 — إنجاز المرحلة 0: الأساس والتثبيت (Phase 0: Baseline & Stabilization)
+
+### ما تم إنجازه
+
+- **توثيق قرار حسم التعارض (ADR-001):** أضيف في `docs/DECISIONS.md` لتثبيت أسبقية توجيه المالك الأحدث (مسودة 23 أكتوبر) على وثيقة PRD فيما يخص محليّة التطبيق (دون شبكة/Supabase/مزامنة)، واللغة الافتراضية، والجلسات المؤقتة، واستيراد القوى العاملة، مع إبقاء المعايير المعمارية للـ PRD وقواعد الكود ملزمة وتعليق بنود السحابة.
+- **اعتماد حزمة `excel`:** سُجّل القرار الرسمي لموافقة المالك على الحزمة للاستيراد المحلي لملفات XLSX عبر Storage Access Framework دون أطراف خارجية.
+- **اختبارات التوصيف لـ `EventRepository`:** أنشئ ملف `test/core/events/event_repository_test.dart` (205 أسطر) يغطي:
+  1. الإضافة الفردية والذرية وتحديث أرقام التسلسل `deviceSeq` في جدول الإعدادات.
+  2. تمييز الأحداث المتأخرة (`isLate`) بناءً على ساعة قطع يوم العمل (Cutoff hour).
+  3. التراجع الذري الكامل في المعاملة (`appendBatch`) إذا تضمن أي حدث خطأ تحقق.
+  4. استئناف التسلسل من القيمة المخزنة، واكتشاف تلف بيانات التسلسل ورمي `StateError`.
+  5. التحقق من صيغة التاريخ YYYY-MM-DD واستخراج نوع التسوية `resolutionKind` من حمولة الـ JSON.
+  6. تدفقات قراءة وبث الأحداث لتاريخ عمل محدد.
+- **اختبارات التوصيف لـ `StatusEngine`:** أنشئ ملف `test/core/status/status_engine_characterization_test.dart` (250 أسطر) يغطي:
+  1. فحص عمال متعددين في دفعة واحدة وعزل حالاتهم مع الحفاظ على الترتيب الأصلي.
+  2. حدود مطابقة مساكن الفحص والغياب مع سكن العامل المسند.
+  3. حدود فترات التوظيف (المنتهية، المستقبلية، السارية).
+  4. حدود SLA الصفرية وكسر المهلة الزمني.
+  5. تأثير تسوية `siteError` في إزالة أعلام التناقض.
+- **عدم المساس بكود الإنتاج:** لم يُعدّل أي سطر من كود الإنتاج داخل `lib/` خلال هذه المرحلة حفاظاً على الاستقرار.
+
+### التحقق
+
+- `dart analyze`: نظيف تماماً (`No issues found!`).
+- `flutter analyze --no-pub`: نظيف تماماً (`No issues found!`, 12.4s).
+- `flutter test --no-pub`: نجح بالكامل (**89/89 اختباراً**، بارتفاع من 73 إلى 89 بعد إضافة 16 اختبار توصيف جديد).
+- اختبارات المعمارية `architecture_test.dart`: نجحت بالكامل وأكدت عدم وجود استيرادات محظورة لـ `flutter/material` أو بين الميزات.
+- **فحص ملفات النظام والأندرويد:**
+  1. `AndroidManifest.xml`: التحقق من ضبط `allowBackup="false"`، وحذف أذونات الشبكة والإنترنت (`INTERNET`, `ACCESS_NETWORK_STATE`) نهائياً.
+  2. كود Kotlin (`MainActivity.kt`): التحقق من قناة اختيار الملفات `radar_labor/workforce_files` باستخدام Storage Access Framework (`ACTION_OPEN_DOCUMENT`) مع حظر الملفات التي تتجاوز 25 ميجابايت وإغلاق التدفقات بشكل آمن.
+
+## 2026-10-23 — اعتماد وتضمين القواعد الهندسية الصارمة (Engineering Rules & Guidelines)
+
+### التوثيق الذي أضيف
+
+- حُدّث ملف `AGENTS.md` ليتضمن القواعد الهندسية والإرشادية التفصيلية:
+  1. **فصل المنطق عن الواجهة (Separation of Concerns):** واجهات Presentation غبية، وخالية تماماً من منطق الأعمال والاستعلامات في `build`، والاعتماد كلياً على Riverpod والطبقات المخصصة.
+  2. **حجم الملفات والهيكلة (File Size & Modularization):** حد أقصى صارم 300 سطر لكل ملف كود `.dart` (مع استثناء ملفات الكود المولد `*.g.dart`).
+  3. **الكود النظيف (Clean Code & Best Practices):** منع الـ Magic Numbers/Strings ونقلها إلى `core/constants` أو الترجمة، حظر الـ empty catch blocks نهائياً ومعالجة الاستثناءات بشكل آمن، وتجنب الـ unsafe null assertions (`!`).
+  4. **إدارة الحالة والبيانات (Architecture & State Management):** الاعتماد الحصري على Riverpod، حصر `setState` بالحالات المؤقتة للأنيميشن فقط، وضمان ذرية عمليات Drift/SQLite عبر transactions مع عزلها عن الـ UI.
+  5. **انضباط التنفيذ والسلامة (Execution Discipline & Safety):** حظر تعديل الـ schemas أو الـ dependencies دون توجيه صريح، اعتماد الإنجليزية في الكود مع دعم العربية/RTL في الواجهات، والالتزام الصارم بهذه القواعد في أي تعديل قادم.
+
+### التحقق
+
+- فُحص ملف `AGENTS.md` يدوياً بعد التحديث للتأكد من المحافظة على قيود بيئة العمل السابقة وسلامتها.
+- لم يُعدّل أي كود في التطبيق ولم يُبنَ أي APK؛ الجلسة خاصة بضبط وتثبيت قواعد التطوير.
+
 ## 2026-10-23 — تعليمات الموديلات وتقرير البيئة
 
 ### التوثيق الذي أضيف

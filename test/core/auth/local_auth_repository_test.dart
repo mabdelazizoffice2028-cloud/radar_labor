@@ -68,4 +68,118 @@ void main() {
       isNotNull,
     );
   });
+
+  test('signIn_withoutRole_succeedsDirectlyWithAccountId', () async {
+    await auth.createInitialAccounts(
+      projectManagerEmployeeUid: 'emp-1',
+      hrEmployeeUid: 'emp-2',
+      projectManagerName: 'Manager',
+      hrName: 'HR',
+    );
+    final accounts = await auth.accounts();
+    final hr = accounts.firstWhere((a) => a.role == AuthRole.hr);
+
+    final signedIn = await auth.signIn(
+      accountId: hr.id,
+      password: '123456',
+    );
+    expect(signedIn, isNotNull);
+    expect(signedIn!.displayName, equals('HR'));
+    expect(signedIn.role, equals(AuthRole.hr));
+  });
+
+  test('changePassword_rejectsTemporaryPasswordAndSamePassword', () async {
+    await auth.createInitialAccounts(
+      projectManagerEmployeeUid: 'emp-1',
+      hrEmployeeUid: 'emp-2',
+      projectManagerName: 'Manager',
+      hrName: 'HR',
+    );
+    final manager = (await auth.accounts()).first;
+
+    expect(
+      () => auth.changePassword(manager, '123456'),
+      throwsA(isA<ArgumentError>()),
+    );
+
+    expect(
+      () => auth.changePassword(manager, 'short'),
+      throwsA(isA<ArgumentError>()),
+    );
+
+    expect(
+      () => auth.changePassword(
+        manager,
+        'new-password-123',
+        currentPassword: 'wrong-current',
+      ),
+      throwsA(isA<StateError>()),
+    );
+  });
+
+  test('failedAttempts_triggersLockoutAfterMaxAttempts', () async {
+    await auth.createInitialAccounts(
+      projectManagerEmployeeUid: 'emp-1',
+      hrEmployeeUid: 'emp-2',
+      projectManagerName: 'Manager',
+      hrName: 'HR',
+    );
+    final manager = (await auth.accounts()).first;
+
+    for (var i = 0; i < 4; i++) {
+      final res = await auth.signIn(accountId: manager.id, password: 'bad');
+      expect(res, isNull);
+    }
+
+    // 5th failed attempt locks out the account
+    final fifth = await auth.signIn(accountId: manager.id, password: 'bad');
+    expect(fifth, isNull);
+
+    // Now even correct password fails while locked out
+    final lockedAttempt = await auth.signIn(
+      accountId: manager.id,
+      password: '123456',
+    );
+    expect(lockedAttempt, isNull);
+  });
+
+  test('deactivateAccount_preventsSignIn', () async {
+    await auth.createInitialAccounts(
+      projectManagerEmployeeUid: 'emp-1',
+      hrEmployeeUid: 'emp-2',
+      projectManagerName: 'Manager',
+      hrName: 'HR',
+    );
+    final manager = (await auth.accounts()).first;
+
+    await auth.deactivateAccount(manager.id);
+
+    expect(
+      () => auth.signIn(accountId: manager.id, password: '123456'),
+      throwsA(isA<AccountDeactivatedException>()),
+    );
+
+    final activeAccounts = await auth.accounts(activeOnly: true);
+    expect(activeAccounts.any((a) => a.id == manager.id), isFalse);
+  });
+
+  test('updateScopes_correctlyStoresAndReturnsAssignedScopes', () async {
+    await auth.createInitialAccounts(
+      projectManagerEmployeeUid: 'emp-1',
+      hrEmployeeUid: 'emp-2',
+      projectManagerName: 'Manager',
+      hrName: 'HR',
+    );
+    final hr = (await auth.accounts()).firstWhere((a) => a.role == AuthRole.hr);
+
+    await auth.updateScopes(
+      hr.id,
+      teamIds: ['team-alpha', 'team-beta'],
+      housingIds: ['housing-1'],
+    );
+
+    final updated = (await auth.accounts()).firstWhere((a) => a.id == hr.id);
+    expect(updated.teamIds, containsAll(['team-alpha', 'team-beta']));
+    expect(updated.housingIds, contains('housing-1'));
+  });
 }

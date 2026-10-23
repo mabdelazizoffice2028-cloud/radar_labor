@@ -1,4 +1,5 @@
 import 'auth_role.dart';
+import 'auth_session.dart';
 
 final class LocalAccount {
   const LocalAccount({
@@ -11,6 +12,7 @@ final class LocalAccount {
     required this.mustChangePassword,
     this.teamIds = const [],
     this.housingIds = const [],
+    this.active = true,
   });
 
   final String id;
@@ -22,6 +24,17 @@ final class LocalAccount {
   final bool mustChangePassword;
   final List<String> teamIds;
   final List<String> housingIds;
+  final bool active;
+
+  AuthSession toSession() => AuthSession(
+    id: id,
+    employeeUid: employeeUid,
+    displayName: displayName,
+    role: role,
+    mustChangePassword: mustChangePassword,
+    teamIds: teamIds,
+    housingIds: housingIds,
+  );
 
   Map<String, Object?> toJson() => {
     'id': id,
@@ -33,6 +46,7 @@ final class LocalAccount {
     'mustChangePassword': mustChangePassword,
     'teamIds': teamIds,
     'housingIds': housingIds,
+    'active': active,
   };
 
   factory LocalAccount.fromJson(Map<String, Object?> json) => LocalAccount(
@@ -45,5 +59,6 @@ final class LocalAccount {
     mustChangePassword: json['mustChangePassword']! as bool,
     teamIds: List<String>.unmodifiable(json['teamIds']! as List<Object?>),
     housingIds: List<String>.unmodifiable(json['housingIds']! as List<Object?>),
+    active: (json['active'] as bool?) ?? true,
   );
 }

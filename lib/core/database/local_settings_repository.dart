@@ -6,6 +6,7 @@ final class LocalSettingsRepository {
   const LocalSettingsRepository(this._database);
 
   final AppDatabase _database;
+  AppDatabase get database => _database;
 
   Future<String?> read(String key) async {
     final row = await (_database.select(

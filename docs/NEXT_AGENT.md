@@ -18,19 +18,20 @@
 
 ## الحالة الحالية
 
-- GitHub remote branch يشير إلى commit `307025d04bf9e6e8c927db67982fb424f05299d7`
-  حسب آخر تحقق، والمالك أكد الرفع. تحديثات التوثيق الحالية لم تُدفع بعد.
-
-- المستودع `C:\my_apps\radar_labor`، الفرع `slice/s6-dashboard-resolution`.
+- GitHub remote مربوط بـ `https://github.com/mabdelazizoffice2028-cloud/radar_labor.git`.
+  الفرع `origin/slice/s6-dashboard-resolution` يشير إلى commit `35389a246247516cd51bedbe1b76d078a825b071`.
+- المستودع `C:\\my_apps\\radar_labor`، الفرع `slice/s6-dashboard-resolution`.
   لا تستخدم force push أو تغييرات خصوصية GitHub. قارن remote قبل أي نشر.
-- Flutter 3.47.7 / Dart 3.13.5، Android SDK `C:\Android\Sdk`، JDK 17، Pub
-  cache `C:\devcache\pub` وGradle cache `C:\devcache\gradle`.
-- APK Release الحالي موجود في `outputs/Radar Labour.apk`، SHA-256
-  `B8822F50D0BC9546BDD1D0EB3B101B1316AC03F177D1C64654DB6A6AE878AC41`؛
-  حجمه 62,815,890 بايت. إنه للتجربة وغير موقع لمتجر Play.
-- التحقق الأحدث: `flutter analyze --no-pub` نظيف، و`flutter test --no-pub` اجتاز 73/73، وبناء Release اكتمل.
-- S6 يتضمن لوحة الحالات وعمليات السكن/الموقع والملخصات؛ أحدث تغييرات فصلت
-  التنسيق/الحفظ في controller وعقود domain. راجع WORKLOG وBUGS للتحقق الحالي.
+- Flutter 3.47.7 / Dart 3.13.5، Android SDK `C:\\Android\\Sdk`، JDK 17، Pub
+  cache `C:\\devcache\\pub` وGradle cache `C:\\devcache\\gradle`.
+- APK Release مبني بعد إنجاز المراحل 1+2+3، موجود في `outputs/Radar Labour.apk`.
+  إنه للتجربة وغير موقع لمتجر Play.
+- التحقق الأحدث: `flutter analyze --no-pub` **نظيف تماماً (0 issues)**، و`flutter test --no-pub` اجتاز **94/94** بنجاح تام.
+- **المراحل 1+2+3 مكتملة:**
+  - توحيد `MaterialApp`، تفكيك `radar_labor_app.dart` إلى ملفات أصغر.
+  - واجهة تسجيل الدخول بدون اختيار دور يدوي، شاشة الإعداد الأولي.
+  - جداول `AppUsers` و`UserScopes`، `schemaVersion=4`، قفل تدريجي مخزن في DB.
+- S6 يتضمن لوحة الحالات وعمليات السكن/الموقع والملخصات؛ راجع WORKLOG وBUGS.
 - أضيفت حزمة `excel` محليًا؛ المستورد يستخدم Android Storage Access Framework
   عبر MethodChannel بلا إذن ملفات شامل ولا اتصال.
 - ملف المصدر `All Labour Active` يحوي S/O وID No. وName وDesignation وSupplier.
@@ -40,7 +41,15 @@
 
 ## العمل المتبقي
 
-الميزات المحلية الأساسية V1 اكتملت. المالك يراجع تحديثات التوثيق الحالية ويعمل لها commit ويرفعها بنفسه؛ لا تدفعها نيابة عنه. بعد ذلك يثبت `outputs/Radar Labour.apk` ويجرب الأدوار والاستيراد واستمرار البيانات والعمل دون إنترنت. بعد ملاحظاته، واصل مراحل تقارير التصدير والنسخ الاحتياطي وإدارة فترات التوظيف.
+ملفات تتجاوز 300 سطر (ما زالت تحتاج تقسيم):
+- `lib/features/dashboard/presentation/dashboard_components.dart` — 329 سطراً (يستخدم `part of` — اقرأ `dashboard_screen.dart` أولاً قبل التعديل).
+
+ميزات مطلوبة في drafts لم تُبنَ بعد:
+- شاشة إدارة الحسابات (تعطيل / إعادة تعيين كلمة المرور / تحديث النطاق).
+- شاشة تعيين العامل لفريق وسكن — ثغرة وظيفية رئيسية (شاشات الحضور فارغة بدونها).
+
+المالك يراجع تحديثات التوثيق الحالية ويعمل لها commit ويرفعها بنفسه؛
+لا تدفعها نيابة عنه. بعد ذلك يثبت APK على الهاتف ويجرب الأدوار والاستيراد.
 
 التحقق من الهاتف/ADB غير مثبت. لا تدّع وضع الطيران أو التثبيت الناجح بلا دليل.
 لا ترفع APK أو roster أو أسرار. إذا تعذر Flutter بسبب startup lock سجّل ذلك
