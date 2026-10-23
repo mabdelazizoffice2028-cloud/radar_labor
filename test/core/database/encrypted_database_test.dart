@@ -1,0 +1,129 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:drift/native.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:radar_labor/core/constants/app_constants.dart';
+import 'package:radar_labor/core/database/app_database.dart';
+import 'package:radar_labor/core/database/database_encryption.dart';
+import 'package:radar_labor/core/database/database_open_exception.dart';
+import 'package:radar_labor/core/database/database_opener.dart';
+import 'package:sqlite3/sqlite3.dart';
+
+const _keyA =
+    'a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90';
+const _keyB =
+    '0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0';
+const _plaintextProbe = 'plaintext_probe_value';
+
+AppDatabase _open(File file, String key) => AppDatabase(
+  NativeDatabase(file, setup: (raw) => applyEncryption(raw, key)),
+);
+
+Future<AppDatabase> _openInBackground(File file, String key) =>
+    openEncryptedDatabase(file, key);
+
+Future<void> _insert(AppDatabase db, String key, String value) {
+  return db
+      .into(db.settings)
+      .insert(SettingsCompanion.insert(key: key, value: value));
+}
+
+void main() {
+  late Directory directory;
+  late File file;
+
+  setUp(() {
+    directory = Directory.systemTemp.createTempSync('radar_labor_db_');
+    file = File('${directory.path}/${DatabaseConstants.fileName}');
+  });
+
+  tearDown(() => directory.deleteSync(recursive: true));
+
+  test('cipherPragma_isNotEmpty_whenSqlite3mcIsActive', () {
+    final raw = sqlite3.openInMemory();
+    addTearDown(raw.close);
+    expect(raw.select('PRAGMA cipher'), isNotEmpty);
+  });
+
+  test('encryption_rejectsKeysWithWrongLengthOrCharacters', () {
+    final raw = sqlite3.openInMemory();
+    addTearDown(raw.close);
+
+    final nonHexKey = List<String>.filled(
+      DatabaseConstants.keyByteLength * 2,
+      'g',
+    ).join();
+    final longKey = List<String>.filled(
+      DatabaseConstants.keyByteLength * 2 + 1,
+      'a',
+    ).join();
+
+    expect(() => applyEncryption(raw, nonHexKey), throwsArgumentError);
+    expect(() => applyEncryption(raw, longKey), throwsArgumentError);
+  });
+
+  test('schemaVersion_isOne_onFreshDatabase', () async {
+    final db = _open(file, _keyA);
+    addTearDown(db.close);
+    final row = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(row.read<int>('user_version'), DatabaseConstants.schemaVersion);
+  });
+
+  test('backgroundOpener_encryptsAndMigratesFreshDatabase', () async {
+    final db = await _openInBackground(file, _keyA);
+    addTearDown(db.close);
+
+    final cipherRows = await db.customSelect('PRAGMA cipher').get();
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    final settingsTable = await db
+        .customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'settings'",
+        )
+        .get();
+
+    expect(cipherRows, isNotEmpty);
+    expect(version.read<int>('user_version'), DatabaseConstants.schemaVersion);
+    expect(settingsTable, hasLength(1));
+  });
+
+  test('storedData_isNotPlaintextOnDisk_andSurvivesReopen', () async {
+    var db = _open(file, _keyA);
+    await _insert(db, 'probe', _plaintextProbe);
+    await db.close();
+
+    expect(
+      latin1.decode(file.readAsBytesSync()),
+      isNot(contains(_plaintextProbe)),
+    );
+
+    db = _open(file, _keyA);
+    addTearDown(db.close);
+    final rows = await db.select(db.settings).get();
+    expect(rows.single.value, _plaintextProbe);
+  });
+
+  test('openWithWrongKey_throwsOpenException', () async {
+    final db = _open(file, _keyA);
+    await _insert(db, 'k', 'v');
+    await db.close();
+
+    final wrong = _open(file, _keyB);
+    addTearDown(wrong.close);
+    await expectLater(
+      wrong.select(wrong.settings).get(),
+      throwsA(isA<DatabaseOpenException>()),
+    );
+  });
+
+  test('backgroundOpener_preservesTypedFailureForWrongKey', () async {
+    final db = _open(file, _keyA);
+    await _insert(db, 'k', 'v');
+    await db.close();
+
+    await expectLater(
+      _openInBackground(file, _keyB),
+      throwsA(isA<DatabaseOpenException>()),
+    );
+  });
+}
