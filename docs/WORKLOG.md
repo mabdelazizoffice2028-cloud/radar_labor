@@ -4,6 +4,32 @@ Append one dated handoff entry for each model/session. Keep prior entries so the
 next model can understand decisions and recoveries. The newest handoff is at the
 top of the log.
 
+## 2026-10-26 — Phase 1 & 2: Field UX Simplification & Smart Login (Release APK)
+
+- **Owner request:** 
+  1. Phase 1 (Field UX Simplification): Auto-select single scopes in Housing Check and Site Attendance, hide dropdowns when exactly 1 scope exists, remove TeamWizardScreen entry point from daily attendance flow, and compact AttendanceDateBar into an InkWell row.
+  2. Phase 2 (Smart Login & PIN Flow): Remember last logged-in account ID in LocalSettingsRepository upon successful authentication, display a simplified PIN/Password entry screen (PinLoginForm) for remembered users with immediate autofocus, and provide a Switch Account capability to return to the standard role/name flow.
+  3. Verification & Release: Run flutter analyze and flutter test, verify zero issues, build Release APK with flutter build apk --release --no-pub, copy to outputs/Radar Labour.apk, and document SHA-256 and size.
+- **Changes applied:**
+  - housing_check_screen.dart: auto-selects single housing and hides DropdownButtonFormField when housings.length == 1; immediate access to worker checklist.
+  - site_attendance_screen.dart & site_attendance_header.dart: removed TeamWizardScreen entry point, onCreateTeam, and canCreateTeam. Replaced dropdown with header text when teams.length == 1.
+  - attendance_date_bar.dart: refactored bulky OutlinedButton into a compact Row with calendar_month_outlined icon and localized date string wrapped in an InkWell. Maintained past date warning and source banner.
+  - app_setting_keys.dart: added lastLoggedInAccountId = 'last_logged_in_account_id'.
+  - auth_flow_strings.dart: added localized strings switchAccount and welcomeBack.
+  - login_flow_notifier.dart: updated state to manage rememberedAccountId and isRememberedMode, with switchAccount() method.
+  - pin_login_form.dart: created dedicated, modular PIN/Password entry widget with user avatar, name, role badge, password field, error banner, and switch account button (200 lines).
+  - auth_gate.dart: loads remembered account from settings, switches between PinLoginForm and AuthLoginForm, writes account ID on successful sign-in, and handles _switchAccount().
+  - test/app/login_flow_test.dart: added unit and widget test cases for remembered account mode and PinLoginForm.
+- **Checks observed:**
+  - flutter analyze --no-pub: 0 errors / warnings (No issues found!).
+  - flutter test --no-pub: 130/130 tests passed.
+  - File lengths verified: all .dart files strictly under the 300-line limit.
+- **Build output:**
+  - flutter build apk --release --no-pub built in 91.4s.
+  - Copied to outputs/Radar Labour.apk.
+  - Size: 69,505,143 bytes (~66.3 MB).
+  - SHA-256: AE6165E8A1A95EDA666F838BA2770CAFA88E4DFEF6AF5533BF0357B7B0061D47.
+
 ## 2026-10-23 — App icon and Android Release APK
 
 - Replaced the default Flutter launcher mark with a Radar Labour icon: a hardhat

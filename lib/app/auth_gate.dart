@@ -2,11 +2,13 @@ import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/login/login_flow_notifier.dart';
 import 'package:radar_labor/app/widgets/auth_login_form.dart';
 import 'package:radar_labor/app/widgets/change_temporary_password_dialog.dart';
+import 'package:radar_labor/app/widgets/pin_login_form.dart';
 import 'package:radar_labor/core/auth/account_provisioning_repository.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
 import 'package:radar_labor/core/auth/local_auth_repository.dart';
 import 'package:radar_labor/core/database/app_database.dart';
+import 'package:radar_labor/core/database/app_setting_keys.dart';
 import 'package:radar_labor/core/database/local_settings_repository.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
 import 'package:radar_labor/core/l10n/auth_flow_strings.dart';
@@ -61,12 +63,15 @@ final class _AuthGateState extends State<AuthGate> {
     try {
       final settings = LocalSettingsRepository(widget.database);
       final locale = await settings.read('locale');
+      final rememberedId = await settings.read(
+        AppSettingKeys.lastLoggedInAccountId,
+      );
       // Project manager and HR can always sign in, even on an empty database.
       await _provisioning.ensureAdminAccounts();
       final accounts = await _auth.accounts(activeOnly: true);
 
       if (!mounted) return;
-      _flowNotifier.setAccounts(accounts);
+      _flowNotifier.setAccounts(accounts, rememberedAccountId: rememberedId);
       setState(() {
         _locale = locale ?? 'en';
         _loading = false;
@@ -115,6 +120,11 @@ final class _AuthGateState extends State<AuthGate> {
       } else {
         _activeAccount = account;
       }
+      final settings = LocalSettingsRepository(widget.database);
+      await settings.write(
+        AppSettingKeys.lastLoggedInAccountId,
+        _activeAccount!.id,
+      );
       if (mounted) setState(() => _error = null);
     } on AccountLockedException catch (_) {
       if (mounted) setState(() => _error = AppStrings.accountLocked(_arabic));
@@ -127,6 +137,13 @@ final class _AuthGateState extends State<AuthGate> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _switchAccount() async {
+    final settings = LocalSettingsRepository(widget.database);
+    await settings.delete(AppSettingKeys.lastLoggedInAccountId);
+    _flowNotifier.switchAccount();
+    if (mounted) setState(() => _error = null);
   }
 
   void _logout() {
@@ -163,25 +180,43 @@ final class _AuthGateState extends State<AuthGate> {
                   : StreamBuilder<LoginFlowState>(
                       stream: _flowNotifier.stream,
                       initialData: _flowNotifier.state,
-                      builder: (context, snapshot) => AuthLoginForm(
-                        flowState: snapshot.data ?? _flowNotifier.state,
-                        onRoleSelected: (role) {
-                          setState(() => _error = null);
-                          _flowNotifier.selectRole(role);
-                        },
-                        onClearRole: () {
-                          setState(() => _error = null);
-                          _flowNotifier.clearRole();
-                        },
-                        onAccountChanged: (id) {
-                          setState(() => _error = null);
-                          _flowNotifier.selectAccount(id);
-                        },
-                        onSignIn: _signIn,
-                        busy: _busy,
-                        errorMessage: _error,
-                        arabic: _arabic,
-                      ),
+                      builder: (context, snapshot) {
+                        final state = snapshot.data ?? _flowNotifier.state;
+                        final remembered = state.rememberedAccount;
+                        if (state.isRememberedMode && remembered != null) {
+                          return PinLoginForm(
+                            account: remembered,
+                            onSignIn: (password) => _signIn(
+                              remembered.role,
+                              remembered.id,
+                              password,
+                            ),
+                            onSwitchAccount: _switchAccount,
+                            busy: _busy,
+                            errorMessage: _error,
+                            arabic: _arabic,
+                          );
+                        }
+                        return AuthLoginForm(
+                          flowState: state,
+                          onRoleSelected: (role) {
+                            setState(() => _error = null);
+                            _flowNotifier.selectRole(role);
+                          },
+                          onClearRole: () {
+                            setState(() => _error = null);
+                            _flowNotifier.clearRole();
+                          },
+                          onAccountChanged: (id) {
+                            setState(() => _error = null);
+                            _flowNotifier.selectAccount(id);
+                          },
+                          onSignIn: _signIn,
+                          busy: _busy,
+                          errorMessage: _error,
+                          arabic: _arabic,
+                        );
+                      },
                     ),
             ),
           ),

@@ -33,33 +33,39 @@ final class _HousingCheckScreenState extends State<HousingCheckScreen> {
       stream: widget.controller.watchHousings(),
       builder: (context, housingState) {
         final housings = housingState.data ?? const <EntityOption>[];
+        final singleHousing = housings.length == 1 ? housings.first : null;
+        if (singleHousing != null && _housingId != singleHousing.id) {
+          _housingId = singleHousing.id;
+        }
+        final effectiveHousingId = singleHousing?.id ?? _housingId;
         final selected = housings
-            .where((row) => row.id == _housingId)
+            .where((row) => row.id == effectiveHousingId)
             .firstOrNull;
         return Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(AppTokens.space16),
-              child: DropdownButtonFormField<String>(
-                initialValue: selected?.id,
-                decoration: InputDecoration(
-                  labelText: OperationsStrings.selectHousing(ar),
-                  border: const OutlineInputBorder(),
+            if (housings.length > 1)
+              Padding(
+                padding: const EdgeInsets.all(AppTokens.space16),
+                child: DropdownButtonFormField<String>(
+                  initialValue: selected?.id,
+                  decoration: InputDecoration(
+                    labelText: OperationsStrings.selectHousing(ar),
+                    border: const OutlineInputBorder(),
+                  ),
+                  items: housings
+                      .map(
+                        (row) => DropdownMenuItem(
+                          value: row.id,
+                          child: Text(row.displayName(arabic: ar)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) => setState(() {
+                    _housingId = value;
+                    _absent.clear();
+                  }),
                 ),
-                items: housings
-                    .map(
-                      (row) => DropdownMenuItem(
-                        value: row.id,
-                        child: Text(row.displayName(arabic: ar)),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) => setState(() {
-                  _housingId = value;
-                  _absent.clear();
-                }),
               ),
-            ),
             Expanded(
               child: selected == null
                   ? Center(child: Text(OperationsStrings.addHousingToStart(ar)))

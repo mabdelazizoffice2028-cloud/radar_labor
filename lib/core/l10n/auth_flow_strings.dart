@@ -38,4 +38,10 @@ final class AuthFlowStrings {
 
   static String newPasswordTitle(bool ar) =>
       ar ? 'إنشاء رقم سر جديد' : 'Create a new password';
+
+  static String switchAccount(bool ar) =>
+      ar ? 'تبديل الحساب' : 'Switch account';
+
+  static String welcomeBack(bool ar) =>
+      ar ? 'مرحباً بعودتك' : 'Welcome back';
 }

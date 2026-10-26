@@ -1,6 +1,6 @@
 # تسليم العمل للموديل التالي
 
-**آخر تحديث:** 25 أكتوبر 2026. ابدأ من `AGENTS.md` في جذر المشروع، ثم اقرأ
+**آخر تحديث:** 26 أكتوبر 2026. ابدأ من `AGENTS.md` في جذر المشروع، ثم اقرأ
 `README.md` و`docs/README.md` و`DEVICE_AND_MODEL_HANDOFF.md` و`DECISIONS.md` وهذا
 الملف. بعد ذلك راجع `WORKLOG.md` و`BUGS.md` و`ROADMAP.md` و`SECURITY_AND_SYNC_PLAN_V1_5.md`.
 
@@ -10,10 +10,22 @@
 - قاعدة البيانات المحليّة المشفرة وصلت إلى `schemaVersion=5` (إضافة جدول `audit_log`، وجعل `app_users.employee_uid` اختياريًا لدعم حسابات `viewer`، ومفتاح `roster_epoch`).
 - جميع ملفات `.dart` في `lib/` (باستثناء الملفات المولدة `*.g.dart`) تلتزم بالحد الصارم **<= 300 سطر** بعد تشغيل `dart format`.
 - الفحص الساكن: `flutter analyze --no-pub` نجح بدون أي تحذير أو خطأ (**No issues found!**).
-- الاختبارات الآلية: `flutter test --no-pub` نجح بالكامل (**125/125 All tests passed!**).
+- الاختبارات الآلية: `flutter test --no-pub` نجح بالكامل (**130/130 All tests passed!**).
 - نسخة الإطلاق النهائية مبنية ومنسوخة في `outputs/Radar Labour.apk`:
-  - الحجم: **69,521,599 بايت**
-  - بصمة SHA-256: `5E7F5F7397B3C2C938FD36794C2F25AC58A032293083023AE12D2E54C9C19957`
+  - الحجم: **69,505,143 بايت**
+  - بصمة SHA-256: `AE6165E8A1A95EDA666F838BA2770CAFA88E4DFEF6AF5533BF0357B7B0061D47`
+
+
+## تحديث 26 أكتوبر 2026 (Phase 1 & Phase 2 — UX Simplification & Smart Login)
+
+1. **المرحلة 1 (تبسيط واجهات العمليات):**
+   - اختيار النطاق الفردي تلقائياً وإخفاء القائمة المنسدلة في فحص السكن (HousingCheckScreen) وحضور الموقع (SiteAttendanceScreen).
+   - إزالة مسار إنشاء الفرق (TeamWizardScreen) من تدفق الحضور اليومي، وحصر إعداد الفرق في المسار الإداري.
+   - اختزال AttendanceDateBar إلى صف تفاعلي مضغوط (InkWell).
+2. **المرحلة 2 (الدخول الذكي دون اتصال):**
+   - حفظ الحساب المسجل بنجاح في LocalSettingsRepository عبر AppSettingKeys.lastLoggedInAccountId.
+   - شاشة مبسطة مباشرة لإدخال الرمز السري (PinLoginForm) تعرض اسم المستخدم ودوره مع تركيز فوري على حقل الرمز.
+   - زر «تبديل الحساب» للعودة إلى شاشة اختيار الدور والاسم عند الحاجة.
 
 ## ما أُنجز في V1.5
 

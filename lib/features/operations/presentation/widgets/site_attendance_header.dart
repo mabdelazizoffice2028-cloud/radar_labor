@@ -13,10 +13,8 @@ class SiteAttendanceHeader extends StatelessWidget {
     required this.state,
     required this.arabic,
     required this.canEditTeam,
-    required this.canCreateTeam,
     required this.onTeamChanged,
     required this.onDateSelected,
-    required this.onCreateTeam,
     required this.onSelectAll,
     required this.onAddGuest,
     this.onEditTeam,
@@ -28,16 +26,15 @@ class SiteAttendanceHeader extends StatelessWidget {
   final SiteAttendanceState state;
   final bool arabic;
   final bool canEditTeam;
-  final bool canCreateTeam;
   final ValueChanged<String?> onTeamChanged;
   final ValueChanged<String> onDateSelected;
   final VoidCallback? onEditTeam;
-  final VoidCallback onCreateTeam;
   final ValueChanged<bool> onSelectAll;
   final VoidCallback onAddGuest;
 
   @override
   Widget build(BuildContext context) {
+    final singleTeam = teams.length == 1 ? (selected ?? teams.first) : null;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppTokens.space16,
@@ -51,22 +48,27 @@ class SiteAttendanceHeader extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: DropdownButtonFormField<String>(
-                  initialValue: selected?.id,
-                  decoration: InputDecoration(
-                    labelText: OperationsStrings.selectTeam(arabic),
-                    border: const OutlineInputBorder(),
-                  ),
-                  items: teams
-                      .map(
-                        (row) => DropdownMenuItem(
-                          value: row.id,
-                          child: Text(row.displayName(arabic: arabic)),
-                        ),
+                child: singleTeam != null
+                    ? Text(
+                        singleTeam.displayName(arabic: arabic),
+                        style: Theme.of(context).textTheme.titleLarge,
                       )
-                      .toList(),
-                  onChanged: onTeamChanged,
-                ),
+                    : DropdownButtonFormField<String>(
+                        initialValue: selected?.id,
+                        decoration: InputDecoration(
+                          labelText: OperationsStrings.selectTeam(arabic),
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: teams
+                            .map(
+                              (row) => DropdownMenuItem(
+                                value: row.id,
+                                child: Text(row.displayName(arabic: arabic)),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: onTeamChanged,
+                      ),
               ),
               if (canEditTeam && onEditTeam != null) ...[
                 const SizedBox(width: AppTokens.space4),
@@ -74,14 +76,6 @@ class SiteAttendanceHeader extends StatelessWidget {
                   tooltip: OperationsStrings.editTeam(arabic),
                   onPressed: onEditTeam,
                   icon: const Icon(Icons.group_add_outlined),
-                ),
-              ],
-              if (canCreateTeam) ...[
-                const SizedBox(width: AppTokens.space4),
-                IconButton(
-                  tooltip: OperationsStrings.createNewTeam(arabic),
-                  onPressed: onCreateTeam,
-                  icon: const Icon(Icons.add_circle_outline),
                 ),
               ],
             ],

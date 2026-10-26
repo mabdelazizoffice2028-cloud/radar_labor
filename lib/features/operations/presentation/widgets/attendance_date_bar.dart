@@ -60,22 +60,29 @@ class AttendanceDateBar extends StatelessWidget {
         Semantics(
           button: true,
           label: dateTitle,
-          child: OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size.fromHeight(AppTokens.minTouchTarget),
-              alignment: AlignmentDirectional.centerStart,
-            ),
-            onPressed: () => _pickDate(context),
-            icon: const Icon(Icons.calendar_today_outlined),
-            label: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(dateTitle, style: Theme.of(context).textTheme.titleSmall),
-                Text(
-                  OperationsStrings.changeDate(arabic),
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-              ],
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppTokens.radius12),
+            onTap: () => _pickDate(context),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AppTokens.space8,
+                horizontal: AppTokens.space4,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.calendar_month_outlined,
+                    size: 18,
+                    color: AppTokens.primary,
+                  ),
+                  const SizedBox(width: AppTokens.space8),
+                  Text(
+                    dateTitle,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

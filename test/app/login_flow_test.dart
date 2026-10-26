@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/login/login_flow_notifier.dart';
 import 'package:radar_labor/app/widgets/auth_login_form.dart';
+import 'package:radar_labor/app/widgets/pin_login_form.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
 import 'package:radar_labor/core/auth/local_auth_repository.dart';
@@ -71,6 +72,33 @@ void main() {
       notifier.selectRole(AuthRole.viewer);
       expect(notifier.state.accountsForRole, isEmpty);
       expect(notifier.state.selectedAccountId, isNull);
+    });
+
+    test('supports remembered account mode and switchAccount', () {
+      final notifier = LoginFlowNotifier([
+        makeAccount(id: 'sup-1', name: 'أحمد', role: AuthRole.siteSupervisor),
+        makeAccount(id: 'pm-1', name: 'المدير العام', role: AuthRole.projectManager),
+      ]);
+
+      // Set remembered account
+      notifier.setAccounts([
+        makeAccount(id: 'sup-1', name: 'أحمد', role: AuthRole.siteSupervisor),
+        makeAccount(id: 'pm-1', name: 'المدير العام', role: AuthRole.projectManager),
+      ], rememberedAccountId: 'sup-1');
+
+      expect(notifier.state.isRememberedMode, isTrue);
+      expect(notifier.state.rememberedAccount?.id, 'sup-1');
+
+      // Switch account turns off remembered mode
+      notifier.switchAccount();
+      expect(notifier.state.isRememberedMode, isFalse);
+      expect(notifier.state.rememberedAccountId, isNull);
+
+      // Inactive or nonexistent remembered account is ignored
+      notifier.setAccounts([
+        makeAccount(id: 'sup-1', name: 'أحمد', role: AuthRole.siteSupervisor, active: false),
+      ], rememberedAccountId: 'sup-1');
+      expect(notifier.state.isRememberedMode, isFalse);
     });
   });
 
@@ -229,6 +257,58 @@ void main() {
         expect(submittedRole, AuthRole.siteSupervisor);
         expect(submittedAccountId, 'sup-1');
         expect(submittedPassword, '123456');
+      },
+    );
+
+    testWidgets(
+      'PinLoginForm renders remembered account, submits PIN, and handles switch account',
+      (tester) async {
+        final account = makeAccount(
+          id: 'sup-1',
+          name: 'مشرف أ',
+          role: AuthRole.siteSupervisor,
+        );
+
+        String? submittedPassword;
+        var switched = false;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: PinLoginForm(
+                  account: account,
+                  onSignIn: (password) async {
+                    submittedPassword = password;
+                  },
+                  onSwitchAccount: () {
+                    switched = true;
+                  },
+                  busy: false,
+                  errorMessage: null,
+                  arabic: true,
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(find.text('مشرف أ'), findsOneWidget);
+        expect(find.text('مشرف الموقع'), findsOneWidget);
+
+        await tester.enterText(
+          find.byKey(const ValueKey('remembered_password_field')),
+          'secret123',
+        );
+        await tester.tap(find.byKey(const ValueKey('remembered_login_button')));
+        await tester.pump();
+
+        expect(submittedPassword, 'secret123');
+
+        await tester.tap(find.byKey(const ValueKey('switch_account_button')));
+        await tester.pump();
+
+        expect(switched, isTrue);
       },
     );
   });

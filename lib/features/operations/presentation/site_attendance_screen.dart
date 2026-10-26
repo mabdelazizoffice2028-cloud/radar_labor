@@ -13,7 +13,6 @@ import 'package:radar_labor/features/operations/domain/team_setup_store.dart';
 import 'package:radar_labor/features/operations/presentation/state/operations_controller.dart';
 import 'package:radar_labor/features/operations/presentation/state/site_attendance_notifier.dart';
 import 'package:radar_labor/features/operations/presentation/team_setup/team_edit_screen.dart';
-import 'package:radar_labor/features/operations/presentation/team_setup/team_wizard_screen.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/attendance_conflict_dialog.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/attendance_counter_bar.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/attendance_diff_dialog.dart';
@@ -45,24 +44,6 @@ final class SiteAttendanceScreen extends ConsumerStatefulWidget {
 
 final class _SiteAttendanceScreenState
     extends ConsumerState<SiteAttendanceScreen> {
-  Future<void> _openCreateTeamWizard() async {
-    final store = widget.teamSetupStore;
-    final actor = widget.actor;
-    if (store == null || actor == null) return;
-    final created = await Navigator.push<EntityOption>(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            TeamWizardScreen(store: store, actor: actor, arabic: widget.arabic),
-      ),
-    );
-    if (created != null && mounted) {
-      await ref
-          .read(siteAttendanceNotifierProvider.notifier)
-          .selectTeam(created);
-    }
-  }
-
   Future<void> _openEditTeam(EntityOption team) async {
     final store = widget.teamSetupStore;
     final actor = widget.actor;
@@ -167,18 +148,6 @@ final class _SiteAttendanceScreenState
           return const Center(child: CircularProgressIndicator());
         }
         final teams = teamSnapshot.data ?? const <EntityOption>[];
-        if (teams.isEmpty &&
-            widget.teamSetupStore != null &&
-            widget.actor != null &&
-            widget.actor!.capabilities.canSetupTeam) {
-          return TeamWizardScreen(
-            store: widget.teamSetupStore!,
-            actor: widget.actor!,
-            arabic: ar,
-            embedded: true,
-            onTeamCreated: (created) => unawaited(notifier.selectTeam(created)),
-          );
-        }
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) unawaited(notifier.ensureInitialTeam(teams));
@@ -196,9 +165,6 @@ final class _SiteAttendanceScreenState
                   widget.teamSetupStore != null &&
                   (widget.actor?.capabilities.canEditOwnTeamMembers ?? false) &&
                   selected != null,
-              canCreateTeam:
-                  widget.teamSetupStore != null &&
-                  (widget.actor?.capabilities.canSetupTeam ?? false),
               onTeamChanged: (id) {
                 final next = teams.where((t) => t.id == id).firstOrNull;
                 unawaited(notifier.selectTeam(next));
@@ -207,7 +173,6 @@ final class _SiteAttendanceScreenState
               onEditTeam: selected == null
                   ? null
                   : () => _openEditTeam(selected),
-              onCreateTeam: _openCreateTeamWizard,
               onSelectAll: notifier.selectAll,
               onAddGuest: () => CrossTeamSearchSheet.show(
                 context: context,
