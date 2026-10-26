@@ -1,6 +1,6 @@
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
 
-/// 3-State review model for housing checks (Phase 4).
+/// 3-State review model for housing checks (kept for backward compatibility).
 enum HousingReviewState { unreviewed, reviewedPresent, absent }
 
 /// Presentation row representing a worker in the housing check.
@@ -10,8 +10,20 @@ final class HousingWorkerRow {
     this.reviewState = HousingReviewState.unreviewed,
   });
 
+  const HousingWorkerRow.binary({
+    required WorkerOption worker,
+    required bool isAbsent,
+  }) : this(
+         worker: worker,
+         reviewState: isAbsent
+             ? HousingReviewState.absent
+             : HousingReviewState.reviewedPresent,
+       );
+
   final WorkerOption worker;
   final HousingReviewState reviewState;
+
+  bool get isAbsent => reviewState == HousingReviewState.absent;
 
   HousingWorkerRow copyWith({HousingReviewState? reviewState}) =>
       HousingWorkerRow(
@@ -20,7 +32,7 @@ final class HousingWorkerRow {
       );
 }
 
-/// Immutable state for the 3-state housing check workflow.
+/// Immutable state for the campus (housing) check workflow.
 final class HousingCheckState {
   const HousingCheckState({
     required this.selectedDate,

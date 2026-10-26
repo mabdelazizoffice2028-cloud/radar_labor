@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
@@ -16,11 +15,14 @@ import 'package:radar_labor/features/operations/presentation/team_setup/team_edi
 import 'package:radar_labor/features/operations/presentation/widgets/attendance_conflict_dialog.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/attendance_counter_bar.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/attendance_diff_dialog.dart';
-import 'package:radar_labor/features/operations/presentation/widgets/attendance_row_tile.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/cross_team_search_sheet.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/operation_confirm_sync_dialog.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/operation_sync_helper.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/operation_whatsapp_dialog.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/site_attendance_header.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/site_worker_list_view.dart';
 
-/// Smart daily site attendance screen (PRD §8, §9, §10).
+/// Smart daily site attendance screen with dedicated back button navigation.
 final class SiteAttendanceScreen extends ConsumerStatefulWidget {
   const SiteAttendanceScreen({
     required this.controller,
@@ -52,7 +54,7 @@ final class _SiteAttendanceScreenState
     final updated = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (context) => TeamEditScreen(
+        builder: (_) => TeamEditScreen(
           store: store,
           actor: actor,
           scope: scope,
@@ -69,30 +71,50 @@ final class _SiteAttendanceScreenState
   Future<void> _handleSave() async {
     final ar = widget.arabic;
     final notifier = ref.read(siteAttendanceNotifierProvider.notifier);
+    final state = ref.read(siteAttendanceNotifierProvider);
     final prepared = await notifier.prepareSave();
     if (prepared == null || !mounted) return;
 
-    final diffConfirmed = await AttendanceDiffDialog.show(
+    final diffOk = await AttendanceDiffDialog.show(
       context: context,
       team: prepared.team,
       date: prepared.date,
       diff: prepared.diff,
       arabic: ar,
     );
-    if (!diffConfirmed || !mounted) return;
+    if (!diffOk || !mounted) return;
 
     var resolutions = <String, ConflictResolutionChoice>{};
     if (prepared.conflicts.isNotEmpty) {
-      final resolved = await AttendanceConflictDialog.show(
+      final res = await AttendanceConflictDialog.show(
         context: context,
         conflicts: prepared.conflicts,
         currentTeamName: prepared.team.displayName(arabic: ar),
         arabic: ar,
         currentDate: prepared.date,
       );
-      if (resolved == null || !mounted) return;
-      resolutions = resolved;
+      if (res == null || !mounted) return;
+      resolutions = res;
     }
+
+    final presentWorkers = state.rows
+        .where((r) => r.isPresent)
+        .map((r) => r.worker)
+        .toList();
+    final action = await OperationConfirmSyncDialog.show(
+      context: context,
+      title: OperationsStrings.confirmSiteAttendanceTitle(ar),
+      entityName: prepared.team.displayName(arabic: ar),
+      date: prepared.date,
+      countSummaryText: OperationsStrings.presentCountLabel(
+        ar,
+        state.presentCount,
+      ),
+      selectedWorkers: presentWorkers,
+      emptySelectionText: OperationsStrings.zeroWorkersConfirmation(ar),
+      arabic: ar,
+    );
+    if (action == null || !mounted) return;
 
     final result = await notifier.confirmSave(
       prepared: prepared,
@@ -100,39 +122,36 @@ final class _SiteAttendanceScreenState
     );
     if (result == null || !mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(OperationsStrings.teamSavedLocally(ar)),
-        duration: OperationsConstants.undoWindow,
-        action: SnackBarAction(
-          label: OperationsStrings.undoAction(ar),
-          onPressed: () => unawaited(notifier.undoLastSave()),
+    if (action == ConfirmSaveAction.saveAndSync) {
+      await performOperationSync(
+        ref: ref,
+        context: context,
+        actor: widget.actor,
+        scope: widget.scope,
+        arabic: ar,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(OperationsStrings.teamSavedLocally(ar)),
+          duration: OperationsConstants.undoWindow,
+          action: SnackBarAction(
+            label: OperationsStrings.undoAction(ar),
+            onPressed: () => unawaited(notifier.undoLastSave()),
+          ),
         ),
-      ),
-    );
+      );
+    }
 
-    await showDialog<void>(
+    if (!mounted) return;
+    await showOperationWhatsappDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(OperationsStrings.whatsappSummaryTitle(ar)),
-        content: SelectableText(result.summary.messageText),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              await Clipboard.setData(
-                ClipboardData(text: result.summary.messageText),
-              );
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: Text(OperationsStrings.copyTextAction(ar)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(OperationsStrings.closeAction(ar)),
-          ),
-        ],
-      ),
+      messageText: result.summary.messageText,
+      arabic: ar,
     );
+    if (mounted && Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -142,19 +161,23 @@ final class _SiteAttendanceScreenState
       ..setOverrideContext(actor: widget.actor, scope: widget.scope);
     final state = ref.watch(siteAttendanceNotifierProvider);
 
-    return StreamBuilder<List<EntityOption>>(
+    final content = StreamBuilder<List<EntityOption>>(
       stream: widget.controller.watchTeams(),
       builder: (context, teamSnapshot) {
         if (!teamSnapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
         final teams = teamSnapshot.data ?? const <EntityOption>[];
-
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) unawaited(notifier.ensureInitialTeam(teams));
         });
 
         final selected = state.selectedTeam ?? teams.firstOrNull;
+        final canEdit =
+            widget.teamSetupStore != null &&
+            (widget.actor?.capabilities.canEditOwnTeamMembers ?? false) &&
+            selected != null;
+
         return Column(
           children: [
             SiteAttendanceHeader(
@@ -162,15 +185,11 @@ final class _SiteAttendanceScreenState
               selected: selected,
               state: state,
               arabic: ar,
-              canEditTeam:
-                  widget.teamSetupStore != null &&
-                  (widget.actor?.capabilities.canEditOwnTeamMembers ?? false) &&
-                  selected != null,
-              onTeamChanged: (id) {
-                final next = teams.where((t) => t.id == id).firstOrNull;
-                unawaited(notifier.selectTeam(next));
-              },
-              onDateSelected: (date) => unawaited(notifier.selectDate(date)),
+              canEditTeam: canEdit,
+              onTeamChanged: (id) => unawaited(
+                notifier.selectTeam(teams.where((t) => t.id == id).firstOrNull),
+              ),
+              onDateSelected: (d) => unawaited(notifier.selectDate(d)),
               onEditTeam: selected == null
                   ? null
                   : () => _openEditTeam(selected),
@@ -204,10 +223,6 @@ final class _SiteAttendanceScreenState
                     hintText: OperationsStrings.searchWorkersHint(ar),
                     prefixIcon: const Icon(Icons.search, size: 20),
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: AppTokens.space12,
-                      vertical: AppTokens.space8,
-                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTokens.radius12),
                     ),
@@ -222,30 +237,13 @@ final class _SiteAttendanceScreenState
                 ),
               ),
             Expanded(
-              child: state.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : selected == null
-                  ? Center(child: Text(OperationsStrings.addTeamToStart(ar)))
-                  : state.rows.isEmpty
-                  ? Center(child: Text(OperationsStrings.noWorkersInTeam(ar)))
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppTokens.space16,
-                        vertical: AppTokens.space8,
-                      ),
-                      itemCount: state.filteredRows.length,
-                      itemBuilder: (context, index) {
-                        final row = state.filteredRows[index];
-                        return AttendanceRowTile(
-                          row: row,
-                          arabic: ar,
-                          onToggle: () => notifier.toggleWorker(row.worker.id),
-                          onRemoveGuest: row.isGuest
-                              ? () => notifier.removeGuestWorker(row.worker.id)
-                              : null,
-                        );
-                      },
-                    ),
+              child: SiteWorkerListView(
+                state: state,
+                selected: selected,
+                arabic: ar,
+                onToggle: notifier.toggleWorker,
+                onRemoveGuest: notifier.removeGuestWorker,
+              ),
             ),
             AttendanceCounterBar(
               presentCount: state.presentCount,
@@ -258,5 +256,15 @@ final class _SiteAttendanceScreenState
         );
       },
     );
+
+    if (Navigator.of(context).canPop()) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(OperationsStrings.startSiteAttendanceAction(ar)),
+        ),
+        body: content,
+      );
+    }
+    return content;
   }
 }

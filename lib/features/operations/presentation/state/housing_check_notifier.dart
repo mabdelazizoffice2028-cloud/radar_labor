@@ -13,7 +13,7 @@ import 'package:radar_labor/features/operations/domain/operations_store.dart';
 import 'package:radar_labor/features/operations/presentation/state/housing_check_state.dart';
 import 'package:radar_labor/features/operations/presentation/state/operations_controller.dart';
 
-/// Riverpod notifier managing 3-state housing review, drafts, and persistence (Phase 4).
+/// Riverpod notifier managing binary housing absence review, drafts, and persistence (Phase 4).
 final class HousingCheckNotifier extends Notifier<HousingCheckState> {
   Timer? _draftTimer;
 
@@ -61,6 +61,21 @@ final class HousingCheckNotifier extends Notifier<HousingCheckState> {
 
   void setSearchQuery(String query) {
     state = state.copyWith(searchQuery: query);
+  }
+
+  void toggleAbsent(String workerId) {
+    final updated = [
+      for (final r in state.rows)
+        if (r.worker.id == workerId)
+          r.copyWith(
+            reviewState: r.reviewState == HousingReviewState.absent
+                ? HousingReviewState.reviewedPresent
+                : HousingReviewState.absent,
+          )
+        else
+          r,
+    ];
+    _updateRows(updated);
   }
 
   void setReviewState(String workerId, HousingReviewState newState) {
@@ -168,16 +183,13 @@ final class HousingCheckNotifier extends Notifier<HousingCheckState> {
       );
       if (draft != null) {
         final absentSet = draft.absentWorkerIds.toSet();
-        final reviewedSet = draft.reviewedWorkerIds.toSet();
         final rows = [
           for (final w in workers)
             HousingWorkerRow(
               worker: w,
               reviewState: absentSet.contains(w.id)
                   ? HousingReviewState.absent
-                  : (reviewedSet.contains(w.id)
-                        ? HousingReviewState.reviewedPresent
-                        : HousingReviewState.unreviewed),
+                  : HousingReviewState.reviewedPresent,
             ),
         ];
         state = state.copyWith(
@@ -193,7 +205,7 @@ final class HousingCheckNotifier extends Notifier<HousingCheckState> {
         for (final w in workers)
           HousingWorkerRow(
             worker: w,
-            reviewState: HousingReviewState.unreviewed,
+            reviewState: HousingReviewState.reviewedPresent,
           ),
       ];
       state = state.copyWith(

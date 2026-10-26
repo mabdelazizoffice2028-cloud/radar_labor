@@ -4,6 +4,45 @@ Append one dated handoff entry for each model/session. Keep prior entries so the
 next model can understand decisions and recoveries. The newest handoff is at the
 top of the log.
 
+## 2026-10-26 — Strict Architectural & UX Refactoring (Launcher Hub, Binary Housing & Explicit Sync)
+
+- **Owner request:**
+  1. STEP 1 (Localization): Add 9 static methods to `OperationsStrings` (`startCampusCheckAction`, `startSiteAttendanceAction`, `nextConfirmAction`, `saveLocallyOnlyAction`, `saveAndSyncNowAction`, `syncSuccessMessage`, `syncOfflineFallbackMessage`, `selectAbsentWorkersHint`, `selectPresentWorkersHint`).
+  2. STEP 2 (Binary Housing State): Abolish 3-state review in housing UI. Add `isAbsent` and `.binary` constructor to `HousingWorkerRow`. Add `toggleAbsent` to `HousingCheckNotifier` and initialize fresh days with `reviewedPresent`. Rewrite `HousingWorkerTile` into a single clean full-row tappable Checkbox card.
+  3. STEP 3 (Shared Confirmation & Sync Dialog): Create `OperationConfirmSyncDialog` (< 200 lines) with summary banner, scrollable selected workers list, and stacked actions: `saveAndSync`, `saveLocalOnly`, and `reviewAction` (cancel).
+  4. STEP 4 (Operations Launcher Hub): Rewrite `OperationsScreen` (< 200 lines) as an uncluttered launcher page with `SupervisorTaskBanner` and large, high-contrast action cards pushing `HousingCheckScreen` and `SiteAttendanceScreen`.
+  5. STEP 5 (Dedicated HousingCheckScreen): Rewrite `HousingCheckScreen` (< 260 lines) as a Scaffold with AppBar Back button, absent-only hint banner, search field, worker tile list, and sticky bottom bar with `nextConfirmAction` invoking `OperationConfirmSyncDialog` and WhatsApp copy.
+  6. STEP 6 (Dedicated SiteAttendanceScreen): Make `SiteAttendanceScreen` (< 280 lines) a Scaffold with AppBar when `canPop()` is true, integrate `OperationConfirmSyncDialog` with explicit sync, and update `HomeScaffold._openEditSiteDay` to push `SiteAttendanceScreen` on its own dedicated route with a Back button.
+  7. STEP 7 (Verification & Build): Update regression tests (`phases_3_to_6_test.dart`), add `operations_launcher_test.dart` verifying launcher and Back navigation, enforce <= 300 lines on every file in `lib/`, verify `flutter analyze --no-pub` has zero issues, verify 100% tests pass, build release APK and overwrite `outputs/Radar Labour.apk`.
+- **Changes applied:**
+  - `lib/core/l10n/operations_strings.dart`: Added all 9 localization methods; compacted lines to 221 lines total (<= 300).
+  - `lib/features/operations/presentation/state/housing_check_state.dart`: Added `bool get isAbsent` and `HousingWorkerRow.binary` constructor (134 lines).
+  - `lib/features/operations/presentation/state/housing_check_notifier.dart`: Added `toggleAbsent(String workerId)` and initialized fresh days with `reviewedPresent` (282 lines <= 300).
+  - `lib/features/operations/presentation/widgets/housing_worker_tile.dart`: Rewrote tile into full-row Checkbox card with `statusUnknownSoft` background and `statusUnknown` checkbox when absent, and clean surface when present (94 lines).
+  - `lib/features/operations/presentation/widgets/operation_confirm_sync_dialog.dart`: Created shared dialog with `ConfirmSaveAction` enum, absent/present count banner, worker list, and stacked sync/local action buttons (160 lines < 200).
+  - `lib/features/operations/presentation/operations_screen.dart`: Refactored to clean launcher hub with `SupervisorTaskBanner` and large primary launcher cards (185 lines < 200).
+  - `lib/features/operations/presentation/housing_check_screen.dart`: Rewrote screen with `AppBar` Back button, absent-only hint, live count, sticky next button, confirm sync dialog, and WhatsApp dialog (256 lines < 260).
+  - `lib/features/operations/presentation/widgets/operation_whatsapp_dialog.dart`: Extracted reusable WhatsApp summary dialog (33 lines).
+  - `lib/features/operations/presentation/widgets/operation_sync_helper.dart`: Extracted reusable synchronization executor with SnackBar feedback (48 lines).
+  - `lib/features/operations/presentation/widgets/site_worker_list_view.dart`: Extracted modular worker list view for site attendance (48 lines).
+  - `lib/features/operations/presentation/site_attendance_screen.dart`: Added AppBar Back button when `canPop()` is true, integrated `OperationConfirmSyncDialog` and sync helper (270 lines < 280).
+  - `lib/app/home_scaffold.dart`: Updated `_openEditSiteDay` to push `SiteAttendanceScreen` with Back button when editing from History (265 lines <= 300).
+  - `test/features/operations/phases_3_to_6_test.dart`: Updated `HousingWorkerTile` widget test for binary absent state.
+  - `test/features/operations/operations_launcher_test.dart`: Added widget test verifying `OperationsScreen` renders launcher card and navigates to `HousingCheckScreen` with Back button.
+- **Checks observed:**
+  - Strict line counts: Every `.dart` file in `lib/` is `<= 300` lines.
+    - `operation_confirm_sync_dialog.dart`: 160 lines (< 200).
+    - `operations_screen.dart`: 185 lines (< 200).
+    - `housing_check_screen.dart`: 256 lines (< 260).
+    - `site_attendance_screen.dart`: 270 lines (< 280).
+  - Import hygiene: Zero imports of `package:flutter/material.dart` in `lib/` (only `package:material_ui/material_ui.dart`). Zero forbidden database/drift/supabase imports in presentation.
+  - `flutter analyze --no-pub`: `No issues found!`.
+  - `flutter test --no-pub`: `146/146 All tests passed! (100%)`.
+  - Built release APK via `flutter build apk --release --no-pub` (66.6MB).
+  - Overwrote `outputs/Radar Labour.apk`:
+    - Exact size: **69,783,979 bytes** (~66.55 MB).
+    - SHA-256: `B5D2F352D6EE9F209A5676C42F97A4D099B38AFD8CFA39FA5A813E2232A18D3B`.
+
 ## 2026-10-26 — Premium App Icon Redesign & Fresh Release APK Overwrite
 
 - **Owner request:**

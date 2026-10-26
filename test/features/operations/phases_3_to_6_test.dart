@@ -199,7 +199,7 @@ void main() {
       (tester) async {
         const row = HousingWorkerRow(
           worker: w1,
-          reviewState: HousingReviewState.reviewedPresent,
+          reviewState: HousingReviewState.absent,
         );
 
         // Test RTL Arabic
@@ -219,7 +219,7 @@ void main() {
         );
         expect(find.textContaining('أحمد علي'), findsOneWidget);
         expect(
-          find.textContaining(HousingReviewStrings.reviewStateReviewed(true)),
+          find.textContaining(HousingReviewStrings.reviewStateAbsent(true)),
           findsOneWidget,
         );
 
@@ -240,7 +240,7 @@ void main() {
         );
         expect(find.textContaining('Ahmed Ali'), findsOneWidget);
         expect(
-          find.textContaining(HousingReviewStrings.reviewStateReviewed(false)),
+          find.textContaining(HousingReviewStrings.reviewStateAbsent(false)),
           findsOneWidget,
         );
       },

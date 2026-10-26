@@ -23,6 +23,7 @@ import 'package:radar_labor/features/dashboard/presentation/dashboard_screen.dar
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
 import 'package:radar_labor/features/operations/presentation/history_screen.dart';
 import 'package:radar_labor/features/operations/presentation/operations_screen.dart';
+import 'package:radar_labor/features/operations/presentation/site_attendance_screen.dart';
 import 'package:radar_labor/features/operations/presentation/state/history_notifier.dart';
 import 'package:radar_labor/features/operations/presentation/state/operations_controller.dart';
 import 'package:radar_labor/features/operations/presentation/state/site_attendance_notifier.dart';
@@ -49,17 +50,29 @@ final class HomeScaffold extends ConsumerStatefulWidget {
 final class _HomeScaffoldState extends ConsumerState<HomeScaffold> {
   int _tab = 0;
 
-  void _openEditSiteDay(
-    List<AppSection> sections,
-    EntityOption team,
-    String date,
-  ) {
-    final idx = sections.indexOf(AppSection.checkIn);
-    if (idx >= 0) setState(() => _tab = idx);
+  void _openEditSiteDay({
+    required EntityOption team,
+    required String date,
+    required OperationsController operationsController,
+    required bool ar,
+    required ActorContext actor,
+    required ScopeSnapshot scope,
+  }) {
     unawaited(
       ref
           .read(siteAttendanceNotifierProvider.notifier)
           .openTeamAndDate(team: team, date: date),
+    );
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SiteAttendanceScreen(
+          controller: operationsController,
+          arabic: ar,
+          teamSetupStore: ref.read(teamSetupStoreProvider),
+          actor: actor,
+          scope: scope,
+        ),
+      ),
     );
   }
 
@@ -177,7 +190,14 @@ final class _HomeScaffoldState extends ConsumerState<HomeScaffold> {
       arabic: ar,
       actor: actor,
       scope: scope,
-      onEditSiteDay: (t, d) => _openEditSiteDay(sections, t, d),
+      onEditSiteDay: (t, d) => _openEditSiteDay(
+        team: t,
+        date: d,
+        operationsController: operationsController,
+        ar: ar,
+        actor: actor,
+        scope: scope,
+      ),
     ),
     AppSection.settings => PreferencesScreen(
       arabic: ar,
