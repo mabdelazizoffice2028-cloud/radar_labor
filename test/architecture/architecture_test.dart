@@ -64,11 +64,17 @@ void main() {
     expect(violations, isEmpty);
   });
 
-  test('widgetFiles_doNotImportDatabaseOrSupabase', () {
-    final violations = _filesWithDirective((f) {
-      final path = _norm(f);
-      return path.contains('/presentation/') || path.contains('lib/core/ui/');
-    }, (line) => line.contains('core/database') || line.contains('supabase'));
+  test('widgetFiles_doNotImportDatabaseOrSupabaseOrDrift', () {
+    final violations = _filesWithDirective(
+      (f) {
+        final path = _norm(f);
+        return path.contains('/presentation/') || path.contains('lib/core/ui/');
+      },
+      (line) =>
+          line.contains('core/database') ||
+          line.contains('supabase') ||
+          line.contains('package:drift'),
+    );
     expect(violations, isEmpty);
   });
 

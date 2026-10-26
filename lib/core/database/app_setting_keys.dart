@@ -4,4 +4,10 @@ abstract final class AppSettingKeys {
   static const String deviceSequence = 'device_sequence';
   static const String locale = 'locale';
   static const String slaMinutes = 'sla_minutes';
+  static const String rosterEpoch = 'roster_epoch';
+  static const String deviceActivated = 'device_activated';
+  static const String draftSiteAttendancePrefix = 'draft_site_attendance_';
+
+  static String draftSiteAttendance(String teamId, String date) =>
+      '$draftSiteAttendancePrefix${teamId}_$date';
 }

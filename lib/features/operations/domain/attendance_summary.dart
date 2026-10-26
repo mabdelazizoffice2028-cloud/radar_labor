@@ -1,6 +1,7 @@
 import 'package:radar_labor/core/l10n/attendance_message_strings.dart';
-
-import 'operations_models.dart';
+import 'package:radar_labor/core/l10n/name_collation.dart';
+import 'package:radar_labor/features/operations/domain/operations_models.dart';
+import 'package:radar_labor/features/operations/domain/whatsapp_template_engine.dart';
 
 /// Ready-to-display confirmation and copy text for a daily roster submission.
 final class AttendanceSummary {
@@ -26,12 +27,13 @@ final class AttendanceSummary {
   }) {
     final selectedWorkers = _selectedWorkers(workers, absentIds, arabic);
     return _create(
+      kind: WhatsappMessageKind.housing,
       entityName: housing.displayName(arabic: arabic),
       date: date,
-      countLabel: strings.absenceCount,
       selectedWorkers: selectedWorkers,
-      emptyMessage: strings.noAbsences,
       emptyConfirmation: strings.confirmNoAbsences,
+      arabic: arabic,
+      strings: strings,
     );
   }
 
@@ -45,32 +47,41 @@ final class AttendanceSummary {
   }) {
     final selectedWorkers = _selectedWorkers(workers, presentIds, arabic);
     return _create(
+      kind: WhatsappMessageKind.site,
       entityName: team.displayName(arabic: arabic),
       date: date,
-      countLabel: strings.presenceCount,
       selectedWorkers: selectedWorkers,
-      emptyMessage: strings.noPresence,
       emptyConfirmation: strings.confirmNoPresence,
+      arabic: arabic,
+      strings: strings,
     );
   }
 
   static AttendanceSummary _create({
+    required WhatsappMessageKind kind,
     required String entityName,
     required String date,
-    required String countLabel,
-    required List<({String id, String label})> selectedWorkers,
-    required String emptyMessage,
+    required List<({String id, String code, String name, String label})>
+    selectedWorkers,
     required String emptyConfirmation,
+    required bool arabic,
+    required AttendanceMessageStrings strings,
   }) {
     final workerLabels = selectedWorkers.map((worker) => worker.label).toList();
     final confirmation = workerLabels.isEmpty
         ? emptyConfirmation
         : workerLabels.join('\n');
-    final messageBody = workerLabels.isEmpty
-        ? emptyMessage
-        : workerLabels.join('\n');
-    final message =
-        '$entityName\n$date\n$countLabel: ${workerLabels.length}\n$messageBody';
+    final message = WhatsappTemplateEngine.format(
+      kind: kind,
+      date: date,
+      entityName: entityName,
+      workers: [
+        for (final worker in selectedWorkers)
+          WhatsappWorkerItem(code: worker.code, name: worker.name),
+      ],
+      arabic: arabic,
+      strings: strings,
+    );
     return AttendanceSummary(
       workerCount: workerLabels.length,
       workerIds: Set.unmodifiable(selectedWorkers.map((worker) => worker.id)),
@@ -79,16 +90,32 @@ final class AttendanceSummary {
     );
   }
 
-  static List<({String id, String label})> _selectedWorkers(
+  static List<({String id, String code, String name, String label})>
+  _selectedWorkers(
     Iterable<WorkerOption> workers,
     Set<String> selectedIds,
     bool arabic,
-  ) => [
-    for (final worker in workers)
-      if (selectedIds.contains(worker.id))
-        (
-          id: worker.id,
-          label: '${worker.displayName(arabic: arabic)} (${worker.code})',
-        ),
-  ];
+  ) {
+    final items = [
+      for (final worker in workers)
+        if (selectedIds.contains(worker.id))
+          (
+            id: worker.id,
+            code: worker.code,
+            name: worker.displayName(arabic: arabic),
+            label: '${worker.displayName(arabic: arabic)} (${worker.code})',
+          ),
+    ];
+    items.sort(
+      (a, b) => NameCollation.compareWorkers(
+        nameA: a.name,
+        codeA: a.code,
+        idA: a.id,
+        nameB: b.name,
+        codeB: b.code,
+        idB: b.id,
+      ),
+    );
+    return items;
+  }
 }

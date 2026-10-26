@@ -2901,9 +2901,9 @@ class $AppUsersTable extends AppUsers with TableInfo<$AppUsersTable, AppUser> {
   late final GeneratedColumn<String> employeeUid = GeneratedColumn<String>(
     'employee_uid',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _displayNameMeta = const VerificationMeta(
     'displayName',
@@ -3056,8 +3056,6 @@ class $AppUsersTable extends AppUsers with TableInfo<$AppUsersTable, AppUser> {
           _employeeUidMeta,
         ),
       );
-    } else if (isInserting) {
-      context.missing(_employeeUidMeta);
     }
     if (data.containsKey('display_name')) {
       context.handle(
@@ -3156,7 +3154,7 @@ class $AppUsersTable extends AppUsers with TableInfo<$AppUsersTable, AppUser> {
       employeeUid: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}employee_uid'],
-      )!,
+      ),
       displayName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}display_name'],
@@ -3208,7 +3206,7 @@ class $AppUsersTable extends AppUsers with TableInfo<$AppUsersTable, AppUser> {
 
 class AppUser extends DataClass implements Insertable<AppUser> {
   final String id;
-  final String employeeUid;
+  final String? employeeUid;
   final String displayName;
   final String role;
   final bool active;
@@ -3221,7 +3219,7 @@ class AppUser extends DataClass implements Insertable<AppUser> {
   final DateTime createdAt;
   const AppUser({
     required this.id,
-    required this.employeeUid,
+    this.employeeUid,
     required this.displayName,
     required this.role,
     required this.active,
@@ -3237,7 +3235,9 @@ class AppUser extends DataClass implements Insertable<AppUser> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    map['employee_uid'] = Variable<String>(employeeUid);
+    if (!nullToAbsent || employeeUid != null) {
+      map['employee_uid'] = Variable<String>(employeeUid);
+    }
     map['display_name'] = Variable<String>(displayName);
     map['role'] = Variable<String>(role);
     map['active'] = Variable<bool>(active);
@@ -3256,7 +3256,9 @@ class AppUser extends DataClass implements Insertable<AppUser> {
   AppUsersCompanion toCompanion(bool nullToAbsent) {
     return AppUsersCompanion(
       id: Value(id),
-      employeeUid: Value(employeeUid),
+      employeeUid: employeeUid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(employeeUid),
       displayName: Value(displayName),
       role: Value(role),
       active: Value(active),
@@ -3279,7 +3281,7 @@ class AppUser extends DataClass implements Insertable<AppUser> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AppUser(
       id: serializer.fromJson<String>(json['id']),
-      employeeUid: serializer.fromJson<String>(json['employeeUid']),
+      employeeUid: serializer.fromJson<String?>(json['employeeUid']),
       displayName: serializer.fromJson<String>(json['displayName']),
       role: serializer.fromJson<String>(json['role']),
       active: serializer.fromJson<bool>(json['active']),
@@ -3297,7 +3299,7 @@ class AppUser extends DataClass implements Insertable<AppUser> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'employeeUid': serializer.toJson<String>(employeeUid),
+      'employeeUid': serializer.toJson<String?>(employeeUid),
       'displayName': serializer.toJson<String>(displayName),
       'role': serializer.toJson<String>(role),
       'active': serializer.toJson<bool>(active),
@@ -3313,7 +3315,7 @@ class AppUser extends DataClass implements Insertable<AppUser> {
 
   AppUser copyWith({
     String? id,
-    String? employeeUid,
+    Value<String?> employeeUid = const Value.absent(),
     String? displayName,
     String? role,
     bool? active,
@@ -3326,7 +3328,7 @@ class AppUser extends DataClass implements Insertable<AppUser> {
     DateTime? createdAt,
   }) => AppUser(
     id: id ?? this.id,
-    employeeUid: employeeUid ?? this.employeeUid,
+    employeeUid: employeeUid.present ? employeeUid.value : this.employeeUid,
     displayName: displayName ?? this.displayName,
     role: role ?? this.role,
     active: active ?? this.active,
@@ -3419,7 +3421,7 @@ class AppUser extends DataClass implements Insertable<AppUser> {
 
 class AppUsersCompanion extends UpdateCompanion<AppUser> {
   final Value<String> id;
-  final Value<String> employeeUid;
+  final Value<String?> employeeUid;
   final Value<String> displayName;
   final Value<String> role;
   final Value<bool> active;
@@ -3448,7 +3450,7 @@ class AppUsersCompanion extends UpdateCompanion<AppUser> {
   });
   AppUsersCompanion.insert({
     required String id,
-    required String employeeUid,
+    this.employeeUid = const Value.absent(),
     required String displayName,
     required String role,
     this.active = const Value.absent(),
@@ -3461,7 +3463,6 @@ class AppUsersCompanion extends UpdateCompanion<AppUser> {
     required DateTime createdAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       employeeUid = Value(employeeUid),
        displayName = Value(displayName),
        role = Value(role),
        pwHash = Value(pwHash),
@@ -3502,7 +3503,7 @@ class AppUsersCompanion extends UpdateCompanion<AppUser> {
 
   AppUsersCompanion copyWith({
     Value<String>? id,
-    Value<String>? employeeUid,
+    Value<String?>? employeeUid,
     Value<String>? displayName,
     Value<String>? role,
     Value<bool>? active,
@@ -3906,6 +3907,575 @@ class UserScopesCompanion extends UpdateCompanion<UserScope> {
   }
 }
 
+class $AuditLogsTable extends AuditLogs
+    with TableInfo<$AuditLogsTable, AuditLog> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AuditLogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _auditIdMeta = const VerificationMeta(
+    'auditId',
+  );
+  @override
+  late final GeneratedColumn<String> auditId = GeneratedColumn<String>(
+    'audit_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _actionMeta = const VerificationMeta('action');
+  @override
+  late final GeneratedColumn<String> action = GeneratedColumn<String>(
+    'action',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entityTypeMeta = const VerificationMeta(
+    'entityType',
+  );
+  @override
+  late final GeneratedColumn<String> entityType = GeneratedColumn<String>(
+    'entity_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entityIdMeta = const VerificationMeta(
+    'entityId',
+  );
+  @override
+  late final GeneratedColumn<String> entityId = GeneratedColumn<String>(
+    'entity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deviceTimeMeta = const VerificationMeta(
+    'deviceTime',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deviceTime = GeneratedColumn<DateTime>(
+    'device_time',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _receivedAtMeta = const VerificationMeta(
+    'receivedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> receivedAt = GeneratedColumn<DateTime>(
+    'received_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    auditId,
+    userId,
+    action,
+    entityType,
+    entityId,
+    deviceId,
+    deviceTime,
+    receivedAt,
+    syncStatus,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'audit_log';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AuditLog> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('audit_id')) {
+      context.handle(
+        _auditIdMeta,
+        auditId.isAcceptableOrUnknown(data['audit_id']!, _auditIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_auditIdMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    }
+    if (data.containsKey('action')) {
+      context.handle(
+        _actionMeta,
+        action.isAcceptableOrUnknown(data['action']!, _actionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_actionMeta);
+    }
+    if (data.containsKey('entity_type')) {
+      context.handle(
+        _entityTypeMeta,
+        entityType.isAcceptableOrUnknown(data['entity_type']!, _entityTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityTypeMeta);
+    }
+    if (data.containsKey('entity_id')) {
+      context.handle(
+        _entityIdMeta,
+        entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityIdMeta);
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('device_time')) {
+      context.handle(
+        _deviceTimeMeta,
+        deviceTime.isAcceptableOrUnknown(data['device_time']!, _deviceTimeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceTimeMeta);
+    }
+    if (data.containsKey('received_at')) {
+      context.handle(
+        _receivedAtMeta,
+        receivedAt.isAcceptableOrUnknown(data['received_at']!, _receivedAtMeta),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {auditId};
+  @override
+  AuditLog map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AuditLog(
+      auditId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}audit_id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      ),
+      action: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}action'],
+      )!,
+      entityType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_type'],
+      )!,
+      entityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_id'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      deviceTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}device_time'],
+      )!,
+      receivedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}received_at'],
+      ),
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+    );
+  }
+
+  @override
+  $AuditLogsTable createAlias(String alias) {
+    return $AuditLogsTable(attachedDatabase, alias);
+  }
+}
+
+class AuditLog extends DataClass implements Insertable<AuditLog> {
+  final String auditId;
+  final String? userId;
+  final String action;
+  final String entityType;
+  final String entityId;
+  final String deviceId;
+  final DateTime deviceTime;
+  final DateTime? receivedAt;
+  final String syncStatus;
+  const AuditLog({
+    required this.auditId,
+    this.userId,
+    required this.action,
+    required this.entityType,
+    required this.entityId,
+    required this.deviceId,
+    required this.deviceTime,
+    this.receivedAt,
+    required this.syncStatus,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['audit_id'] = Variable<String>(auditId);
+    if (!nullToAbsent || userId != null) {
+      map['user_id'] = Variable<String>(userId);
+    }
+    map['action'] = Variable<String>(action);
+    map['entity_type'] = Variable<String>(entityType);
+    map['entity_id'] = Variable<String>(entityId);
+    map['device_id'] = Variable<String>(deviceId);
+    map['device_time'] = Variable<DateTime>(deviceTime);
+    if (!nullToAbsent || receivedAt != null) {
+      map['received_at'] = Variable<DateTime>(receivedAt);
+    }
+    map['sync_status'] = Variable<String>(syncStatus);
+    return map;
+  }
+
+  AuditLogsCompanion toCompanion(bool nullToAbsent) {
+    return AuditLogsCompanion(
+      auditId: Value(auditId),
+      userId: userId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userId),
+      action: Value(action),
+      entityType: Value(entityType),
+      entityId: Value(entityId),
+      deviceId: Value(deviceId),
+      deviceTime: Value(deviceTime),
+      receivedAt: receivedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(receivedAt),
+      syncStatus: Value(syncStatus),
+    );
+  }
+
+  factory AuditLog.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AuditLog(
+      auditId: serializer.fromJson<String>(json['auditId']),
+      userId: serializer.fromJson<String?>(json['userId']),
+      action: serializer.fromJson<String>(json['action']),
+      entityType: serializer.fromJson<String>(json['entityType']),
+      entityId: serializer.fromJson<String>(json['entityId']),
+      deviceId: serializer.fromJson<String>(json['deviceId']),
+      deviceTime: serializer.fromJson<DateTime>(json['deviceTime']),
+      receivedAt: serializer.fromJson<DateTime?>(json['receivedAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'auditId': serializer.toJson<String>(auditId),
+      'userId': serializer.toJson<String?>(userId),
+      'action': serializer.toJson<String>(action),
+      'entityType': serializer.toJson<String>(entityType),
+      'entityId': serializer.toJson<String>(entityId),
+      'deviceId': serializer.toJson<String>(deviceId),
+      'deviceTime': serializer.toJson<DateTime>(deviceTime),
+      'receivedAt': serializer.toJson<DateTime?>(receivedAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+    };
+  }
+
+  AuditLog copyWith({
+    String? auditId,
+    Value<String?> userId = const Value.absent(),
+    String? action,
+    String? entityType,
+    String? entityId,
+    String? deviceId,
+    DateTime? deviceTime,
+    Value<DateTime?> receivedAt = const Value.absent(),
+    String? syncStatus,
+  }) => AuditLog(
+    auditId: auditId ?? this.auditId,
+    userId: userId.present ? userId.value : this.userId,
+    action: action ?? this.action,
+    entityType: entityType ?? this.entityType,
+    entityId: entityId ?? this.entityId,
+    deviceId: deviceId ?? this.deviceId,
+    deviceTime: deviceTime ?? this.deviceTime,
+    receivedAt: receivedAt.present ? receivedAt.value : this.receivedAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+  );
+  AuditLog copyWithCompanion(AuditLogsCompanion data) {
+    return AuditLog(
+      auditId: data.auditId.present ? data.auditId.value : this.auditId,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      action: data.action.present ? data.action.value : this.action,
+      entityType: data.entityType.present
+          ? data.entityType.value
+          : this.entityType,
+      entityId: data.entityId.present ? data.entityId.value : this.entityId,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      deviceTime: data.deviceTime.present
+          ? data.deviceTime.value
+          : this.deviceTime,
+      receivedAt: data.receivedAt.present
+          ? data.receivedAt.value
+          : this.receivedAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AuditLog(')
+          ..write('auditId: $auditId, ')
+          ..write('userId: $userId, ')
+          ..write('action: $action, ')
+          ..write('entityType: $entityType, ')
+          ..write('entityId: $entityId, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('deviceTime: $deviceTime, ')
+          ..write('receivedAt: $receivedAt, ')
+          ..write('syncStatus: $syncStatus')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    auditId,
+    userId,
+    action,
+    entityType,
+    entityId,
+    deviceId,
+    deviceTime,
+    receivedAt,
+    syncStatus,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AuditLog &&
+          other.auditId == this.auditId &&
+          other.userId == this.userId &&
+          other.action == this.action &&
+          other.entityType == this.entityType &&
+          other.entityId == this.entityId &&
+          other.deviceId == this.deviceId &&
+          other.deviceTime == this.deviceTime &&
+          other.receivedAt == this.receivedAt &&
+          other.syncStatus == this.syncStatus);
+}
+
+class AuditLogsCompanion extends UpdateCompanion<AuditLog> {
+  final Value<String> auditId;
+  final Value<String?> userId;
+  final Value<String> action;
+  final Value<String> entityType;
+  final Value<String> entityId;
+  final Value<String> deviceId;
+  final Value<DateTime> deviceTime;
+  final Value<DateTime?> receivedAt;
+  final Value<String> syncStatus;
+  final Value<int> rowid;
+  const AuditLogsCompanion({
+    this.auditId = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.action = const Value.absent(),
+    this.entityType = const Value.absent(),
+    this.entityId = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.deviceTime = const Value.absent(),
+    this.receivedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AuditLogsCompanion.insert({
+    required String auditId,
+    this.userId = const Value.absent(),
+    required String action,
+    required String entityType,
+    required String entityId,
+    required String deviceId,
+    required DateTime deviceTime,
+    this.receivedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : auditId = Value(auditId),
+       action = Value(action),
+       entityType = Value(entityType),
+       entityId = Value(entityId),
+       deviceId = Value(deviceId),
+       deviceTime = Value(deviceTime);
+  static Insertable<AuditLog> custom({
+    Expression<String>? auditId,
+    Expression<String>? userId,
+    Expression<String>? action,
+    Expression<String>? entityType,
+    Expression<String>? entityId,
+    Expression<String>? deviceId,
+    Expression<DateTime>? deviceTime,
+    Expression<DateTime>? receivedAt,
+    Expression<String>? syncStatus,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (auditId != null) 'audit_id': auditId,
+      if (userId != null) 'user_id': userId,
+      if (action != null) 'action': action,
+      if (entityType != null) 'entity_type': entityType,
+      if (entityId != null) 'entity_id': entityId,
+      if (deviceId != null) 'device_id': deviceId,
+      if (deviceTime != null) 'device_time': deviceTime,
+      if (receivedAt != null) 'received_at': receivedAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AuditLogsCompanion copyWith({
+    Value<String>? auditId,
+    Value<String?>? userId,
+    Value<String>? action,
+    Value<String>? entityType,
+    Value<String>? entityId,
+    Value<String>? deviceId,
+    Value<DateTime>? deviceTime,
+    Value<DateTime?>? receivedAt,
+    Value<String>? syncStatus,
+    Value<int>? rowid,
+  }) {
+    return AuditLogsCompanion(
+      auditId: auditId ?? this.auditId,
+      userId: userId ?? this.userId,
+      action: action ?? this.action,
+      entityType: entityType ?? this.entityType,
+      entityId: entityId ?? this.entityId,
+      deviceId: deviceId ?? this.deviceId,
+      deviceTime: deviceTime ?? this.deviceTime,
+      receivedAt: receivedAt ?? this.receivedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (auditId.present) {
+      map['audit_id'] = Variable<String>(auditId.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (action.present) {
+      map['action'] = Variable<String>(action.value);
+    }
+    if (entityType.present) {
+      map['entity_type'] = Variable<String>(entityType.value);
+    }
+    if (entityId.present) {
+      map['entity_id'] = Variable<String>(entityId.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (deviceTime.present) {
+      map['device_time'] = Variable<DateTime>(deviceTime.value);
+    }
+    if (receivedAt.present) {
+      map['received_at'] = Variable<DateTime>(receivedAt.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AuditLogsCompanion(')
+          ..write('auditId: $auditId, ')
+          ..write('userId: $userId, ')
+          ..write('action: $action, ')
+          ..write('entityType: $entityType, ')
+          ..write('entityId: $entityId, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('deviceTime: $deviceTime, ')
+          ..write('receivedAt: $receivedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3918,6 +4488,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $EventsTable events = $EventsTable(this);
   late final $AppUsersTable appUsers = $AppUsersTable(this);
   late final $UserScopesTable userScopes = $UserScopesTable(this);
+  late final $AuditLogsTable auditLogs = $AuditLogsTable(this);
   late final Index employeesEmployeeCode = Index(
     'employees_employee_code',
     'CREATE UNIQUE INDEX employees_employee_code ON employees (employee_code COLLATE NOCASE)',
@@ -3955,6 +4526,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     events,
     appUsers,
     userScopes,
+    auditLogs,
     employeesEmployeeCode,
     employmentPeriodEmployeeStart,
     eventsDeviceSequenceUnique,
@@ -5685,7 +6257,7 @@ typedef $$EventsTableProcessedTableManager =
     >;
 typedef $$AppUsersTableCreateCompanionBuilder = AppUsersCompanion Function({
   required String id,
-  required String employeeUid,
+  Value<String?> employeeUid,
   required String displayName,
   required String role,
   Value<bool> active,
@@ -5700,7 +6272,7 @@ typedef $$AppUsersTableCreateCompanionBuilder = AppUsersCompanion Function({
 });
 typedef $$AppUsersTableUpdateCompanionBuilder = AppUsersCompanion Function({
   Value<String> id,
-  Value<String> employeeUid,
+  Value<String?> employeeUid,
   Value<String> displayName,
   Value<String> role,
   Value<bool> active,
@@ -5939,7 +6511,7 @@ class $$AppUsersTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                Value<String> employeeUid = const Value.absent(),
+                Value<String?> employeeUid = const Value.absent(),
                 Value<String> displayName = const Value.absent(),
                 Value<String> role = const Value.absent(),
                 Value<bool> active = const Value.absent(),
@@ -5969,7 +6541,7 @@ class $$AppUsersTableTableManager
           createCompanionCallback:
               ({
                 required String id,
-                required String employeeUid,
+                Value<String?> employeeUid = const Value.absent(),
                 required String displayName,
                 required String role,
                 Value<bool> active = const Value.absent(),
@@ -6212,6 +6784,291 @@ typedef $$UserScopesTableProcessedTableManager =
       UserScope,
       PrefetchHooks Function()
     >;
+typedef $$AuditLogsTableCreateCompanionBuilder = AuditLogsCompanion Function({
+  required String auditId,
+  Value<String?> userId,
+  required String action,
+  required String entityType,
+  required String entityId,
+  required String deviceId,
+  required DateTime deviceTime,
+  Value<DateTime?> receivedAt,
+  Value<String> syncStatus,
+  Value<int> rowid,
+});
+typedef $$AuditLogsTableUpdateCompanionBuilder = AuditLogsCompanion Function({
+  Value<String> auditId,
+  Value<String?> userId,
+  Value<String> action,
+  Value<String> entityType,
+  Value<String> entityId,
+  Value<String> deviceId,
+  Value<DateTime> deviceTime,
+  Value<DateTime?> receivedAt,
+  Value<String> syncStatus,
+  Value<int> rowid,
+});
+
+class $$AuditLogsTableFilterComposer
+    extends Composer<_$AppDatabase, $AuditLogsTable> {
+  $$AuditLogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get auditId => $composableBuilder(
+    column: $table.auditId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get action => $composableBuilder(
+    column: $table.action,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityId => $composableBuilder(
+    column: $table.entityId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deviceTime => $composableBuilder(
+    column: $table.deviceTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get receivedAt => $composableBuilder(
+    column: $table.receivedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AuditLogsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AuditLogsTable> {
+  $$AuditLogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get auditId => $composableBuilder(
+    column: $table.auditId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get action => $composableBuilder(
+    column: $table.action,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityId => $composableBuilder(
+    column: $table.entityId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deviceTime => $composableBuilder(
+    column: $table.deviceTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get receivedAt => $composableBuilder(
+    column: $table.receivedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AuditLogsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AuditLogsTable> {
+  $$AuditLogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get auditId =>
+      $composableBuilder(column: $table.auditId, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get action =>
+      $composableBuilder(column: $table.action, builder: (column) => column);
+
+  GeneratedColumn<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get entityId =>
+      $composableBuilder(column: $table.entityId, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deviceTime => $composableBuilder(
+    column: $table.deviceTime,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get receivedAt => $composableBuilder(
+    column: $table.receivedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+}
+
+class $$AuditLogsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AuditLogsTable,
+          AuditLog,
+          $$AuditLogsTableFilterComposer,
+          $$AuditLogsTableOrderingComposer,
+          $$AuditLogsTableAnnotationComposer,
+          $$AuditLogsTableCreateCompanionBuilder,
+          $$AuditLogsTableUpdateCompanionBuilder,
+          (AuditLog, BaseReferences<_$AppDatabase, $AuditLogsTable, AuditLog>),
+          AuditLog,
+          PrefetchHooks Function()
+        > {
+  $$AuditLogsTableTableManager(_$AppDatabase db, $AuditLogsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AuditLogsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AuditLogsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AuditLogsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> auditId = const Value.absent(),
+                Value<String?> userId = const Value.absent(),
+                Value<String> action = const Value.absent(),
+                Value<String> entityType = const Value.absent(),
+                Value<String> entityId = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<DateTime> deviceTime = const Value.absent(),
+                Value<DateTime?> receivedAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AuditLogsCompanion(
+                auditId: auditId,
+                userId: userId,
+                action: action,
+                entityType: entityType,
+                entityId: entityId,
+                deviceId: deviceId,
+                deviceTime: deviceTime,
+                receivedAt: receivedAt,
+                syncStatus: syncStatus,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String auditId,
+                Value<String?> userId = const Value.absent(),
+                required String action,
+                required String entityType,
+                required String entityId,
+                required String deviceId,
+                required DateTime deviceTime,
+                Value<DateTime?> receivedAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AuditLogsCompanion.insert(
+                auditId: auditId,
+                userId: userId,
+                action: action,
+                entityType: entityType,
+                entityId: entityId,
+                deviceId: deviceId,
+                deviceTime: deviceTime,
+                receivedAt: receivedAt,
+                syncStatus: syncStatus,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AuditLogsTable, AuditLog>(table),
+                  BaseReferences<_$AppDatabase, $AuditLogsTable, AuditLog>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AuditLogsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AuditLogsTable,
+      AuditLog,
+      $$AuditLogsTableFilterComposer,
+      $$AuditLogsTableOrderingComposer,
+      $$AuditLogsTableAnnotationComposer,
+      $$AuditLogsTableCreateCompanionBuilder,
+      $$AuditLogsTableUpdateCompanionBuilder,
+      (AuditLog, BaseReferences<_$AppDatabase, $AuditLogsTable, AuditLog>),
+      AuditLog,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6232,4 +7089,6 @@ class $AppDatabaseManager {
       $$AppUsersTableTableManager(_db, _db.appUsers);
   $$UserScopesTableTableManager get userScopes =>
       $$UserScopesTableTableManager(_db, _db.userScopes);
+  $$AuditLogsTableTableManager get auditLogs =>
+      $$AuditLogsTableTableManager(_db, _db.auditLogs);
 }

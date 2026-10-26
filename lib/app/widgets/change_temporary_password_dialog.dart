@@ -67,9 +67,7 @@ final class _ChangeTemporaryPasswordDialogState
   @override
   Widget build(BuildContext context) => AlertDialog(
     title: Text(
-      widget.arabic
-          ? 'تغيير كلمة المرور المؤقتة'
-          : 'Change temporary password',
+      widget.arabic ? 'تغيير كلمة المرور المؤقتة' : 'Change temporary password',
     ),
     content: SingleChildScrollView(
       child: Column(

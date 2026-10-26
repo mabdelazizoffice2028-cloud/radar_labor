@@ -1,73 +1,42 @@
 # تسليم العمل للموديل التالي
 
-**آخر تحديث:** 23 أكتوبر 2026. ابدأ من `AGENTS.md` في جذر المشروع، ثم اقرأ
+**آخر تحديث:** 25 أكتوبر 2026. ابدأ من `AGENTS.md` في جذر المشروع، ثم اقرأ
 `README.md` و`docs/README.md` و`DEVICE_AND_MODEL_HANDOFF.md` و`DECISIONS.md` وهذا
-الملف. بعد ذلك راجع `WORKLOG.md` و`BUGS.md` و`ROADMAP.md` وأقسام PRD/DESIGN ذات الصلة.
+الملف. بعد ذلك راجع `WORKLOG.md` و`BUGS.md` و`ROADMAP.md` و`SECURITY_AND_SYNC_PLAN_V1_5.md`.
 
-## توجيه المالك
+## الحالة الحالية (بعد إكمال V1.5 بالكامل)
 
-- **تحديث 23 أكتوبر 2026:** طلب المالك إعداد Supabase بالمفتاح Publishable
-  وتأسيس RBAC/RLS. هذا الطلب يحل محل قرار تأجيل Supabase ضمن هذا النطاق. راجع
-  `supabase_integration_log.md`. العميل يبدأ بعد فتح Drift ولا يجب أن يمنع
-  التشغيل المحلي. ترحيل SQL موجود لكنه **لم يُطبق** على المشروع المستضاف؛ لا
-  تدّعِ اتصالًا أو نشرًا أو مزامنة. لا تضع Service Role key في التطبيق.
-- التوجيه الأحدث يطلب إكمال كل نطاق V1 الآن، ويلغي شرط التوقف بعد S6 وانتظار
-  تجربة الهاتف.
-- البيانات وسير العمل الحاليان محليان، بقاعدة مشفرة وأصول وخطوط محلية. عميل
-  Supabase مهيأ اختياريًا؛ المزامنة وتسجيل الدخول السحابي لم يُنفذا.
-- الإنجليزية افتراضية، والعربية اختيارية مع RTL. اجعل الواجهات بسيطة.
-- ملخصات WhatsApp محلية قابلة للنسخ فقط؛ لا ترسل تلقائيًا.
-- كلمة المرور الابتدائية 123456 مؤقتة ويجب تغييرها في أول دخول؛ تبقى إمكانية
-  تغييرها من الإعدادات. الأدوار: مدير المشروع، HR، مشرف سكن، مشرف موقع، ومشاهد.
-- حدّث docs مع كل مرحلة وأخطاء، ولا تضع أسماء أو أرقام هوية في Git أو السجلات.
+- اكتملت جميع جلسات `Radar_Labour_PRD_V1_5_Full.md` (الجلسات 0 إلى 11 — المرحلة أ والمرحلة ب).
+- قاعدة البيانات المحليّة المشفرة وصلت إلى `schemaVersion=5` (إضافة جدول `audit_log`، وجعل `app_users.employee_uid` اختياريًا لدعم حسابات `viewer`، ومفتاح `roster_epoch`).
+- جميع ملفات `.dart` في `lib/` (باستثناء الملفات المولدة `*.g.dart`) تلتزم بالحد الصارم **<= 300 سطر** بعد تشغيل `dart format`.
+- الفحص الساكن: `flutter analyze --no-pub` نجح بدون أي تحذير أو خطأ (**No issues found!**).
+- الاختبارات الآلية: `flutter test --no-pub` نجح بالكامل (**125/125 All tests passed!**).
+- نسخة الإطلاق النهائية مبنية ومنسوخة في `outputs/Radar Labour.apk`:
+  - الحجم: **69,521,599 بايت**
+  - بصمة SHA-256: `5E7F5F7397B3C2C938FD36794C2F25AC58A032293083023AE12D2E54C9C19957`
 
-## الحالة الحالية
+## ما أُنجز في V1.5
 
-- GitHub remote مربوط بـ `https://github.com/mabdelazizoffice2028-cloud/radar_labor.git`.
-  الفرع `origin/slice/s6-dashboard-resolution` يشير إلى commit `35389a246247516cd51bedbe1b76d078a825b071`.
-- المستودع `C:\\my_apps\\radar_labor`، والفرع المحلي الذي ظهر في فحص جلسة
-  الأيقونة والبناء هو `main`؛ لم يُفحص remote في تلك الجلسة.
-  لا تستخدم force push أو تغييرات خصوصية GitHub. قارن remote قبل أي نشر.
-- Flutter 3.47.7 / Dart 3.13.5، Android SDK `C:\\Android\\Sdk`، JDK 17، Pub
-  cache `C:\\devcache\\pub` وGradle cache `C:\\devcache\\gradle`.
-- APK Release حديث بأيقونة Radar Labour الجديدة في `outputs/Radar Labour.apk`،
-  SHA-256 `39007DAEF137228E3F3A873F0E25AC1C03659A21ADBEB8B2237F9C562040D630`؛
-  حجمه 68,077,931 بايت. بناء محلي للتجربة وموقّع بإعداد debug الحالي، وليس
-  جاهزًا لمتجر Play. لم يُثبت على هاتف.
-- التحقق: `flutter analyze --no-pub` نجح بعد إضافة Supabase؛ أحدث `flutter build
-  apk --release --no-pub` نجح بعد إضافة الأيقونة. نتيجة `flutter test --no-pub`
-  المسجلة 94/94 سابقة ولم تُعد لهذا البناء.
-- **المراحل 1+2+3 مكتملة:**
-  - توحيد `MaterialApp`، تفكيك `radar_labor_app.dart` إلى ملفات أصغر.
-  - واجهة تسجيل الدخول بدون اختيار دور يدوي، شاشة الإعداد الأولي.
-  - جداول `AppUsers` و`UserScopes`، `schemaVersion=4`، قفل تدريجي مخزن في DB.
-- S6 يتضمن لوحة الحالات وعمليات السكن/الموقع والملخصات؛ راجع WORKLOG وBUGS.
-- أضيفت حزمة `excel` محليًا؛ المستورد يستخدم Android Storage Access Framework
-  عبر MethodChannel بلا إذن ملفات شامل ولا اتصال.
-- ملف المصدر `All Labour Active` يحوي S/O وID No. وName وDesignation وSupplier.
-  يمنع تخزين رقم الهوية، ويستخدم S/O ككود مبدئي بعد فحص التكرار. لا يتضمن
-  الملف ربط الفريق والسكن؛ على المدير إسناد ذلك محليًا.
-- نُقلت نسخة roster شخصية من docs وحذفت (B-007). لا تسترجعها ولا تنشرها.
+1. **المرحلة أ (العمليات الميدانية والسجل التاريخي):**
+   - فصل تبويب «التسجيل اليومي» عن الإدارة (`HomeScaffold` — BC-1) وحذف قائمة التسجيل من شاشة العمال (`WorkersScreen` — BC-2).
+   - بث النطاقات الحي (`LocalAuthRepository.watchScopes`) ومعالج إعداد الفريق من 3 خطوات (`TeamWizardScreen`) وشاشة تعديل أعضاء الفريق (`TeamEditScreen`).
+   - التسجيل اليومي الذكي (`SiteAttendanceRepository`, `SiteAttendanceNotifier`, `SiteAttendanceScreen`) بأولويات التحميل الأربع، والمسودة التلقائية، وإضافة العامل الضيف ليوم واحد، وحوار معاينة الفروقات (`AttendanceDiffDialog`)، وحوار حل التعارض المحلي (`AttendanceConflictDialog` مع استثناء D-15)، والتراجع الذري الشامل (`LedgerUndoPlan`)، ومحرك قوالب واتساب (`WhatsAppTemplateEngine`).
+   - السجل التاريخي (`HistoryScreen`, `HistoryDayDetailSheet`) للمشرف والإدارة مع نافذة التعديل خلال 7 أيام، وإظهار أسماء المشرفين المسؤولين في بطاقات «لم يسجَّل بعد» (`DashboardCoverageRepository`).
+2. **المرحلة ب (الدخول الموجه بالدور، سجل التدقيق، مسح القوى، والمزامنة التلقائية):**
+   - تدفق الدخول الموجه بالدور (`RolePicker`, `LoginFlowNotifier`, `AuthLoginForm`, `AuthGate` — BC-5) مع التحقق الصارم من الدور في `signIn` وإعادة تعيين كلمة المرور وتعطيل الحساب في `LocalAccountsScreen` (BC-6).
+   - الخطة الأمنية والمعمارية الكاملة في `docs/SECURITY_AND_SYNC_PLAN_V1_5.md`.
+   - `AuditLogRepository` و `RosterAdminRepository` و `RosterWipePlan` وتبويب «سجل التغييرات» (`AuditLogTabView`).
+   - محرك المزامنة التلقائية (`OutboxRepository`, `RemoteSyncGateway`, `SyncEngine`) ومؤشر المزامنة الهادئ (`SyncStatusBadge`).
 
-## العمل المتبقي
+## الخطوة التالية المحدودة
 
-ملفات تتجاوز 300 سطر (ما زالت تحتاج تقسيم):
-- `lib/features/dashboard/presentation/dashboard_components.dart` — 329 سطراً (يستخدم `part of` — اقرأ `dashboard_screen.dart` أولاً قبل التعديل).
-
-ميزات مطلوبة في drafts لم تُبنَ بعد:
-- شاشة إدارة الحسابات (تعطيل / إعادة تعيين كلمة المرور / تحديث النطاق).
-- شاشة تعيين العامل لفريق وسكن — ثغرة وظيفية رئيسية (شاشات الحضور فارغة بدونها).
-
-المالك يراجع تحديثات التوثيق الحالية ويعمل لها commit ويرفعها بنفسه؛
-لا تدفعها نيابة عنه. بعد ذلك يثبت APK على الهاتف ويجرب الأدوار والاستيراد.
-
-التحقق من الهاتف/ADB غير مثبت. لا تدّع وضع الطيران أو التثبيت الناجح بلا دليل.
-لا ترفع APK أو roster أو أسرار. إذا تعذر Flutter بسبب startup lock سجّل ذلك
-وواصل ما يمكن التحقق منه بـ Dart، مع إبقاء سبب العائق مفتوحًا في `BUGS.md`.
+1. تثبيت `outputs/Radar Labour.apk` على هاتف المالك وتجربة:
+   - الدخول الموجه بالدور (مدير مشروع / HR / مشرف موقع / مشرف سكن / مشاهد).
+   - إنشاء فريق من معالج مشرف الموقع وتجربة التسجيل اليومي الذكي والفروقات وحل التعارض والملخص القابل للنسخ.
+   - مراجعة السجل التاريخي وتبويب «سجل التغييرات» الإداري.
+2. عند رغبة المالك في تفعيل المزامنة السحابية الحية على مشروع Supabase المستضاف، يُطبَّق مخطط SQL/RPC الموثق في `docs/SECURITY_AND_SYNC_PLAN_V1_5.md` ويُربط تنفيذ `SupabaseRemoteSyncGateway` بواجهة `RemoteSyncGateway`.
 
 ## البيئة
 
 - لا تشغل `flutter clean` ولا تحذف `.dart_tool` أو كاش Flutter/Pub/Gradle.
-- استخدم `work/flutter-profile/android-env.cmd` ثم أوامر Flutter مع `--no-pub`؛
-  فهو يضبط Android/JDK/Pub/Gradle وTEMP/TMP المحليين.
-- B-003 يوثق حل عوائق Gradle السابقة، وB-005 يوثق قفل Flutter إن عاد.
+- استخدم `work/flutter-profile/android-env.cmd` ثم أوامر Flutter مع `--no-pub`.

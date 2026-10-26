@@ -14,15 +14,23 @@ abstract interface class OperationsStore {
     required String date,
     required EntityOption housing,
     required Set<String> absentIds,
+    required String actorUserId,
   });
 
-  Future<void> undoHousingCheck(HousingCheckUndo undo);
+  Future<void> undoHousingCheck(
+    HousingCheckUndo undo, {
+    required String actorUserId,
+  });
 
   Future<SiteAttendanceUndo> saveSiteAttendance({
     required String date,
     required EntityOption team,
     required Set<String> presentIds,
+    required String actorUserId,
   });
 
-  Future<void> undoSiteAttendance(SiteAttendanceUndo undo);
+  Future<void> undoSiteAttendance(
+    SiteAttendanceUndo undo, {
+    required String actorUserId,
+  });
 }

@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart';
 
-/// Local authenticated users stored in the encrypted database.
+/// Local authenticated users stored in the encrypted database (BC-7: employeeUid is nullable for viewer).
 class AppUsers extends Table {
   TextColumn get id => text()();
-  TextColumn get employeeUid => text()();
+  TextColumn get employeeUid => text().nullable()();
   TextColumn get displayName => text()();
   TextColumn get role => text()();
   BoolColumn get active => boolean().withDefault(const Constant(true))();

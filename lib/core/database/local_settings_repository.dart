@@ -29,6 +29,17 @@ final class LocalSettingsRepository {
         );
   }
 
+  Future<void> delete(String key) async {
+    await (_database.delete(
+      _database.settings,
+    )..where((setting) => setting.key.equals(key))).go();
+  }
+
+  Future<List<String>> readKeys() async {
+    final rows = await _database.select(_database.settings).get();
+    return List.unmodifiable(rows.map((row) => row.key));
+  }
+
   Future<String> ensureDeviceId() async {
     final existing = await read(AppSettingKeys.deviceId);
     if (existing != null && existing.isNotEmpty) return existing;

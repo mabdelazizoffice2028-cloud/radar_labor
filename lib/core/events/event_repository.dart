@@ -92,6 +92,7 @@ final class EventRepository {
           employeeUid: draft.employeeUid,
           teamId: draft.teamId,
           housingId: draft.housingId,
+          userId: draft.userId,
           deviceTimeUtc: now,
           isLate: isLate[index],
           resolutionKind: ResolutionKind.fromKey(draft.payload['kind']),
@@ -147,6 +148,22 @@ final class EventRepository {
     return List.unmodifiable(rows.map(_toDomain));
   }
 
+  Future<List<LocalEvent>> readBusinessDateRange({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final rows =
+        await (_database.select(_database.events)
+              ..where(
+                (event) =>
+                    event.businessDate.isBiggerOrEqualValue(fromDate) &
+                    event.businessDate.isSmallerOrEqualValue(toDate),
+              )
+              ..orderBy([(event) => OrderingTerm.asc(event.deviceSeq)]))
+            .get();
+    return List.unmodifiable(rows.map(_toDomain));
+  }
+
   Stream<List<LocalEvent>> watchBusinessDate(String businessDate) =>
       (_database.select(_database.events)
             ..where((event) => event.businessDate.equals(businessDate))
@@ -163,6 +180,7 @@ final class EventRepository {
     employeeUid: row.employeeUid,
     teamId: row.teamId,
     housingId: row.housingId,
+    userId: row.userId,
     receivedAtUtc: row.receivedAt?.toUtc(),
     deviceTimeUtc: row.deviceTime.toUtc(),
     delivery: EventDelivery.values.byName(row.syncStatus),

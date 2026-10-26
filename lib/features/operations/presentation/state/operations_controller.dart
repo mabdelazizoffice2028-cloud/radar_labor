@@ -1,8 +1,9 @@
-import 'package:radar_labor/core/auth/auth_role.dart';
+import 'package:radar_labor/core/auth/role_capabilities.dart';
 import 'package:radar_labor/core/l10n/attendance_message_strings.dart';
 import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/core/time/clock.dart';
 import 'package:radar_labor/features/operations/domain/attendance_summary.dart';
+import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
 import 'package:radar_labor/features/operations/domain/operations_store.dart';
 
@@ -30,32 +31,29 @@ final class PreparedSiteAttendance {
   final AttendanceSummary summary;
 }
 
-final class OperationPermissionException implements Exception {
-  const OperationPermissionException();
-}
-
-/// Coordinates daily operation rules while screens handle only presentation.
+/// Coordinates daily operation rules while screens handle only presentation (BC-3).
 final class OperationsController {
   const OperationsController({
     required this.store,
     required this.clock,
-    this.role,
+    required this.actorUserId,
+    required this.capabilities,
     this.allowedHousingIds = const [],
     this.allowedTeamIds = const [],
   });
 
   final OperationsStore store;
   final Clock clock;
-  final AuthRole? role;
+  final String actorUserId;
+  final RoleCapabilities capabilities;
   final List<String> allowedHousingIds;
   final List<String> allowedTeamIds;
 
-  bool get _isAdmin =>
-      role == null || role == AuthRole.projectManager || role == AuthRole.hr;
-  bool get canHousing => _isAdmin || role == AuthRole.housingSupervisor;
-  bool get canSite => _isAdmin || role == AuthRole.siteSupervisor;
-  bool _allowsHousing(String id) => _isAdmin || allowedHousingIds.contains(id);
-  bool _allowsTeam(String id) => _isAdmin || allowedTeamIds.contains(id);
+  bool get canHousing => capabilities.canRecordHousing;
+  bool get canSite => capabilities.canRecordSite;
+  bool _allowsHousing(String id) =>
+      canHousing && allowedHousingIds.contains(id);
+  bool _allowsTeam(String id) => canSite && allowedTeamIds.contains(id);
 
   Stream<List<EntityOption>> watchHousings() => store.watchHousings().map(
     (items) =>
@@ -82,6 +80,7 @@ final class OperationsController {
     required Set<String> absentIds,
     required bool arabic,
   }) async {
+    await _guard(canHousing && _allowsHousing(housing.id));
     final workers = await watchHousingWorkers(housing.id).first;
     final date = businessDateFor(clock.nowUtc());
     return PreparedHousingCheck(
@@ -104,18 +103,20 @@ final class OperationsController {
           date: check.date,
           housing: check.housing,
           absentIds: check.summary.workerIds,
+          actorUserId: actorUserId,
         ),
       );
 
   Future<void> undoHousingCheck(HousingCheckUndo undo) =>
       _guard(canHousing && _allowsHousing(undo.housingId))
-          .then((_) => store.undoHousingCheck(undo));
+          .then((_) => store.undoHousingCheck(undo, actorUserId: actorUserId));
 
   Future<PreparedSiteAttendance> prepareSiteAttendance({
     required EntityOption team,
     required Set<String> presentIds,
     required bool arabic,
   }) async {
+    await _guard(canSite && _allowsTeam(team.id));
     final workers = await watchTeamWorkers(team.id).first;
     final date = businessDateFor(clock.nowUtc());
     return PreparedSiteAttendance(
@@ -139,14 +140,15 @@ final class OperationsController {
       date: attendance.date,
       team: attendance.team,
       presentIds: attendance.summary.workerIds,
+      actorUserId: actorUserId,
     ),
   );
 
-  Future<void> undoSiteAttendance(SiteAttendanceUndo undo) =>
-      _guard(canSite && _allowsTeam(undo.teamId))
-          .then((_) => store.undoSiteAttendance(undo));
+  Future<void> undoSiteAttendance(SiteAttendanceUndo undo) => _guard(
+    canSite && _allowsTeam(undo.teamId),
+  ).then((_) => store.undoSiteAttendance(undo, actorUserId: actorUserId));
 
   Future<void> _guard(bool allowed) async {
-    if (!allowed) throw const OperationPermissionException();
+    if (!allowed) throw const OperationException(PermissionDenied());
   }
 }

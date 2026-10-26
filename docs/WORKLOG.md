@@ -537,3 +537,16 @@ top of the log.
 - وُثق حد كلمة المرور 8 أحرف، وأن الرفض الحالي لا يعرض feedback واضحًا. لم يبق تعديل كود؛ المالك طلب عدم التعديل وأفاد أن الدخول اشتغل.
 - سُجل أن محاولة بناء APK بعد محاولة UX أُلغيت بطلب المالك، وأن النسخة المعتمدة تبقى `outputs/Radar Labour.apk` ببصمتها السابقة. لم يُعد تشغيل تحليل أو اختبارات لأن هذا التسليم توثيق فقط ولم يتغير كود التطبيق.
 - فحص GitHub الأخير أظهر remote branch على commit `307025d04bf9e6e8c927db67982fb424f05299d7`، كما أكد المالك أنه رفع المشروع.
+
+
+## 2026-10-25 — إكمال رادار ليبور V1.5 بالكامل (الجلسات 7 إلى 11 — المرحلة ب والتسليم النهائي)
+
+- **الجلسة 7 (Role-First Login & Account Management):** إنشاء `AuthFlowStrings`, `AdminStrings`, `SyncStrings`, `RolePicker`, `LoginFlowNotifier`، وتحديث `AuthLoginForm`, `AuthGate` (BC-5: الدور -> الاسم -> كلمة المرور مع التحقق من الدور في `signIn`)، و `LocalAccountsScreen` (BC-6: السماح بإنشاء مشرف موقع بلا فريق مسند مبدئيًا، وإضافة إعادة تعيين كلمة المرور وتعطيل الحساب).
+- **الجلسة 8 (Security & Sync Architecture Plan):** كتابة الخطة الأمنية والمعمارية الكاملة لربط الحسابات المحلية بـ Supabase Auth وسياسات RLS ودالة `ingest_event_batch` في `docs/SECURITY_AND_SYNC_PLAN_V1_5.md`.
+- **الجلسة 9 (`schemaVersion=5`, Audit Log, & Roster Control):** ترقية قاعدة البيانات إلى `schemaVersion=5` (`AuditLogs` table -> `audit_log`، وجعل `AppUsers.employeeUid` اختياريًا لدعم حساب `viewer` بلا سجل عامل — BC-7، ومفتاح `roster_epoch`)، وإنشاء `AuditEntry`, `AuditLogRepository`, `RosterWipePlan`, `RosterAdminRepository`, وتبويب «سجل التغييرات» (`AuditLogTabView`) في `HistoryScreen`.
+- **الجلسة 10 (Automatic Offline-First Sync):** إنشاء `OutboxRepository`, `RemoteSyncGateway` (`OfflineRemoteSyncGateway`), `SyncEngine` (مع دعم الرفع غير المكرر `Idempotent`، وتنزيل القوى والحسابات و `roster_epoch`، والتفعيل `ActivationRequired`، وإنهاء الجلسة بعد رفع ما لم يُرفع `SessionRevoked` — D-25)، ومؤشر المزامنة الهادئ `SyncStatusBadge` في `HomeScaffold`.
+- **الجلسة 11 (Final Hardening & Release APK):**
+  - التحقق من أن جميع ملفات `.dart` في `lib/` (باستثناء `*.g.dart`) لا تتجاوز 300 سطر بعد `dart format`.
+  - `flutter analyze --no-pub`: **No issues found!** (0 issues).
+  - `flutter test --no-pub`: **125/125 اختبارًا ناجحًا** (`All tests passed!`).
+  - `flutter build apk --release --no-pub`: نجح البناء ونُسخ إلى `outputs/Radar Labour.apk` بحجم **69,521,599 بايت** وبصمة SHA-256: `5E7F5F7397B3C2C938FD36794C2F25AC58A032293083023AE12D2E54C9C19957`.

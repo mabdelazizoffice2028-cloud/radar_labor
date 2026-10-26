@@ -89,6 +89,7 @@ final class LocalEvent {
     this.employeeUid,
     this.teamId,
     this.housingId,
+    this.userId,
     this.receivedAtUtc,
     this.deviceTimeUtc,
     this.delivery = EventDelivery.pending,
@@ -103,6 +104,7 @@ final class LocalEvent {
   final String? employeeUid;
   final String? teamId;
   final String? housingId;
+  final String? userId;
   final int deviceSeq;
   final DateTime? receivedAtUtc;
   final DateTime? deviceTimeUtc;

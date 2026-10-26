@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:radar_labor/core/l10n/history_strings.dart';
 import 'package:radar_labor/core/status/status_models.dart';
 import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/core/time/clock.dart';
@@ -7,6 +8,7 @@ import 'package:radar_labor/features/dashboard/data/dashboard_coverage_repositor
 import 'package:radar_labor/features/dashboard/data/status_snapshot_repository.dart';
 
 part 'dashboard_components.dart';
+part 'dashboard_sections.dart';
 part 'dashboard_action_sheets.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -15,6 +17,7 @@ class DashboardScreen extends StatefulWidget {
     required this.coverageRepository,
     required this.actionsRepository,
     required this.arabic,
+    required this.actorUserId,
     this.canEdit = true,
     super.key,
   });
@@ -23,6 +26,7 @@ class DashboardScreen extends StatefulWidget {
   final DashboardCoverageRepository coverageRepository;
   final DashboardActionsRepository actionsRepository;
   final bool arabic;
+  final String actorUserId;
   final bool canEdit;
 
   @override
@@ -145,6 +149,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         employeeUid: row.worker.employeeUid,
         businessDate: _businessDate,
         kind: result.kind,
+        actorUserId: widget.actorUserId,
         note: result.note,
       );
     } finally {
@@ -164,6 +169,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       await widget.actionsRepository.justify(
         employeeUid: row.worker.employeeUid,
         businessDate: _businessDate,
+        actorUserId: widget.actorUserId,
         quickReason: result.quick,
         note: result.note,
       );

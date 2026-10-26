@@ -30,7 +30,8 @@ final class AuthSetupView extends StatelessWidget {
   final String? errorMessage;
   final bool arabic;
 
-  String _name(Employee e) => arabic ? e.fullNameAr : (e.fullNameEn ?? e.fullNameAr);
+  String _name(Employee e) =>
+      arabic ? e.fullNameAr : (e.fullNameEn ?? e.fullNameAr);
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -39,7 +40,11 @@ final class AuthSetupView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Icon(Icons.people_alt_outlined, size: 54, color: AppTokens.primary),
+        const Icon(
+          Icons.people_alt_outlined,
+          size: 54,
+          color: AppTokens.primary,
+        ),
         const SizedBox(height: AppTokens.space16),
         Text(
           AppStrings.initialSetup(arabic),
@@ -76,7 +81,12 @@ final class AuthSetupView extends StatelessWidget {
               border: const OutlineInputBorder(),
             ),
             items: employees
-                .map((e) => DropdownMenuItem(value: e.employeeUid, child: Text(_name(e))))
+                .map(
+                  (e) => DropdownMenuItem(
+                    value: e.employeeUid,
+                    child: Text(_name(e)),
+                  ),
+                )
                 .toList(),
             onChanged: busy ? null : onManagerChanged,
           ),
@@ -89,7 +99,12 @@ final class AuthSetupView extends StatelessWidget {
               border: const OutlineInputBorder(),
             ),
             items: employees
-                .map((e) => DropdownMenuItem(value: e.employeeUid, child: Text(_name(e))))
+                .map(
+                  (e) => DropdownMenuItem(
+                    value: e.employeeUid,
+                    child: Text(_name(e)),
+                  ),
+                )
                 .toList(),
             onChanged: busy ? null : onHrChanged,
           ),
@@ -97,7 +112,8 @@ final class AuthSetupView extends StatelessWidget {
           SizedBox(
             height: AppTokens.minTouchTarget,
             child: FilledButton(
-              onPressed: busy ||
+              onPressed:
+                  busy ||
                       selectedManagerUid == null ||
                       selectedHrUid == null ||
                       selectedManagerUid == selectedHrUid
@@ -107,7 +123,10 @@ final class AuthSetupView extends StatelessWidget {
                   ? const SizedBox(
                       width: 24,
                       height: 24,
-                      child: CircularProgressIndicator(color: AppTokens.onPrimary, strokeWidth: 2.5),
+                      child: CircularProgressIndicator(
+                        color: AppTokens.onPrimary,
+                        strokeWidth: 2.5,
+                      ),
                     )
                   : Text(
                       arabic ? 'إنشاء حسابي الإدارة' : 'Create Admin Accounts',
@@ -121,7 +140,10 @@ final class AuthSetupView extends StatelessWidget {
           Text(
             errorMessage!,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppTokens.statusUnknown, fontSize: 13),
+            style: const TextStyle(
+              color: AppTokens.statusUnknown,
+              fontSize: 13,
+            ),
           ),
         ],
       ],

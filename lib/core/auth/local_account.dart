@@ -4,7 +4,7 @@ import 'auth_session.dart';
 final class LocalAccount {
   const LocalAccount({
     required this.id,
-    required this.employeeUid,
+    this.employeeUid,
     required this.displayName,
     required this.role,
     required this.salt,
@@ -16,7 +16,7 @@ final class LocalAccount {
   });
 
   final String id;
-  final String employeeUid;
+  final String? employeeUid;
   final String displayName;
   final AuthRole role;
   final String salt;
@@ -51,7 +51,7 @@ final class LocalAccount {
 
   factory LocalAccount.fromJson(Map<String, Object?> json) => LocalAccount(
     id: json['id']! as String,
-    employeeUid: json['employeeUid']! as String,
+    employeeUid: json['employeeUid'] as String?,
     displayName: json['displayName']! as String,
     role: AuthRole.values.byName(json['role']! as String),
     salt: json['salt']! as String,

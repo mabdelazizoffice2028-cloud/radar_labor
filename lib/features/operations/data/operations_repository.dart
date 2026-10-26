@@ -2,6 +2,8 @@ import 'package:drift/drift.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/core/status/status_models.dart';
+import 'package:radar_labor/features/operations/domain/attendance_ledger.dart';
+import 'package:radar_labor/features/operations/domain/ledger_undo_plan.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
 import 'package:radar_labor/features/operations/domain/operations_store.dart';
 
@@ -67,22 +69,12 @@ final class OperationsRepository implements OperationsStore {
     required String date,
     required EntityOption housing,
     required Set<String> absentIds,
+    required String actorUserId,
   }) async {
     final previous = await events.readBusinessDate(date);
-    final previousAbsences = _latestSetIds(
-      previous.where(
-        (event) =>
-            event.type == EventType.housingAbsent &&
-            event.housingId == housing.id,
-      ),
-    );
-    final oldCheck = previous
-        .where(
-          (event) =>
-              event.type == EventType.housingCheck &&
-              event.housingId == housing.id,
-        )
-        .lastOrNull;
+    final ledger = AttendanceLedger(previous);
+    final previousAbsences = ledger.absentWorkerIdsForHousing(housing.id);
+    final wasChecked = ledger.isHousingChecked(housing.id);
     final ids = {...previousAbsences, ...absentIds};
     await events.appendBatch([
       EventDraft(
@@ -90,6 +82,7 @@ final class OperationsRepository implements OperationsStore {
         action: EventAction.set,
         businessDate: date,
         housingId: housing.id,
+        userId: actorUserId,
       ),
       for (final id in ids)
         EventDraft(
@@ -98,6 +91,7 @@ final class OperationsRepository implements OperationsStore {
           businessDate: date,
           employeeUid: id,
           housingId: housing.id,
+          userId: actorUserId,
         ),
     ]);
     return HousingCheckUndo(
@@ -105,17 +99,21 @@ final class OperationsRepository implements OperationsStore {
       housingId: housing.id,
       previousAbsences: Set.unmodifiable(previousAbsences),
       currentAbsences: Set.unmodifiable(absentIds),
-      wasChecked: oldCheck?.action == EventAction.set,
+      wasChecked: wasChecked,
     );
   }
 
   @override
-  Future<void> undoHousingCheck(HousingCheckUndo undo) => events.appendBatch([
+  Future<void> undoHousingCheck(
+    HousingCheckUndo undo, {
+    required String actorUserId,
+  }) => events.appendBatch([
     EventDraft(
       type: EventType.housingCheck,
       action: undo.wasChecked ? EventAction.set : EventAction.clear,
       businessDate: undo.date,
       housingId: undo.housingId,
+      userId: actorUserId,
     ),
     for (final id in {...undo.previousAbsences, ...undo.currentAbsences})
       EventDraft(
@@ -126,6 +124,7 @@ final class OperationsRepository implements OperationsStore {
         businessDate: undo.date,
         employeeUid: id,
         housingId: undo.housingId,
+        userId: actorUserId,
       ),
   ]);
 
@@ -134,20 +133,12 @@ final class OperationsRepository implements OperationsStore {
     required String date,
     required EntityOption team,
     required Set<String> presentIds,
+    required String actorUserId,
   }) async {
     final previous = await events.readBusinessDate(date);
-    final previousPresent = _latestSetIds(
-      previous.where(
-        (event) =>
-            event.type == EventType.sitePresent && event.teamId == team.id,
-      ),
-    );
-    final oldSubmission = previous
-        .where(
-          (event) =>
-              event.type == EventType.siteSubmitted && event.teamId == team.id,
-        )
-        .lastOrNull;
+    final ledger = AttendanceLedger(previous);
+    final previousPresent = ledger.presentWorkerIdsForTeam(team.id);
+    final wasSubmitted = ledger.isSiteSubmitted(team.id);
     final ids = {...previousPresent, ...presentIds};
     await events.appendBatch([
       for (final id in ids)
@@ -157,12 +148,14 @@ final class OperationsRepository implements OperationsStore {
           businessDate: date,
           employeeUid: id,
           teamId: team.id,
+          userId: actorUserId,
         ),
       EventDraft(
         type: EventType.siteSubmitted,
         action: EventAction.set,
         businessDate: date,
         teamId: team.id,
+        userId: actorUserId,
         payload: {'presentCount': presentIds.length},
       ),
     ]);
@@ -171,45 +164,58 @@ final class OperationsRepository implements OperationsStore {
       teamId: team.id,
       previousPresent: Set.unmodifiable(previousPresent),
       currentPresent: Set.unmodifiable(presentIds),
-      wasSubmitted: oldSubmission?.action == EventAction.set,
+      wasSubmitted: wasSubmitted,
     );
   }
 
   @override
-  Future<void> undoSiteAttendance(SiteAttendanceUndo undo) =>
-      events.appendBatch([
-        for (final id in {...undo.previousPresent, ...undo.currentPresent})
-          EventDraft(
-            type: EventType.sitePresent,
-            action: undo.previousPresent.contains(id)
-                ? EventAction.set
-                : EventAction.clear,
-            businessDate: undo.date,
-            employeeUid: id,
-            teamId: undo.teamId,
-          ),
-        EventDraft(
-          type: EventType.siteSubmitted,
-          action: undo.wasSubmitted ? EventAction.set : EventAction.clear,
-          businessDate: undo.date,
-          teamId: undo.teamId,
-        ),
-      ]);
+  Future<void> undoSiteAttendance(
+    SiteAttendanceUndo undo, {
+    required String actorUserId,
+  }) => events.appendBatch([
+    for (final id in {...undo.previousPresent, ...undo.currentPresent})
+      EventDraft(
+        type: EventType.sitePresent,
+        action: undo.previousPresent.contains(id)
+            ? EventAction.set
+            : EventAction.clear,
+        businessDate: undo.date,
+        employeeUid: id,
+        teamId: undo.teamId,
+        userId: actorUserId,
+      ),
+    EventDraft(
+      type: EventType.siteSubmitted,
+      action: undo.wasSubmitted ? EventAction.set : EventAction.clear,
+      businessDate: undo.date,
+      teamId: undo.teamId,
+      userId: actorUserId,
+    ),
+  ]);
 
-  List<String> _latestSetIds(Iterable<LocalEvent> source) {
-    final latest = <String, LocalEvent>{};
-    for (final event in source) {
-      final id = event.employeeUid;
-      if (id == null) continue;
-      final prior = latest[id];
-      if (prior == null || event.deviceSeq > prior.deviceSeq) {
-        latest[id] = event;
-      }
-    }
-    return [
-      for (final entry in latest.entries)
-        if (entry.value.action == EventAction.set) entry.key,
-    ];
+  /// Executes a [LedgerUndoPlan] by appending compensating events stamped with [actorUserId].
+  Future<void> executeUndoPlan(
+    LedgerUndoPlan plan, {
+    required String actorUserId,
+  }) async {
+    if (plan.entries.isEmpty) return;
+    await events.appendBatch([
+      for (final entry in plan.entries)
+        EventDraft(
+          type: entry.key.type,
+          action: entry.restoreAction,
+          businessDate: plan.businessDate,
+          employeeUid: entry.key.employeeUid,
+          teamId: entry.key.teamId,
+          housingId: entry.key.housingId,
+          userId: actorUserId,
+          payload: {
+            if (entry.key.type == EventType.resolution &&
+                entry.resolutionKind != null)
+              'kind': entry.resolutionKind!.key,
+          },
+        ),
+    ]);
   }
 
   List<WorkerOption> _toWorkers(List<Employee> rows) => List.unmodifiable(

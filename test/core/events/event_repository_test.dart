@@ -46,9 +46,9 @@ void main() {
       expect(event.isLate, isFalse);
       expect(event.deviceTimeUtc, fixedNow);
 
-      final seqRow = await (database.select(database.settings)
-            ..where((s) => s.key.equals(AppSettingKeys.deviceSequence)))
-          .getSingle();
+      final seqRow = await (database.select(
+        database.settings,
+      )..where((s) => s.key.equals(AppSettingKeys.deviceSequence))).getSingle();
       expect(seqRow.value, '1');
 
       final stored = await repository.readBusinessDate(_date);
@@ -97,9 +97,9 @@ void main() {
       expect(events, hasLength(3));
       expect(events.map((e) => e.deviceSeq), [1, 2, 3]);
 
-      final seqRow = await (database.select(database.settings)
-            ..where((s) => s.key.equals(AppSettingKeys.deviceSequence)))
-          .getSingle();
+      final seqRow = await (database.select(
+        database.settings,
+      )..where((s) => s.key.equals(AppSettingKeys.deviceSequence))).getSingle();
       expect(seqRow.value, '3');
     });
 
@@ -120,22 +120,22 @@ void main() {
         ),
       ];
 
-      await expectLater(
-        repository.appendBatch(drafts),
-        throwsArgumentError,
-      );
+      await expectLater(repository.appendBatch(drafts), throwsArgumentError);
 
       final stored = await repository.readBusinessDate(_date);
       expect(stored, isEmpty);
 
-      final seqRow = await (database.select(database.settings)
-            ..where((s) => s.key.equals(AppSettingKeys.deviceSequence)))
-          .getSingleOrNull();
+      final seqRow =
+          await (database.select(database.settings)
+                ..where((s) => s.key.equals(AppSettingKeys.deviceSequence)))
+              .getSingleOrNull();
       expect(seqRow, isNull);
     });
 
     test('resumesSequenceFromExistingSettings', () async {
-      await database.into(database.settings).insert(
+      await database
+          .into(database.settings)
+          .insert(
             SettingsCompanion.insert(
               key: AppSettingKeys.deviceSequence,
               value: '10',
@@ -155,7 +155,9 @@ void main() {
     });
 
     test('throwsStateErrorIfSequenceSettingIsCorrupted', () async {
-      await database.into(database.settings).insert(
+      await database
+          .into(database.settings)
+          .insert(
             SettingsCompanion.insert(
               key: AppSettingKeys.deviceSequence,
               value: 'corrupted_string',

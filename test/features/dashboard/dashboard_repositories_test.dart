@@ -37,7 +37,7 @@ void main() {
           HousingsCompanion.insert(
             housingId: 'housing-1',
             nameAr: 'سكن ١',
-            nameEn: Value('Housing 1'),
+            nameEn: const Value('Housing 1'),
           ),
         );
     await database
@@ -46,7 +46,7 @@ void main() {
           TeamsCompanion.insert(
             teamId: 'team-1',
             nameAr: 'فريق ١',
-            nameEn: Value('Team 1'),
+            nameEn: const Value('Team 1'),
           ),
         );
 
@@ -96,11 +96,13 @@ void main() {
       employeeUid: 'worker-1',
       businessDate: _date,
       kind: ResolutionKind.movedDuringDay,
+      actorUserId: 'admin-1',
       note: 'Changed work site',
     );
     await actions.justify(
       employeeUid: 'worker-1',
       businessDate: _date,
+      actorUserId: 'admin-2',
       quickReason: 'official_errand',
       note: 'Site visit',
     );
@@ -109,6 +111,8 @@ void main() {
     expect(rows, hasLength(2));
     expect(rows.first.type, EventType.resolution);
     expect(rows.first.resolutionKind, ResolutionKind.movedDuringDay);
+    expect(rows.first.userId, 'admin-1');
     expect(rows.last.type, EventType.justification);
+    expect(rows.last.userId, 'admin-2');
   });
 }

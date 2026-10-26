@@ -42,8 +42,14 @@ final class PreferencesScreen extends StatelessWidget {
           trailing: DropdownButton<String>(
             value: locale,
             items: [
-              DropdownMenuItem(value: 'ar', child: Text(AppStrings.arabic(arabic))),
-              DropdownMenuItem(value: 'en', child: Text(AppStrings.english(arabic))),
+              DropdownMenuItem(
+                value: 'ar',
+                child: Text(AppStrings.arabic(arabic)),
+              ),
+              DropdownMenuItem(
+                value: 'en',
+                child: Text(AppStrings.english(arabic)),
+              ),
             ],
             onChanged: (value) {
               if (value != null) onLocale(value);

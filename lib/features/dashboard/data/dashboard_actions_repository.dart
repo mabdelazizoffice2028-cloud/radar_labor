@@ -10,6 +10,7 @@ final class DashboardActionsRepository {
   Future<void> justify({
     required String employeeUid,
     required String businessDate,
+    required String actorUserId,
     String? quickReason,
     String? note,
   }) => events.append(
@@ -18,6 +19,7 @@ final class DashboardActionsRepository {
       action: EventAction.set,
       businessDate: businessDate,
       employeeUid: employeeUid,
+      userId: actorUserId,
       payload: {
         if (quickReason?.isNotEmpty ?? false) 'quick': quickReason,
         if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
@@ -29,6 +31,7 @@ final class DashboardActionsRepository {
     required String employeeUid,
     required String businessDate,
     required ResolutionKind kind,
+    required String actorUserId,
     String? note,
   }) => events.append(
     EventDraft(
@@ -36,6 +39,7 @@ final class DashboardActionsRepository {
       action: EventAction.set,
       businessDate: businessDate,
       employeeUid: employeeUid,
+      userId: actorUserId,
       payload: {
         'kind': kind.key,
         if (note != null && note.trim().isNotEmpty) 'note': note.trim(),

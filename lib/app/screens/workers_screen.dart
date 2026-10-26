@@ -3,12 +3,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
-import 'package:radar_labor/core/status/status_models.dart';
-import 'package:radar_labor/core/time/business_date.dart';
-import 'package:radar_labor/core/time/clock.dart';
 import 'package:uuid/uuid.dart';
 
-/// Screen for viewing and managing workforce employees.
+/// Screen for viewing and managing workforce employees (BC-2: direct event recording removed).
 final class WorkersScreen extends StatefulWidget {
   const WorkersScreen({
     required this.database,
@@ -92,7 +89,8 @@ final class _WorkersScreenState extends State<WorkersScreen> {
                       ),
                     ),
                   ],
-                  onChanged: (value) => updateDialog(() => selectedTeam = value),
+                  onChanged: (value) =>
+                      updateDialog(() => selectedTeam = value),
                 ),
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String?>(
@@ -116,7 +114,8 @@ final class _WorkersScreenState extends State<WorkersScreen> {
                       ),
                     ),
                   ],
-                  onChanged: (value) => updateDialog(() => selectedHousing = value),
+                  onChanged: (value) =>
+                      updateDialog(() => selectedHousing = value),
                 ),
               ],
             ),
@@ -150,46 +149,22 @@ final class _WorkersScreenState extends State<WorkersScreen> {
               employeeCode: code.text.trim(),
               fullNameAr: arabicName.text.trim(),
               fullNameEn: drift.Value(
-                englishName.text.trim().isEmpty ? null : englishName.text.trim(),
+                englishName.text.trim().isEmpty
+                    ? null
+                    : englishName.text.trim(),
               ),
               category: 'general',
               currentTeamId: drift.Value(selectedTeam),
               housingId: drift.Value(selectedHousing),
             ),
           );
-    } catch (_) {
+    } on Exception {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppStrings.workerCodeExists(widget.arabic))),
         );
       }
     }
-  }
-
-  Future<void> _record(Employee worker, String action) async {
-    if ((action == 'site' && worker.currentTeamId == null) ||
-        (action == 'absent' && worker.housingId == null)) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppStrings.assignTeamHousingFirst(widget.arabic)),
-          ),
-        );
-      }
-      return;
-    }
-    await widget.events.append(
-      EventDraft(
-        type: action == 'site'
-            ? EventType.sitePresent
-            : EventType.housingAbsent,
-        action: EventAction.set,
-        businessDate: businessDateFor(const SystemClock().nowUtc()),
-        employeeUid: worker.employeeUid,
-        teamId: action == 'site' ? worker.currentTeamId : null,
-        housingId: action == 'absent' ? worker.housingId : null,
-      ),
-    );
   }
 
   @override
@@ -217,14 +192,12 @@ final class _WorkersScreenState extends State<WorkersScreen> {
             stream: widget.database.select(widget.database.employees).watch(),
             builder: (context, state) {
               final queryNorm = _query.trim().toLowerCase();
-              final workers = (state.data ?? [])
-                  .where((worker) {
-                    if (queryNorm.isEmpty) return true;
-                    return worker.fullNameAr.toLowerCase().contains(queryNorm) ||
-                        worker.employeeCode.toLowerCase().contains(queryNorm) ||
-                        (worker.fullNameEn ?? '').toLowerCase().contains(queryNorm);
-                  })
-                  .toList();
+              final workers = (state.data ?? []).where((worker) {
+                if (queryNorm.isEmpty) return true;
+                return worker.fullNameAr.toLowerCase().contains(queryNorm) ||
+                    worker.employeeCode.toLowerCase().contains(queryNorm) ||
+                    (worker.fullNameEn ?? '').toLowerCase().contains(queryNorm);
+              }).toList();
               if (workers.isEmpty) {
                 return Center(
                   child: Text(AppStrings.noWorkersYet(widget.arabic)),
@@ -243,20 +216,7 @@ final class _WorkersScreenState extends State<WorkersScreen> {
                             : (worker.fullNameEn ?? worker.fullNameAr),
                       ),
                       subtitle: Text(
-                        '${widget.arabic ? 'رقم' : 'Code'} ${worker.employeeCode}',
-                      ),
-                      trailing: PopupMenuButton<String>(
-                        onSelected: (value) => _record(worker, value),
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'site',
-                            child: Text(AppStrings.markOnSite(widget.arabic)),
-                          ),
-                          PopupMenuItem(
-                            value: 'absent',
-                            child: Text(AppStrings.markAbsent(widget.arabic)),
-                          ),
-                        ],
+                        '${AppStrings.workerCode(widget.arabic)}: ${worker.employeeCode}',
                       ),
                     ),
                   );

@@ -101,47 +101,53 @@ void main() {
       expect(snapshot.workers[2].status, WorkerStatus.notRecorded);
     });
 
-    test('housingCheck only applies to worker if housingId matches exactly', () {
-      final worker = _makeWorker(id: 'w-1', housingId: 'h-correct');
-      final events = [
-        _makeEvent(
-          type: EventType.housingCheck,
-          housingId: 'h-different',
-          workerId: null,
-        ),
-      ];
+    test(
+      'housingCheck only applies to worker if housingId matches exactly',
+      () {
+        final worker = _makeWorker(id: 'w-1', housingId: 'h-correct');
+        final events = [
+          _makeEvent(
+            type: EventType.housingCheck,
+            housingId: 'h-different',
+            workerId: null,
+          ),
+        ];
 
-      final snapshot = engine.evaluate(
-        workers: [worker],
-        events: events,
-        businessDate: _day,
-        nowUtc: _now,
-        slaMinutes: 120,
-      );
+        final snapshot = engine.evaluate(
+          workers: [worker],
+          events: events,
+          businessDate: _day,
+          nowUtc: _now,
+          slaMinutes: 120,
+        );
 
-      expect(snapshot.workers.single.status, WorkerStatus.notRecorded);
-    });
+        expect(snapshot.workers.single.status, WorkerStatus.notRecorded);
+      },
+    );
 
-    test('housingAbsent only applies if housingId matches worker assignment', () {
-      final worker = _makeWorker(id: 'w-1', housingId: 'h-correct');
-      final events = [
-        _makeEvent(
-          type: EventType.housingAbsent,
-          housingId: 'h-different',
-          workerId: 'w-1',
-        ),
-      ];
+    test(
+      'housingAbsent only applies if housingId matches worker assignment',
+      () {
+        final worker = _makeWorker(id: 'w-1', housingId: 'h-correct');
+        final events = [
+          _makeEvent(
+            type: EventType.housingAbsent,
+            housingId: 'h-different',
+            workerId: 'w-1',
+          ),
+        ];
 
-      final snapshot = engine.evaluate(
-        workers: [worker],
-        events: events,
-        businessDate: _day,
-        nowUtc: _now,
-        slaMinutes: 120,
-      );
+        final snapshot = engine.evaluate(
+          workers: [worker],
+          events: events,
+          businessDate: _day,
+          nowUtc: _now,
+          slaMinutes: 120,
+        );
 
-      expect(snapshot.workers.single.status, WorkerStatus.notRecorded);
-    });
+        expect(snapshot.workers.single.status, WorkerStatus.notRecorded);
+      },
+    );
 
     test('worker without housingId ignores housingCheck and housingAbsent', () {
       final worker = _makeWorker(id: 'w-1', housingId: null);
@@ -173,21 +179,15 @@ void main() {
     test('employment periods boundaries characterization', () {
       final pastOnly = _makeWorker(
         id: 'w-past',
-        periods: [
-          const EmploymentPeriod('2026-01-01', endDate: '2026-10-22'),
-        ],
+        periods: [const EmploymentPeriod('2026-01-01', endDate: '2026-10-22')],
       );
       final futureOnly = _makeWorker(
         id: 'w-future',
-        periods: [
-          const EmploymentPeriod('2026-10-24'),
-        ],
+        periods: [const EmploymentPeriod('2026-10-24')],
       );
       final spanning = _makeWorker(
         id: 'w-active',
-        periods: [
-          const EmploymentPeriod('2026-10-01', endDate: '2026-10-31'),
-        ],
+        periods: [const EmploymentPeriod('2026-10-01', endDate: '2026-10-31')],
       );
 
       final snapshot = engine.evaluate(

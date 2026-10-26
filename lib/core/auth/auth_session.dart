@@ -5,7 +5,7 @@ import 'package:radar_labor/core/auth/auth_role.dart';
 final class AuthSession {
   const AuthSession({
     required this.id,
-    required this.employeeUid,
+    this.employeeUid,
     required this.displayName,
     required this.role,
     this.mustChangePassword = false,
@@ -14,7 +14,7 @@ final class AuthSession {
   });
 
   final String id;
-  final String employeeUid;
+  final String? employeeUid;
   final String displayName;
   final AuthRole role;
   final bool mustChangePassword;

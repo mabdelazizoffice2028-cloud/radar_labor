@@ -79,10 +79,7 @@ void main() {
     final accounts = await auth.accounts();
     final hr = accounts.firstWhere((a) => a.role == AuthRole.hr);
 
-    final signedIn = await auth.signIn(
-      accountId: hr.id,
-      password: '123456',
-    );
+    final signedIn = await auth.signIn(accountId: hr.id, password: '123456');
     expect(signedIn, isNotNull);
     expect(signedIn!.displayName, equals('HR'));
     expect(signedIn.role, equals(AuthRole.hr));

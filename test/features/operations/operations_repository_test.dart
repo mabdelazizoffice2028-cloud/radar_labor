@@ -28,30 +28,35 @@ void main() {
   tearDown(() => database.close());
 
   test(
-    'housingCheck_setsAndClearsAbsencesAndUndoRestoresPreviousState',
+    'housingCheck_setsAndClearsAbsencesAndUndoRestoresPreviousStateWithUserId',
     () async {
       const housing = EntityOption(id: 'housing-1', nameAr: 'سكن 1');
       await repository.saveHousingCheck(
         date: _date,
         housing: housing,
         absentIds: const {'worker-1'},
+        actorUserId: 'user-housing-1',
       );
-      expect((await events.readBusinessDate(_date)), hasLength(2));
+      final firstRows = await events.readBusinessDate(_date);
+      expect(firstRows, hasLength(2));
+      expect(firstRows.every((e) => e.userId == 'user-housing-1'), isTrue);
 
       final second = await repository.saveHousingCheck(
         date: _date,
         housing: housing,
         absentIds: const {},
+        actorUserId: 'user-housing-1',
       );
       var rows = await events.readBusinessDate(_date);
       expect(rows.last.action, EventAction.clear);
 
-      await repository.undoHousingCheck(second);
+      await repository.undoHousingCheck(second, actorUserId: 'user-housing-1');
       rows = await events.readBusinessDate(_date);
       final latestAbsence = rows.lastWhere(
         (event) => event.type == EventType.housingAbsent,
       );
       expect(latestAbsence.action, EventAction.set);
+      expect(latestAbsence.userId, 'user-housing-1');
     },
   );
 
@@ -61,15 +66,18 @@ void main() {
       date: _date,
       team: team,
       presentIds: const {},
+      actorUserId: 'user-site-1',
     );
     var rows = await events.readBusinessDate(_date);
     expect(rows.single.type, EventType.siteSubmitted);
     expect(rows.single.action, EventAction.set);
+    expect(rows.single.userId, 'user-site-1');
 
-    await repository.undoSiteAttendance(undo);
+    await repository.undoSiteAttendance(undo, actorUserId: 'user-site-1');
     rows = await events.readBusinessDate(_date);
     expect(rows.last.type, EventType.siteSubmitted);
     expect(rows.last.action, EventAction.clear);
+    expect(rows.last.userId, 'user-site-1');
   });
 
   test('appendBatch_validatesBeforeWritingAnyEvent', () async {

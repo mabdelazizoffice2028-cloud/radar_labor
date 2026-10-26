@@ -13,12 +13,14 @@ final class CoverageWarning {
     required this.id,
     required this.nameAr,
     this.nameEn,
+    this.supervisorNames = const <String>[],
   });
 
   final CoverageKind kind;
   final String id;
   final String nameAr;
   final String? nameEn;
+  final List<String> supervisorNames;
 }
 
 final class DashboardCoverage {
@@ -33,7 +35,7 @@ final class DashboardCoverage {
   final List<CoverageWarning> missingTeams;
 }
 
-/// Watches active reference entities and their latest submission for one date.
+/// Watches active reference entities, assigned supervisors, and latest submission for one date.
 final class DashboardCoverageRepository {
   const DashboardCoverageRepository({
     required this.database,
@@ -47,13 +49,27 @@ final class DashboardCoverageRepository {
     late StreamController<DashboardCoverage> controller;
     StreamSubscription<List<Housing>>? housingSubscription;
     StreamSubscription<List<Team>>? teamSubscription;
+    StreamSubscription<List<AppUser>>? userSubscription;
+    StreamSubscription<List<UserScope>>? scopeSubscription;
     StreamSubscription<List<LocalEvent>>? eventSubscription;
     List<Housing>? housings;
     List<Team>? teams;
+    List<AppUser>? activeUsers;
+    List<UserScope>? scopes;
     List<LocalEvent>? dayEvents;
 
     void emit() {
-      if (housings == null || teams == null || dayEvents == null) return;
+      if (housings == null ||
+          teams == null ||
+          activeUsers == null ||
+          scopes == null ||
+          dayEvents == null) {
+        return;
+      }
+      final activeNameById = {
+        for (final user in activeUsers!)
+          if (user.active) user.id: user.displayName,
+      };
       final checkedHousings = _latestKeys(
         dayEvents!.where((event) => event.type == EventType.housingCheck),
         (event) => event.housingId,
@@ -73,6 +89,11 @@ final class DashboardCoverageRepository {
                   id: housing.housingId,
                   nameAr: housing.nameAr,
                   nameEn: housing.nameEn,
+                  supervisorNames: _housingSupervisors(
+                    housingId: housing.housingId,
+                    scopes: scopes!,
+                    activeNameById: activeNameById,
+                  ),
                 ),
           ]),
           missingTeams: List.unmodifiable([
@@ -83,6 +104,11 @@ final class DashboardCoverageRepository {
                   id: team.teamId,
                   nameAr: team.nameAr,
                   nameEn: team.nameEn,
+                  supervisorNames: _teamSupervisors(
+                    team: team,
+                    scopes: scopes!,
+                    activeNameById: activeNameById,
+                  ),
                 ),
           ]),
         ),
@@ -109,6 +135,20 @@ final class DashboardCoverageRepository {
                   teams = value;
                   emit();
                 }, onError: controller.addError);
+        userSubscription =
+            (database.select(
+              database.appUsers,
+            )..where((row) => row.active.equals(true))).watch().listen((value) {
+              activeUsers = value;
+              emit();
+            }, onError: controller.addError);
+        scopeSubscription = database.select(database.userScopes).watch().listen(
+          (value) {
+            scopes = value;
+            emit();
+          },
+          onError: controller.addError,
+        );
         eventSubscription = events.watchBusinessDate(businessDate).listen((
           value,
         ) {
@@ -119,10 +159,46 @@ final class DashboardCoverageRepository {
       onCancel: () async {
         await housingSubscription?.cancel();
         await teamSubscription?.cancel();
+        await userSubscription?.cancel();
+        await scopeSubscription?.cancel();
         await eventSubscription?.cancel();
       },
     );
     return controller.stream;
+  }
+
+  List<String> _housingSupervisors({
+    required String housingId,
+    required List<UserScope> scopes,
+    required Map<String, String> activeNameById,
+  }) {
+    final names = <String>{};
+    for (final s in scopes) {
+      if (s.scopeType == 'housing' && s.scopeId == housingId) {
+        final name = activeNameById[s.userId];
+        if (name != null && name.isNotEmpty) names.add(name);
+      }
+    }
+    return List.unmodifiable(names.toList()..sort());
+  }
+
+  List<String> _teamSupervisors({
+    required Team team,
+    required List<UserScope> scopes,
+    required Map<String, String> activeNameById,
+  }) {
+    final names = <String>{};
+    if (team.supervisorUserId != null) {
+      final direct = activeNameById[team.supervisorUserId!];
+      if (direct != null && direct.isNotEmpty) names.add(direct);
+    }
+    for (final s in scopes) {
+      if (s.scopeType == 'team' && s.scopeId == team.teamId) {
+        final name = activeNameById[s.userId];
+        if (name != null && name.isNotEmpty) names.add(name);
+      }
+    }
+    return List.unmodifiable(names.toList()..sort());
   }
 
   Set<String> _latestKeys(

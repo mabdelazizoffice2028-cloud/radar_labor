@@ -1,12 +1,15 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:radar_labor/app/login/login_flow_notifier.dart';
 import 'package:radar_labor/app/widgets/auth_login_form.dart';
 import 'package:radar_labor/app/widgets/auth_setup_view.dart';
 import 'package:radar_labor/app/widgets/change_temporary_password_dialog.dart';
+import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
 import 'package:radar_labor/core/auth/local_auth_repository.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/database/local_settings_repository.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
+import 'package:radar_labor/core/l10n/auth_flow_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/roster/data/workforce_file_picker.dart';
 import 'package:radar_labor/features/roster/data/workforce_import_repository.dart';
@@ -31,6 +34,7 @@ final class AuthGate extends StatefulWidget {
 final class _AuthGateState extends State<AuthGate> {
   late final _auth = LocalAuthRepository(widget.database);
   late final _importer = WorkforceImportRepository(widget.database);
+  final _flowNotifier = LoginFlowNotifier();
 
   List<LocalAccount> _accounts = const [];
   List<Employee> _employees = const [];
@@ -39,8 +43,6 @@ final class _AuthGateState extends State<AuthGate> {
   String? _error;
   bool _loading = true;
   bool _busy = false;
-
-  String? _selectedAccountId;
   String? _selectedManagerUid;
   String? _selectedHrUid;
 
@@ -50,6 +52,12 @@ final class _AuthGateState extends State<AuthGate> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _flowNotifier.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -63,17 +71,17 @@ final class _AuthGateState extends State<AuthGate> {
       )..where((e) => e.isActive)).get();
 
       if (!mounted) return;
+      _flowNotifier.setAccounts(accounts);
       setState(() {
         _locale = locale ?? 'en';
         _accounts = accounts;
         _employees = employees;
-        _selectedAccountId = accounts.firstOrNull?.id;
         _selectedManagerUid = employees.firstOrNull?.employeeUid;
         _selectedHrUid = employees.skip(1).firstOrNull?.employeeUid;
         _loading = false;
         _error = null;
       });
-    } catch (e) {
+    } on Object catch (e) {
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -83,82 +91,55 @@ final class _AuthGateState extends State<AuthGate> {
     }
   }
 
-  Future<void> _signIn(String accountId, String password) async {
+  Future<void> _signIn(AuthRole role, String accountId, String password) async {
     setState(() {
       _busy = true;
       _error = null;
     });
-
     try {
       final account = await _auth.signIn(
+        role: role,
         accountId: accountId,
         password: password,
       );
-
       if (account == null) {
-        if (!mounted) return;
-        setState(() {
-          _error = _arabic
-              ? 'كلمة المرور غير صحيحة أو الحساب مقفل مؤقتاً'
-              : 'Incorrect password or account temporarily locked';
-        });
+        if (mounted) {
+          setState(
+            () => _error = AuthFlowStrings.invalidCredentialsOrLocked(_arabic),
+          );
+        }
         return;
       }
-
       if (account.mustChangePassword) {
-        final replacement = await _showChangeTemporaryPasswordDialog();
-        if (replacement == null) {
-          setState(() => _busy = false);
-          return;
-        }
+        if (!mounted) return;
+        final replacement = await ChangeTemporaryPasswordDialog.show(
+          context,
+          arabic: _arabic,
+        );
+        if (replacement == null) return;
         await _auth.changePassword(account, replacement);
-        _activeAccount = LocalAccount(
-          id: account.id,
-          employeeUid: account.employeeUid,
-          displayName: account.displayName,
-          role: account.role,
-          salt: account.salt,
-          passwordHash: account.passwordHash,
-          mustChangePassword: false,
-          teamIds: account.teamIds,
-          housingIds: account.housingIds,
-          active: account.active,
+        _activeAccount = (await _auth.accounts()).firstWhere(
+          (a) => a.id == account.id,
         );
       } else {
         _activeAccount = account;
       }
-
-      if (mounted) {
-        setState(() {
-          _error = null;
-          _busy = false;
-        });
-      }
+      if (mounted) setState(() => _error = null);
     } on AccountLockedException catch (_) {
-      if (mounted) {
-        setState(() => _error = AppStrings.accountLocked(_arabic));
-      }
+      if (mounted) setState(() => _error = AppStrings.accountLocked(_arabic));
     } on AccountDeactivatedException catch (_) {
+      if (mounted) setState(() => _error = AppStrings.accountDisabled(_arabic));
+    } on Object catch (_) {
       if (mounted) {
-        setState(() => _error = AppStrings.accountDisabled(_arabic));
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _error = _arabic
-              ? 'تعذر تسجيل الدخول، أعد المحاولة'
-              : 'Could not sign in. Please retry.';
-        });
+        setState(() => _error = AuthFlowStrings.signInFailed(_arabic));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  Future<String?> _showChangeTemporaryPasswordDialog() =>
-      ChangeTemporaryPasswordDialog.show(context, arabic: _arabic);
-
   void _logout() {
+    _flowNotifier.clearRole();
     setState(() => _activeAccount = null);
     _load();
   }
@@ -170,8 +151,7 @@ final class _AuthGateState extends State<AuthGate> {
     });
     try {
       final file = await WorkforceFilePicker().pick();
-      if (file == null) return;
-      if (!mounted) return;
+      if (file == null || !mounted) return;
       final rows = const WorkforceImportParser().parse(
         filename: file.name,
         bytes: file.bytes,
@@ -200,9 +180,13 @@ final class _AuthGateState extends State<AuthGate> {
       if (accepted != true) return;
       await _importer.commit(rows);
       await _load();
-    } catch (_) {
+    } on Object catch (_) {
       if (mounted) {
-        setState(() => _error = _arabic ? 'تعذر استيراد الملف' : 'Could not import workforce file');
+        setState(
+          () => _error = _arabic
+              ? 'تعذر استيراد الملف'
+              : 'Could not import workforce file',
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -215,18 +199,26 @@ final class _AuthGateState extends State<AuthGate> {
       _error = null;
     });
     try {
-      final manager = _employees.firstWhere((e) => e.employeeUid == _selectedManagerUid);
+      final manager = _employees.firstWhere(
+        (e) => e.employeeUid == _selectedManagerUid,
+      );
       final hr = _employees.firstWhere((e) => e.employeeUid == _selectedHrUid);
       await _auth.createInitialAccounts(
         projectManagerEmployeeUid: manager.employeeUid,
         hrEmployeeUid: hr.employeeUid,
-        projectManagerName: _arabic ? manager.fullNameAr : (manager.fullNameEn ?? manager.fullNameAr),
+        projectManagerName: _arabic
+            ? manager.fullNameAr
+            : (manager.fullNameEn ?? manager.fullNameAr),
         hrName: _arabic ? hr.fullNameAr : (hr.fullNameEn ?? hr.fullNameAr),
       );
       await _load();
-    } catch (_) {
+    } on Object catch (_) {
       if (mounted) {
-        setState(() => _error = _arabic ? 'تعذر إنشاء الحسابين' : 'Could not create initial accounts');
+        setState(
+          () => _error = _arabic
+              ? 'تعذر إنشاء الحسابين'
+              : 'Could not create initial accounts',
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -238,7 +230,6 @@ final class _AuthGateState extends State<AuthGate> {
     if (_activeAccount != null) {
       return widget.builder(_activeAccount!, _logout);
     }
-
     return Scaffold(
       backgroundColor: AppTokens.background,
       appBar: AppBar(
@@ -264,7 +255,8 @@ final class _AuthGateState extends State<AuthGate> {
                       employees: _employees,
                       selectedManagerUid: _selectedManagerUid,
                       selectedHrUid: _selectedHrUid,
-                      onManagerChanged: (v) => setState(() => _selectedManagerUid = v),
+                      onManagerChanged: (v) =>
+                          setState(() => _selectedManagerUid = v),
                       onHrChanged: (v) => setState(() => _selectedHrUid = v),
                       onPickRoster: _pickRoster,
                       onCreateAdmins: _createAdmins,
@@ -272,14 +264,28 @@ final class _AuthGateState extends State<AuthGate> {
                       errorMessage: _error,
                       arabic: _arabic,
                     )
-                  : AuthLoginForm(
-                      accounts: _accounts,
-                      selectedAccountId: _selectedAccountId,
-                      onAccountChanged: (v) => setState(() => _selectedAccountId = v),
-                      onSignIn: _signIn,
-                      busy: _busy,
-                      errorMessage: _error,
-                      arabic: _arabic,
+                  : StreamBuilder<LoginFlowState>(
+                      stream: _flowNotifier.stream,
+                      initialData: _flowNotifier.state,
+                      builder: (context, snapshot) => AuthLoginForm(
+                        flowState: snapshot.data ?? _flowNotifier.state,
+                        onRoleSelected: (role) {
+                          setState(() => _error = null);
+                          _flowNotifier.selectRole(role);
+                        },
+                        onClearRole: () {
+                          setState(() => _error = null);
+                          _flowNotifier.clearRole();
+                        },
+                        onAccountChanged: (id) {
+                          setState(() => _error = null);
+                          _flowNotifier.selectAccount(id);
+                        },
+                        onSignIn: _signIn,
+                        busy: _busy,
+                        errorMessage: _error,
+                        arabic: _arabic,
+                      ),
                     ),
             ),
           ),

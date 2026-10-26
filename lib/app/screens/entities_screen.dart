@@ -68,21 +68,29 @@ final class _EntitiesScreenState extends State<EntitiesScreen> {
     final id = const Uuid().v4();
 
     if (widget.teams) {
-      await widget.database.into(widget.database.teams).insert(
-        TeamsCompanion.insert(
-          teamId: id,
-          nameAr: ar.text.trim(),
-          nameEn: drift.Value(en.text.trim().isEmpty ? null : en.text.trim()),
-        ),
-      );
+      await widget.database
+          .into(widget.database.teams)
+          .insert(
+            TeamsCompanion.insert(
+              teamId: id,
+              nameAr: ar.text.trim(),
+              nameEn: drift.Value(
+                en.text.trim().isEmpty ? null : en.text.trim(),
+              ),
+            ),
+          );
     } else {
-      await widget.database.into(widget.database.housings).insert(
-        HousingsCompanion.insert(
-          housingId: id,
-          nameAr: ar.text.trim(),
-          nameEn: drift.Value(en.text.trim().isEmpty ? null : en.text.trim()),
-        ),
-      );
+      await widget.database
+          .into(widget.database.housings)
+          .insert(
+            HousingsCompanion.insert(
+              housingId: id,
+              nameAr: ar.text.trim(),
+              nameEn: drift.Value(
+                en.text.trim().isEmpty ? null : en.text.trim(),
+              ),
+            ),
+          );
     }
   }
 
@@ -90,27 +98,29 @@ final class _EntitiesScreenState extends State<EntitiesScreen> {
   Widget build(BuildContext context) {
     final stream = widget.teams
         ? widget.database
-            .select(widget.database.teams)
-            .watch()
-            .map(
-              (rows) => rows
-                  .map(
-                    (row) =>
-                        widget.arabic ? row.nameAr : (row.nameEn ?? row.nameAr),
-                  )
-                  .toList(),
-            )
+              .select(widget.database.teams)
+              .watch()
+              .map(
+                (rows) => rows
+                    .map(
+                      (row) => widget.arabic
+                          ? row.nameAr
+                          : (row.nameEn ?? row.nameAr),
+                    )
+                    .toList(),
+              )
         : widget.database
-            .select(widget.database.housings)
-            .watch()
-            .map(
-              (rows) => rows
-                  .map(
-                    (row) =>
-                        widget.arabic ? row.nameAr : (row.nameEn ?? row.nameAr),
-                  )
-                  .toList(),
-            );
+              .select(widget.database.housings)
+              .watch()
+              .map(
+                (rows) => rows
+                    .map(
+                      (row) => widget.arabic
+                          ? row.nameAr
+                          : (row.nameEn ?? row.nameAr),
+                    )
+                    .toList(),
+              );
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -124,9 +134,7 @@ final class _EntitiesScreenState extends State<EntitiesScreen> {
         builder: (context, state) {
           final rows = state.data ?? [];
           if (rows.isEmpty) {
-            return Center(
-              child: Text(AppStrings.noDataYet(widget.arabic)),
-            );
+            return Center(child: Text(AppStrings.noDataYet(widget.arabic)));
           }
           return ListView.builder(
             itemCount: rows.length,

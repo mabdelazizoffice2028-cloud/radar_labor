@@ -2,9 +2,13 @@ import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
 import 'package:radar_labor/core/auth/local_auth_repository.dart';
+import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
+import 'package:radar_labor/core/l10n/admin_strings.dart';
+import 'package:radar_labor/core/l10n/app_strings.dart';
+import 'package:radar_labor/core/ui/app_tokens.dart';
 
-/// Local administrator screen for creating accounts and assigning scopes.
+/// Local administrator screen for creating accounts, resetting PINs, and assigning scopes.
 final class LocalAccountsScreen extends StatefulWidget {
   const LocalAccountsScreen({
     required this.database,
@@ -25,9 +29,9 @@ final class _LocalAccountsScreenState extends State<LocalAccountsScreen> {
   List<Team> _teams = const [];
   List<Housing> _housings = const [];
   String? _error;
-  bool _loading = true;
-  bool _busy = false;
-  String t(String ar, String en) => widget.arabic ? ar : en;
+  bool _loading = true, _busy = false;
+  bool get _ar => widget.arabic;
+  String t(String ar, String en) => _ar ? ar : en;
 
   @override
   void initState() {
@@ -37,221 +41,228 @@ final class _LocalAccountsScreenState extends State<LocalAccountsScreen> {
 
   Future<void> _reload() async {
     try {
-      final values = await Future.wait<Object>([
+      final db = widget.database;
+      final v = await Future.wait<Object>([
         _auth.accounts(),
-        (widget.database.select(
-          widget.database.employees,
-        )..where((row) => row.isActive)).get(),
-        (widget.database.select(
-          widget.database.teams,
-        )..where((row) => row.isActive)).get(),
-        (widget.database.select(
-          widget.database.housings,
-        )..where((row) => row.isActive)).get(),
+        (db.select(db.employees)..where((r) => r.isActive)).get(),
+        (db.select(db.teams)..where((r) => r.isActive)).get(),
+        (db.select(db.housings)..where((r) => r.isActive)).get(),
       ]);
       if (!mounted) return;
       setState(() {
-        _accounts = values[0] as List<LocalAccount>;
-        _employees = values[1] as List<Employee>;
-        _teams = values[2] as List<Team>;
-        _housings = values[3] as List<Housing>;
+        _accounts = v[0] as List<LocalAccount>;
+        _employees = v[1] as List<Employee>;
+        _teams = v[2] as List<Team>;
+        _housings = v[3] as List<Housing>;
         _loading = false;
         _error = null;
       });
     } on Exception catch (error) {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _error = error.toString();
-        });
-      }
+      if (mounted) setState(() => (_loading = false, _error = '$error'));
     }
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(t('إدارة المستخدمين', 'User accounts'))),
+    appBar: AppBar(title: Text(AdminStrings.userAccountsTitle(_ar))),
     floatingActionButton: FloatingActionButton.extended(
       onPressed: _busy ? null : _add,
       icon: const Icon(Icons.person_add_alt_1),
-      label: Text(t('إضافة مستخدم', 'Add user')),
+      label: Text(AdminStrings.addUser(_ar)),
     ),
     body: _loading
         ? const Center(child: CircularProgressIndicator())
-        : _error != null
-        ? Center(child: Text(_error!))
         : ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTokens.space16),
             children: [
-              for (final account in _accounts)
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.account_circle_outlined),
-                    title: Text(account.displayName),
-                    subtitle: Text(
-                      '${account.role.label(arabic: widget.arabic)} · ${_scopeLabel(account)}',
-                    ),
-                    trailing: account.mustChangePassword
-                        ? const Icon(Icons.key_outlined)
-                        : null,
-                  ),
-                ),
+              if (_error != null) Text(_error!),
+              for (final account in _accounts) _buildAccountCard(account),
             ],
           ),
   );
 
+  Widget _buildAccountCard(LocalAccount account) => Card(
+    child: ListTile(
+      leading: Icon(
+        account.active ? Icons.account_circle_outlined : Icons.block_outlined,
+        color: account.active ? AppTokens.primary : AppTokens.textSecondary,
+      ),
+      title: Text(account.displayName),
+      subtitle: Text(
+        '${account.role.label(arabic: _ar)} · ${_scopeLabel(account)}'
+        '${account.active ? '' : ' · ${AdminStrings.accountDeactivatedBadge(_ar)}'}',
+      ),
+      trailing: PopupMenuButton<String>(
+        key: ValueKey('account_menu_${account.id}'),
+        onSelected: (action) => _onAccountAction(account, action),
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            value: 'reset_pin',
+            child: Text(AdminStrings.resetPasswordAction(_ar)),
+          ),
+          if (account.active)
+            PopupMenuItem(
+              value: 'deactivate',
+              child: Text(AdminStrings.deactivateAccountAction(_ar)),
+            ),
+        ],
+      ),
+    ),
+  );
+
+  Future<void> _onAccountAction(LocalAccount account, String action) async {
+    setState(() => _busy = true);
+    try {
+      if (action == 'reset_pin') {
+        await _auth.resetPassword(account.id);
+        await _reload();
+        if (mounted) {
+          final msg = AdminStrings.resetPasswordDone(
+            _ar,
+            AuthConstants.temporaryPassword,
+          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(msg)));
+        }
+      } else if (action == 'deactivate') {
+        await _auth.deactivateAccount(account.id);
+        await _reload();
+      }
+    } on Exception catch (e) {
+      if (mounted) setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _add() async {
     if (_employees.isEmpty) return;
-    final employee = ValueNotifier<String?>(_employees.first.employeeUid);
-    final role = ValueNotifier<AuthRole>(AuthRole.housingSupervisor);
+    final emp = ValueNotifier<String?>(_employees.first.employeeUid);
+    final role = ValueNotifier<AuthRole>(AuthRole.siteSupervisor);
     final teams = ValueNotifier<Set<String>>({});
     final housings = ValueNotifier<Set<String>>({});
     final created = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(t('إضافة مستخدم', 'Add user')),
-        content: SizedBox(
-          width: 420,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ValueListenableBuilder(
-                  valueListenable: role,
-                  builder: (context, value, _) =>
-                      DropdownButtonFormField<AuthRole>(
-                        initialValue: value,
-                        decoration: InputDecoration(
-                          labelText: t('الدور', 'Role'),
-                        ),
-                        items: AuthRole.values
-                            .map(
-                              (item) => DropdownMenuItem(
-                                value: item,
-                                child: Text(item.label(arabic: widget.arabic)),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (next) {
-                          if (next != null) role.value = next;
-                        },
-                      ),
-                ),
-                ValueListenableBuilder(
-                  valueListenable: employee,
-                  builder: (context, value, _) =>
-                      DropdownButtonFormField<String>(
-                        initialValue: value,
-                        decoration: InputDecoration(
-                          labelText: t('الموظف', 'Employee'),
-                        ),
-                        items: _employees
-                            .map(
-                              (item) => DropdownMenuItem(
-                                value: item.employeeUid,
-                                child: Text(_name(item)),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (next) => employee.value = next,
-                      ),
-                ),
-                ValueListenableBuilder(
-                  valueListenable: role,
-                  builder: (context, currentRole, _) {
-                    if (currentRole == AuthRole.siteSupervisor) {
-                      return _assignmentList(
-                        _teams
-                            .map(
-                              (item) => (
-                                item.teamId,
-                                _entityName(item.nameAr, item.nameEn),
-                              ),
-                            )
-                            .toList(),
-                        teams,
-                        t('الفرق المسندة', 'Assigned teams'),
-                      );
-                    }
-                    if (currentRole == AuthRole.housingSupervisor) {
-                      return _assignmentList(
-                        _housings
-                            .map(
-                              (item) => (
-                                item.housingId,
-                                _entityName(item.nameAr, item.nameEn),
-                              ),
-                            )
-                            .toList(),
-                        housings,
-                        t('المساكن المسندة', 'Assigned housing'),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(t('إلغاء', 'Cancel')),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(t('إنشاء', 'Create')),
-          ),
-        ],
-      ),
+      builder: (ctx) => _buildAddDialog(ctx, role, emp, teams, housings),
     );
-    if (created != true) return;
-    final employeeRow = _employees.firstWhere(
-      (item) => item.employeeUid == employee.value,
-    );
-    if ((role.value == AuthRole.siteSupervisor && teams.value.isEmpty) ||
-        (role.value == AuthRole.housingSupervisor && housings.value.isEmpty)) {
-      setState(
-        () => _error = t(
-          'اختر نطاقًا واحدًا على الأقل للمشرف',
-          'Assign at least one team or housing',
-        ),
-      );
-      return;
+    void disposeAll() {
+      for (final n in [emp, role, teams, housings]) {
+        n.dispose();
+      }
     }
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
+
+    if (created != true) return disposeAll();
+    if (role.value == AuthRole.housingSupervisor && housings.value.isEmpty) {
+      setState(() => _error = AdminStrings.assignHousingRequired(_ar));
+      return disposeAll();
+    }
+    final empRow = _employees.firstWhere((e) => e.employeeUid == emp.value);
+    setState(() => (_busy = true, _error = null));
     try {
       await _auth.createAccount(
-        employeeUid: employeeRow.employeeUid,
-        displayName: _name(employeeRow),
+        employeeUid: empRow.employeeUid,
+        displayName: _name(empRow),
         role: role.value,
         teamIds: teams.value.toList(),
         housingIds: housings.value.toList(),
       );
       await _reload();
-    } on Exception catch (error) {
-      if (mounted) {
-        setState(
-          () => _error = error is AuthConflictException
-              ? t(
-                  'هذا المستخدم موجود بالفعل لهذا الدور',
-                  'This user already has that role',
-                )
-              : t('تعذر إنشاء الحساب', 'Could not create account'),
-        );
-      }
+    } on Exception catch (e) {
+      if (!mounted) return;
+      final conflict = e is AuthConflictException;
+      setState(
+        () => _error = conflict
+            ? AdminStrings.accountConflictError(_ar)
+            : AdminStrings.accountCreateError(_ar),
+      );
     } finally {
-      employee.dispose();
-      role.dispose();
-      teams.dispose();
-      housings.dispose();
+      disposeAll();
       if (mounted) setState(() => _busy = false);
     }
   }
+
+  AlertDialog _buildAddDialog(
+    BuildContext context,
+    ValueNotifier<AuthRole> role,
+    ValueNotifier<String?> emp,
+    ValueNotifier<Set<String>> teams,
+    ValueNotifier<Set<String>> housings,
+  ) => AlertDialog(
+    title: Text(AdminStrings.addUser(_ar)),
+    content: SizedBox(
+      width: 420,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _roleField(role),
+            _employeeField(emp),
+            ValueListenableBuilder(
+              valueListenable: role,
+              builder: (context, r, _) => switch (r) {
+                AuthRole.siteSupervisor => _assignmentList(
+                  [
+                    for (final t in _teams)
+                      (t.teamId, _entityName(t.nameAr, t.nameEn)),
+                  ],
+                  teams,
+                  AdminStrings.assignedTeams(_ar),
+                ),
+                AuthRole.housingSupervisor => _assignmentList(
+                  [
+                    for (final h in _housings)
+                      (h.housingId, _entityName(h.nameAr, h.nameEn)),
+                  ],
+                  housings,
+                  AdminStrings.assignedHousing(_ar),
+                ),
+                _ => const SizedBox.shrink(),
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context, false),
+        child: Text(AppStrings.cancel(_ar)),
+      ),
+      FilledButton(
+        onPressed: () => Navigator.pop(context, true),
+        child: Text(t('إنشاء', 'Create')),
+      ),
+    ],
+  );
+
+  Widget _roleField(ValueNotifier<AuthRole> role) => ValueListenableBuilder(
+    valueListenable: role,
+    builder: (context, value, _) => DropdownButtonFormField<AuthRole>(
+      initialValue: value,
+      decoration: InputDecoration(labelText: AdminStrings.roleLabel(_ar)),
+      items: [
+        for (final r in AuthRole.values)
+          DropdownMenuItem(
+            value: r,
+            child: Text(r.label(arabic: _ar)),
+          ),
+      ],
+      onChanged: (next) => next == null ? null : role.value = next,
+    ),
+  );
+
+  Widget _employeeField(ValueNotifier<String?> emp) => ValueListenableBuilder(
+    valueListenable: emp,
+    builder: (context, value, _) => DropdownButtonFormField<String>(
+      initialValue: value,
+      decoration: InputDecoration(labelText: AdminStrings.employeeLabel(_ar)),
+      items: [
+        for (final e in _employees)
+          DropdownMenuItem(value: e.employeeUid, child: Text(_name(e))),
+      ],
+      onChanged: (next) => emp.value = next,
+    ),
+  );
 
   Widget _assignmentList(
     List<(String, String)> options,
@@ -259,28 +270,28 @@ final class _LocalAccountsScreenState extends State<LocalAccountsScreen> {
     String title,
   ) => ValueListenableBuilder<Set<String>>(
     valueListenable: selection,
-    builder: (context, selected, _) => ExpansionTile(
+    builder: (context, sel, _) => ExpansionTile(
       title: Text(title),
       children: [
-        for (final item in options)
+        for (final o in options)
           CheckboxListTile(
-            value: selected.contains(item.$1),
-            title: Text(item.$2),
-            onChanged: (checked) =>
-                selection.value = {...selected, if (checked == true) item.$1}
-                  ..removeWhere((id) => checked == false && id == item.$1),
+            value: sel.contains(o.$1),
+            title: Text(o.$2),
+            onChanged: (c) =>
+                selection.value = {...sel, if (c == true) o.$1}
+                  ..removeWhere((id) => c == false && id == o.$1),
           ),
       ],
     ),
   );
 
-  String _name(Employee row) =>
-      widget.arabic ? row.fullNameAr : (row.fullNameEn ?? row.fullNameAr);
-  String _entityName(String ar, String? en) => widget.arabic ? ar : (en ?? ar);
-  String _scopeLabel(LocalAccount account) => switch (account.role) {
+  String _name(Employee r) =>
+      _ar ? r.fullNameAr : (r.fullNameEn ?? r.fullNameAr);
+  String _entityName(String ar, String? en) => _ar ? ar : (en ?? ar);
+  String _scopeLabel(LocalAccount a) => switch (a.role) {
     AuthRole.housingSupervisor =>
-      '${account.housingIds.length} ${t('مساكن', 'housing')}',
-    AuthRole.siteSupervisor => '${account.teamIds.length} ${t('فرق', 'teams')}',
+      '${a.housingIds.length} ${t('مساكن', 'housing')}',
+    AuthRole.siteSupervisor => '${a.teamIds.length} ${t('فرق', 'teams')}',
     _ => t('كامل التطبيق', 'Full app'),
   };
 }

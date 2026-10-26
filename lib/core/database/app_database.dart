@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/database/tables/app_users_table.dart';
+import 'package:radar_labor/core/database/tables/audit_log_table.dart';
 import 'package:radar_labor/core/database/tables/employees_table.dart';
 import 'package:radar_labor/core/database/tables/employment_periods_table.dart';
 import 'package:radar_labor/core/database/tables/events_table.dart';
@@ -14,7 +15,7 @@ import 'package:uuid/uuid.dart';
 
 part 'app_database.g.dart';
 
-/// Local encrypted source of truth for roster, employment, settings, accounts, and events.
+/// Local encrypted source of truth for roster, employment, settings, accounts, events, and audit logs.
 @DriftDatabase(
   tables: [
     Settings,
@@ -25,6 +26,7 @@ part 'app_database.g.dart';
     Events,
     AppUsers,
     UserScopes,
+    AuditLogs,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -55,14 +57,20 @@ class AppDatabase extends _$AppDatabase {
         await migrator.createTable(userScopes);
         await _migrateLegacyJsonAccounts();
       }
+      if (from < 5) {
+        await migrator.createTable(auditLogs);
+        if (from == 4) {
+          await migrator.alterTable(TableMigration(appUsers));
+        }
+      }
     },
   );
 
   Future<void> _migrateLegacyJsonAccounts() async {
     try {
-      final row = await (select(settings)
-            ..where((s) => s.key.equals('local_accounts_v1')))
-          .getSingleOrNull();
+      final row = await (select(
+        settings,
+      )..where((s) => s.key.equals('local_accounts_v1'))).getSingleOrNull();
       if (row == null || row.value.isEmpty) return;
 
       final decoded = jsonDecode(row.value) as List<Object?>;
@@ -72,19 +80,27 @@ class AppDatabase extends _$AppDatabase {
       for (final item in decoded) {
         if (item is! Map<String, Object?>) continue;
         final id = item['id'] as String? ?? uuid.v4();
-        final employeeUid = item['employeeUid'] as String? ?? '';
+        final employeeUid = item['employeeUid'] as String?;
         final displayName = item['displayName'] as String? ?? 'User';
         final role = item['role'] as String? ?? 'viewer';
         final salt = item['salt'] as String? ?? '';
         final passwordHash = item['passwordHash'] as String? ?? '';
         final mustChange = item['mustChangePassword'] as bool? ?? true;
-        final teamIds = (item['teamIds'] as List<Object?>?)?.map((e) => e.toString()).toList() ?? const [];
-        final housingIds = (item['housingIds'] as List<Object?>?)?.map((e) => e.toString()).toList() ?? const [];
+        final teamIds =
+            (item['teamIds'] as List<Object?>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            const [];
+        final housingIds =
+            (item['housingIds'] as List<Object?>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            const [];
 
         await into(appUsers).insert(
           AppUsersCompanion.insert(
             id: id,
-            employeeUid: employeeUid,
+            employeeUid: Value(employeeUid),
             displayName: displayName,
             role: role,
             pwHash: passwordHash,
@@ -120,7 +136,11 @@ class AppDatabase extends _$AppDatabase {
         }
       }
 
-      await (delete(settings)..where((s) => s.key.equals('local_accounts_v1'))).go();
-    } catch (_) {}
+      await (delete(
+        settings,
+      )..where((s) => s.key.equals('local_accounts_v1'))).go();
+    } on Object catch (_) {
+      // Legacy settings malformed JSON is safely ignored during upgrade.
+    }
   }
 }
