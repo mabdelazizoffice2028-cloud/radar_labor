@@ -4,6 +4,66 @@ Append one dated handoff entry for each model/session. Keep prior entries so the
 next model can understand decisions and recoveries. The newest handoff is at the
 top of the log.
 
+## 2026-10-26 — Final Polish, UI Minimalism Sweep & Premium Native App Icon Upgrade
+
+- **Owner request:**
+  1. Task 1 (UI Minimalism & Clean AppBar): Remove redundant Sign Out button from `HomeScaffold` AppBar actions (accessible via Settings tab). Keep AppBar actions strictly minimal (only `SyncStatusBadge` and styled Business Date badge).
+  2. Task 2 (Professional Native App Icon): Rewrite Android Vector Drawable in `android/app/src/main/res/drawable/ic_launcher_foreground.xml` and background in `android/app/src/main/res/values/ic_launcher_background.xml`. Design a scalable vector graphic combining a minimalist Radar/Pulse concept with a Workforce/Construction Hardhat concept, matching brand colors (`#1D4ED8`, `#0F172A`, `#F59E0B`, `#FFFFFF`).
+  3. Task 3 (Code Health & Edge Case Sweep): Final sweep for unhandled exceptions and empty catches. Run `dart format lib test` and `flutter analyze --no-pub` (zero issues). Ensure all files in `lib/` are strictly <= 300 lines.
+  4. Task 4 (Final Release Build & Documentation): Run `flutter test --no-pub` (100% pass), build release APK via `flutter build apk --release --no-pub`, copy to `outputs/Radar Labour.apk`, and compute exact byte size and SHA-256 hash.
+- **Changes applied:**
+  - `lib/app/home_scaffold.dart`: removed logout button from AppBar; extracted `HomeDateBadge` and `UserPasswordChangeDialog`, reducing file from 312 to 246 lines.
+  - `lib/app/widgets/home_date_badge.dart`: created minimal, branded operational date badge.
+  - `lib/app/widgets/user_password_change_dialog.dart`: extracted password change dialog into dedicated widget file.
+  - `android/app/src/main/res/values/ic_launcher_background.xml`: updated background to premium deep navy `#0F172A`.
+  - `android/app/src/main/res/drawable/ic_launcher_foreground.xml`: redesigned adaptive foreground vector with concentric radar waves, amber detection ping, hardhat dome and central ridge, and workforce foundation in brand primary `#1D4ED8`.
+  - Audited all catch blocks across `lib/`: 0 empty or unhandled catches.
+- **Checks observed:**
+  - `dart format lib test`: formatted cleanly.
+  - File lengths: 100% of `.dart` files in `lib/` strictly <= 300 lines (0 files over limit).
+  - `flutter analyze --no-pub`: `No issues found! (ran in 5.6s)`.
+  - `flutter test --no-pub`: `136/136 All tests passed!`.
+- **Build output:**
+  - `flutter build apk --release --no-pub` built in 118.1 seconds.
+  - Copied to `outputs/Radar Labour.apk`.
+  - Size: 69,521,863 bytes (~66.30 MB).
+  - SHA-256: `9607A0AED30803529BD8AE1D1CC980AFA20095F1CDF0D3FC4694DE60089B8036`.
+
+## 2026-10-26 — Phases 3, 4, 5, and 6: UX/UI & Localization Overhaul (Release APK)
+
+- **Owner request:**
+  1. Phase 3 (Complete Localization Sweep): Move 100% of inline/hardcoded Arabic/English strings to centralized l10n classes. Create DashboardStrings and update all dashboard presentation files. Move remaining auth strings into AuthFlowStrings and accounts strings into AdminStrings.
+  2. Phase 4 (Housing Check 3-State Review, Local Drafts & In-List Search): Implement explicit enum HousingReviewState { unreviewed, reviewedPresent, absent }. Store housing drafts in LocalSettingsRepository under AppSettingKeys.draftHousingCheck(housingId, date). Create HousingCheckNotifier & HousingCheckState with quick action 'Mark remaining as reviewed'. Add in-list search bar to Site Attendance and Housing Check. Ensure Site Attendance Select All operates on visible filtered unlocked rows.
+  3. Phase 5 (Supervisor Task Banner & Scoped Worker Lookup): Add high-contrast task summary card at top of supervisor operations view with approved business date, 3-state task badge (Not Started, Draft Saved, Saved Locally/Completed), and live counters. Add quick scoped worker lookup sheet.
+  4. Phase 6 (Simplified Conflict Resolution Dialog): Refactor conflict dialog with non-technical comparison card (Current record vs Conflicting record with Riyadh time) and 3 clear radio options with primary title and 1-line subtitle explanation.
+  5. Verification & Release: Run dart format, verify all .dart files <= 300 lines, run flutter analyze --no-pub (0 errors), run flutter test --no-pub (136/136 pass), build Release APK, copy to outputs/Radar Labour.apk, and record exact size and SHA-256 hash.
+- **Changes applied:**
+  - lib/core/l10n/dashboard_strings.dart: created with complete English & Arabic translations, Bidi isolation, and zero magic strings.
+  - lib/core/l10n/housing_review_strings.dart, lib/core/l10n/supervisor_task_strings.dart, lib/core/l10n/conflict_resolution_strings.dart: created dedicated l10n classes keeping all files strictly under 300 lines.
+  - lib/features/dashboard/presentation/: refactored dashboard_screen.dart, dashboard_components.dart, dashboard_sections.dart, and dashboard_action_sheets.dart to use DashboardStrings.
+  - lib/app/widgets/change_temporary_password_dialog.dart & auth_setup_view.dart: updated to use AuthFlowStrings.
+  - lib/app/local_accounts_screen.dart: updated to use AdminStrings.
+  - lib/core/auth/auth_role.dart: updated to use AuthFlowStrings.
+  - lib/core/database/app_setting_keys.dart: added draftHousingCheckPrefix and draftHousingCheck(housingId, date).
+  - lib/features/operations/domain/housing_draft_store.dart & data/settings_housing_draft_store.dart: implemented draft persistence storing JSON {'v':1, 'reviewed':[...], 'absent':[...], 'updatedAt':'...'}.
+  - lib/features/operations/presentation/state/housing_check_state.dart & housing_check_notifier.dart: created 3-state review model with live counters, debounced draft saves, and 'Mark remaining as reviewed'.
+  - lib/features/operations/presentation/housing_check_screen.dart: refactored to Riverpod ConsumerStatefulWidget with in-list search, 3-state HousingWorkerTile, and draft/undo workflow.
+  - lib/features/operations/presentation/state/site_attendance_state.dart & site_attendance_notifier.dart: added searchQuery, filteredRows, and updated selectAll to operate strictly on visible filtered unlocked rows.
+  - lib/features/operations/presentation/site_attendance_screen.dart: added compact in-list worker search field.
+  - lib/features/operations/presentation/widgets/supervisor_task_banner.dart & scoped_worker_lookup_sheet.dart: created supervisor task summary card and scoped worker lookup sheet, integrated into operations_screen.dart.
+  - lib/features/operations/presentation/widgets/attendance_conflict_dialog.dart & attendance_conflict_choice_tile.dart: simplified conflict resolution with current/conflicting record comparison card, 3 clear options with title and explanation, and submission protection.
+  - lib/core/auth/user_scope_storage.dart: extracted helper ensuring LocalAuthRepository is comfortably <= 300 lines.
+  - test/features/operations/phases_3_to_6_test.dart: added comprehensive unit and widget tests for 3-state review, draft persistence/restoration, in-list search filtering, and Arabic RTL / English LTR rendering.
+- **Checks observed:**
+  - flutter analyze --no-pub: 0 issues found!
+  - flutter test --no-pub: 136/136 tests passed (100% pass rate).
+  - File lengths: 100% of .dart files in lib/ strictly <= 300 lines.
+- **Build output:**
+  - flutter build apk --release --no-pub built in 83.2 seconds.
+  - Copied to outputs/Radar Labour.apk.
+  - Size: 69,521,747 bytes (~66.3 MB).
+  - SHA-256: BB1268E561F3D69933DAE3BEBFD51632AB7537EB676693BCE31476C8E3D1EB5B.
+
 ## 2026-10-26 — Phase 1 & 2: Field UX Simplification & Smart Login (Release APK)
 
 - **Owner request:** 

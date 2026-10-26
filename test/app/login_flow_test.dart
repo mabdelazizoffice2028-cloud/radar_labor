@@ -77,13 +77,21 @@ void main() {
     test('supports remembered account mode and switchAccount', () {
       final notifier = LoginFlowNotifier([
         makeAccount(id: 'sup-1', name: 'أحمد', role: AuthRole.siteSupervisor),
-        makeAccount(id: 'pm-1', name: 'المدير العام', role: AuthRole.projectManager),
+        makeAccount(
+          id: 'pm-1',
+          name: 'المدير العام',
+          role: AuthRole.projectManager,
+        ),
       ]);
 
       // Set remembered account
       notifier.setAccounts([
         makeAccount(id: 'sup-1', name: 'أحمد', role: AuthRole.siteSupervisor),
-        makeAccount(id: 'pm-1', name: 'المدير العام', role: AuthRole.projectManager),
+        makeAccount(
+          id: 'pm-1',
+          name: 'المدير العام',
+          role: AuthRole.projectManager,
+        ),
       ], rememberedAccountId: 'sup-1');
 
       expect(notifier.state.isRememberedMode, isTrue);
@@ -96,7 +104,12 @@ void main() {
 
       // Inactive or nonexistent remembered account is ignored
       notifier.setAccounts([
-        makeAccount(id: 'sup-1', name: 'أحمد', role: AuthRole.siteSupervisor, active: false),
+        makeAccount(
+          id: 'sup-1',
+          name: 'أحمد',
+          role: AuthRole.siteSupervisor,
+          active: false,
+        ),
       ], rememberedAccountId: 'sup-1');
       expect(notifier.state.isRememberedMode, isFalse);
     });

@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
+import 'package:radar_labor/core/l10n/auth_flow_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 
 /// Interactive initial setup widget for roster import and manager/HR initialization.
@@ -53,9 +54,7 @@ final class AuthSetupView extends StatelessWidget {
         ),
         const SizedBox(height: AppTokens.space8),
         Text(
-          arabic
-              ? 'ابدأ باستيراد ملف القوى العاملة (XLSX / CSV). لن يُحفظ رقم الهوية الوطنية.'
-              : 'Start by importing the workforce file. National ID numbers are never saved.',
+          AuthFlowStrings.initialSetupDescription(arabic),
           textAlign: TextAlign.center,
           style: const TextStyle(color: AppTokens.textSecondary, fontSize: 14),
         ),
@@ -67,7 +66,7 @@ final class AuthSetupView extends StatelessWidget {
               onPressed: busy ? null : onPickRoster,
               icon: const Icon(Icons.upload_file),
               label: Text(
-                arabic ? 'اختيار ملف Excel أو CSV' : 'Choose Excel or CSV file',
+                AuthFlowStrings.chooseRosterFile(arabic),
                 style: const TextStyle(fontSize: 16),
               ),
             ),
@@ -76,7 +75,7 @@ final class AuthSetupView extends StatelessWidget {
           DropdownButtonFormField<String>(
             initialValue: selectedManagerUid,
             decoration: InputDecoration(
-              labelText: arabic ? 'مدير المشروع' : 'Project Manager',
+              labelText: AuthFlowStrings.projectManagerRole(arabic),
               prefixIcon: const Icon(Icons.badge_outlined),
               border: const OutlineInputBorder(),
             ),
@@ -94,7 +93,7 @@ final class AuthSetupView extends StatelessWidget {
           DropdownButtonFormField<String>(
             initialValue: selectedHrUid,
             decoration: InputDecoration(
-              labelText: arabic ? 'مسؤول HR' : 'HR Administrator',
+              labelText: AuthFlowStrings.hrRole(arabic),
               prefixIcon: const Icon(Icons.manage_accounts_outlined),
               border: const OutlineInputBorder(),
             ),
@@ -129,7 +128,7 @@ final class AuthSetupView extends StatelessWidget {
                       ),
                     )
                   : Text(
-                      arabic ? 'إنشاء حسابي الإدارة' : 'Create Admin Accounts',
+                      AuthFlowStrings.createAdminAccountsAction(arabic),
                       style: const TextStyle(fontSize: 16),
                     ),
             ),

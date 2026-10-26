@@ -118,24 +118,14 @@ final class SiteAttendanceNotifier extends Notifier<SiteAttendanceState> {
         date: date,
         arabic: _isArabic,
       );
-      state = state.copyWith(
-        selectedTeam: d.team,
-        selectedDate: d.date,
-        todayDate: today,
-        isPastDate: d.isPastDate,
-        isLoading: false,
-        rows: d.rows,
-        baseline: d.baseline,
-        initialSource: d.initialSource,
-        initialSourceDate: d.initialSourceDate,
-        clearInitialSourceDate: d.initialSourceDate == null,
-        skippedDraftCount: d.skippedDraftCount,
-        clearError: true,
-      );
+      state = state.withLoadedDay(d, today);
     } on OperationException catch (error) {
       _setFailure(error);
     }
   }
+
+  void setSearchQuery(String query) =>
+      state = state.copyWith(searchQuery: query);
 
   void toggleWorker(String workerId) => _updateRows([
     for (final row in state.rows)
@@ -145,10 +135,16 @@ final class SiteAttendanceNotifier extends Notifier<SiteAttendanceState> {
         row,
   ]);
 
-  void selectAll(bool present) => _updateRows([
-    for (final row in state.rows)
-      if (!row.isLocked) row.copyWith(isPresent: present) else row,
-  ]);
+  void selectAll(bool present) {
+    final visibleIds = state.filteredRows.map((r) => r.worker.id).toSet();
+    _updateRows([
+      for (final row in state.rows)
+        if (!row.isLocked && visibleIds.contains(row.worker.id))
+          row.copyWith(isPresent: present)
+        else
+          row,
+    ]);
+  }
 
   void addGuestWorker(CrossTeamWorkerOption guest) {
     if (state.existingWorkerIds.contains(guest.worker.id)) return;

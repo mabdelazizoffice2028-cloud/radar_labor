@@ -41,9 +41,13 @@ final class _LocalAccountsScreenState extends State<LocalAccountsScreen> {
   Future<void> _reload() async {
     try {
       final data = await _controller.load();
-      if (mounted) setState(() => (_data = data, _error = null));
+      if (mounted) {
+        setState(() => (_data = data, _error = null));
+      }
     } on Exception catch (_) {
-      if (mounted) setState(() => _error = AdminStrings.accountUpdateError(_ar));
+      if (mounted) {
+        setState(() => _error = AdminStrings.accountUpdateError(_ar));
+      }
     }
   }
 
@@ -66,9 +70,9 @@ final class _LocalAccountsScreenState extends State<LocalAccountsScreen> {
     }
   }
 
-  void _toast(String message) => ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(message)));
+  void _toast(String message) =>
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
 
   Future<void> _import() => _run(() async {
     final preview = await _controller.pickImport();
@@ -99,23 +103,27 @@ final class _LocalAccountsScreenState extends State<LocalAccountsScreen> {
     if (accepted != true) return;
     final r = await _controller.commitImport(preview);
     if (mounted) {
-      _toast(AdminStrings.importDone(_ar, r.added, r.updated, r.accountsCreated));
+      _toast(
+        AdminStrings.importDone(_ar, r.added, r.updated, r.accountsCreated),
+      );
     }
   }, AdminStrings.importFailed(_ar));
 
-  AccountFormDialog _dialog(AccountsAdminData d, [LocalAccount? initial]) =>
-      AccountFormDialog(
-        arabic: _ar,
-        initial: initial,
-        employees: [
-          for (final e in d.employees)
-            (e.employeeUid, _ar ? e.fullNameAr : (e.fullNameEn ?? e.fullNameAr)),
-        ],
-        teams: [for (final t in d.teams) (t.teamId, _label(t.nameAr, t.nameEn))],
-        housings: [
-          for (final h in d.housings) (h.housingId, _label(h.nameAr, h.nameEn)),
-        ],
-      );
+  AccountFormDialog _dialog(
+    AccountsAdminData d, [
+    LocalAccount? initial,
+  ]) => AccountFormDialog(
+    arabic: _ar,
+    initial: initial,
+    employees: [
+      for (final e in d.employees)
+        (e.employeeUid, _ar ? e.fullNameAr : (e.fullNameEn ?? e.fullNameAr)),
+    ],
+    teams: [for (final t in d.teams) (t.teamId, _label(t.nameAr, t.nameEn))],
+    housings: [
+      for (final h in d.housings) (h.housingId, _label(h.nameAr, h.nameEn)),
+    ],
+  );
 
   Future<void> _add() async {
     final data = _data;
@@ -250,10 +258,15 @@ final class _LocalAccountsScreenState extends State<LocalAccountsScreen> {
   String _label(String ar, String? en) => _ar ? ar : (en ?? ar);
 
   String _scope(LocalAccount a) => switch (a.role) {
-    AuthRole.housingSupervisor =>
-      '${a.housingIds.length} ${_ar ? 'مساكن' : 'campus'}',
-    AuthRole.siteSupervisor => '${a.teamIds.length} ${_ar ? 'فرق' : 'teams'}',
-    _ => _ar ? 'كامل التطبيق' : 'Full app',
+    AuthRole.housingSupervisor => AdminStrings.scopeHousingCount(
+      _ar,
+      a.housingIds.length,
+    ),
+    AuthRole.siteSupervisor => AdminStrings.scopeTeamsCount(
+      _ar,
+      a.teamIds.length,
+    ),
+    _ => AdminStrings.scopeFullApp(_ar),
   };
 }
 
@@ -264,7 +277,10 @@ final class _ErrorText extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: AppTokens.space8),
-    child: Text(message, style: const TextStyle(color: AppTokens.statusUnknown)),
+    child: Text(
+      message,
+      style: const TextStyle(color: AppTokens.statusUnknown),
+    ),
   );
 }
 

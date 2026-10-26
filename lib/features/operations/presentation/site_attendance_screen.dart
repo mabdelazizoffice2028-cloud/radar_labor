@@ -88,6 +88,7 @@ final class _SiteAttendanceScreenState
         conflicts: prepared.conflicts,
         currentTeamName: prepared.team.displayName(arabic: ar),
         arabic: ar,
+        currentDate: prepared.date,
       );
       if (resolved == null || !mounted) return;
       resolutions = resolved;
@@ -191,6 +192,35 @@ final class _SiteAttendanceScreenState
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ),
+            if (selected != null && state.rows.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTokens.space16,
+                  vertical: AppTokens.space4,
+                ),
+                child: TextField(
+                  key: const ValueKey('site_worker_search_field'),
+                  decoration: InputDecoration(
+                    hintText: OperationsStrings.searchWorkersHint(ar),
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppTokens.space12,
+                      vertical: AppTokens.space8,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTokens.radius12),
+                    ),
+                    suffixIcon: state.searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () => notifier.setSearchQuery(''),
+                          )
+                        : null,
+                  ),
+                  onChanged: notifier.setSearchQuery,
+                ),
+              ),
             Expanded(
               child: state.isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -203,9 +233,9 @@ final class _SiteAttendanceScreenState
                         horizontal: AppTokens.space16,
                         vertical: AppTokens.space8,
                       ),
-                      itemCount: state.rows.length,
+                      itemCount: state.filteredRows.length,
                       itemBuilder: (context, index) {
-                        final row = state.rows[index];
+                        final row = state.filteredRows[index];
                         return AttendanceRowTile(
                           row: row,
                           arabic: ar,

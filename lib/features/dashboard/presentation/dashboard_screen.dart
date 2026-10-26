@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:radar_labor/core/l10n/dashboard_strings.dart';
 import 'package:radar_labor/core/l10n/history_strings.dart';
 import 'package:radar_labor/core/status/status_models.dart';
 import 'package:radar_labor/core/time/business_date.dart';
@@ -44,7 +45,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       initialDate: initialDate,
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
-      helpText: _ar ? 'اختر يوم العمل' : 'Choose business date',
+      helpText: DashboardStrings.chooseBusinessDate(_ar),
     );
     if (!mounted || selected == null) return;
     setState(() => _businessDate = _toIsoDate(selected));
@@ -64,7 +65,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     builder: (context, state) {
       if (state.hasError) {
         return _MessageState(
-          message: _ar ? 'تعذر تحميل لوحة الحالات' : 'Could not load dashboard',
+          message: DashboardStrings.couldNotLoadDashboard(_ar),
           icon: Icons.error_outline,
         );
       }
@@ -85,9 +86,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             builder: (context, coverageState) {
               if (coverageState.hasError) {
                 return _MessageState(
-                  message: _ar
-                      ? 'تعذر تحميل تنبيهات التسجيل'
-                      : 'Could not load submission warnings',
+                  message: DashboardStrings.couldNotLoadWarnings(_ar),
                   icon: Icons.warning_amber_rounded,
                 );
               }

@@ -94,11 +94,11 @@ final class AccountProvisioningRepository {
     final name = displayName.trim();
     if (name.isEmpty) throw ArgumentError('Display name is required');
     return _database.transaction(() async {
-      await (_database.update(_database.appUsers)
-            ..where((u) => u.id.equals(accountId)))
-          .write(
-            AppUsersCompanion(displayName: Value(name), role: Value(role.name)),
-          );
+      await (_database.update(
+        _database.appUsers,
+      )..where((u) => u.id.equals(accountId))).write(
+        AppUsersCompanion(displayName: Value(name), role: Value(role.name)),
+      );
       await _auth.updateScopes(
         accountId,
         teamIds: role == AuthRole.siteSupervisor ? teamIds : const [],

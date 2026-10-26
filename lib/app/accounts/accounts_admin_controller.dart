@@ -134,9 +134,8 @@ final class AccountsAdminController {
 
   Future<void> _guardLastManager(LocalAccount account) async {
     if (account.role != AuthRole.projectManager) return;
-    final managers = (await _auth.accounts(
-      activeOnly: true,
-    )).where((a) => a.role == AuthRole.projectManager);
+    final managers = (await _auth.accounts(activeOnly: true))
+        .where((a) => a.role == AuthRole.projectManager);
     if (managers.length <= 1) throw const LastManagerException();
   }
 }

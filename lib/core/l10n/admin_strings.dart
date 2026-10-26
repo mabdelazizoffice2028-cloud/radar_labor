@@ -128,4 +128,12 @@ final class AdminStrings {
     'conflict_resolved' => ar ? 'حل تعارض' : 'Conflict resolved',
     _ => action,
   };
+
+  static String scopeHousingCount(bool ar, int count) =>
+      '$count ${ar ? 'مساكن' : 'campus'}';
+
+  static String scopeTeamsCount(bool ar, int count) =>
+      '$count ${ar ? 'فرق' : 'teams'}';
+
+  static String scopeFullApp(bool ar) => ar ? 'كامل التطبيق' : 'Full app';
 }

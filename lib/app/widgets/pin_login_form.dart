@@ -77,9 +77,8 @@ final class _PinLoginFormState extends State<PinLoginForm> {
           Text(
             AuthFlowStrings.welcomeBack(widget.arabic),
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTokens.textSecondary,
-            ),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: AppTokens.textSecondary),
           ),
           const SizedBox(height: AppTokens.space4),
           Text(

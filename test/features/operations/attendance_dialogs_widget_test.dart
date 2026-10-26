@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:radar_labor/core/l10n/conflict_resolution_strings.dart';
 import 'package:radar_labor/features/operations/domain/attendance_diff.dart';
 import 'package:radar_labor/features/operations/domain/conflict_detector.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
@@ -83,7 +84,9 @@ void main() {
       final confirmFinder = find.widgetWithText(FilledButton, 'Confirm & Save');
       expect(tester.widget<FilledButton>(confirmFinder).onPressed, isNull);
 
-      await tester.tap(find.text('Record as transfer'));
+      await tester.tap(
+        find.text(ConflictResolutionStrings.resolveAsTransferTitle(false)),
+      );
       await tester.pump();
 
       expect(tester.widget<FilledButton>(confirmFinder).onPressed, isNotNull);

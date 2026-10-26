@@ -4,43 +4,77 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- Ambient Radar Scan Sector -->
     <path
-        android:fillColor="#2B27C6D0"
-        android:pathData="M51.2,57 L51.2,24.5 A32.2,32.2 0,0 1,78.3,41 Z" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M19,57 A32.2,32.2 0,0 1,83.4,57"
-        android:strokeColor="#BE43D7DE"
-        android:strokeWidth="1.5" />
+        android:fillColor="#401D4ED8"
+        android:pathData="M 54,54 L 78,28 A 36,36 0 0,0 42,20 Z" />
+
+    <!-- Outer Radar Wave Pulse -->
     <path
         android:fillColor="#00000000"
-        android:pathData="M27.2,57 A24,24 0,0 1,75.2,57"
-        android:strokeColor="#AA43D7DE"
-        android:strokeWidth="1.2" />
+        android:strokeColor="#733B82F6"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M 24,54 A 30,30 0 0,1 84,54" />
+
+    <!-- Middle Radar Wave Pulse -->
     <path
         android:fillColor="#00000000"
-        android:pathData="M35.5,57 A15.7,15.7 0,0 1,66.9,57"
-        android:strokeColor="#9143D7DE"
-        android:strokeWidth="1" />
+        android:strokeColor="#BF60A5FA"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M 33,54 A 21,21 0 0,1 75,54" />
+
+    <!-- Inner Radar Wave Pulse -->
     <path
-        android:fillColor="#FFFFB24A"
-        android:pathData="M67.8,34 A1.7,1.7 0,1 0,67.8 37.4 A1.7,1.7 0,1 0,67.8 34" />
+        android:fillColor="#00000000"
+        android:strokeColor="#FF93C5FD"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M 42,54 A 12,12 0 0,1 66,54" />
+
+    <!-- Radar Target Ping Halo -->
     <path
-        android:fillColor="#FFFFEFCB"
-        android:pathData="M67.8,35.1 A0.6,0.6 0,1 0,67.8 36.3 A0.6,0.6 0,1 0,67.8 35.1" />
+        android:fillColor="#00000000"
+        android:strokeColor="#80F59E0B"
+        android:strokeWidth="1.2"
+        android:pathData="M 69.5,33 a 5.5,5.5 0 1,0 11,0 a 5.5,5.5 0 1,0 -11,0" />
+
+    <!-- Radar Target Ping Center -->
     <path
-        android:fillColor="#FFF4F9FB"
-        android:pathData="M32,59 L32.2,54.7 C32.2,44.7 40,38.2 51.2,37.8 C62.4,38.2 70.2,44.7 70.2,54.7 L70.4,59 Z" />
+        android:fillColor="#FFF59E0B"
+        android:pathData="M 72,33 a 3,3 0 1,0 6,0 a 3,3 0 1,0 -6,0" />
+
+    <!-- Workforce Hardhat Dome -->
     <path
-        android:fillColor="#FF29BECA"
-        android:pathData="M51.2,39.3 L52.6,39.3 L52.6,58 L51.2,58 Z" />
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M 36,66 C 36,52 44,45 54,45 C 64,45 72,52 72,66 Z" />
+
+    <!-- Hardhat Central Ridge -->
     <path
-        android:fillColor="#FFF0F7F9"
-        android:pathData="M28.8,56.8 L73.6,56.8 L73.6,60.2 C73.6,62.5 71.7,64.2 69,64.2 L33.4,64.2 C30.7,64.2 28.8,62.5 28.8,60.2 Z" />
+        android:fillColor="#FFCBD5E1"
+        android:pathData="M 52.2,45 C 52.2,45 53.2,43.8 54,43.8 C 54.8,43.8 55.8,45 55.8,45 L 55.8,66 L 52.2,66 Z" />
+
+    <!-- Hardhat Protective Brim -->
     <path
-        android:fillColor="#FF29BECA"
-        android:pathData="M30.6,59.4 L71.8,59.4 L71.8,61.8 L30.6,61.8 Z" />
+        android:fillColor="#FFF8FAFC"
+        android:pathData="M 30,66.5 C 30,65 32,64.2 36,64.2 L 72,64.2 C 76,64.2 78,65 78,66.5 C 78,68.2 75.5,69.5 71,69.5 L 37,69.5 C 32.5,69.5 30,68.2 30,66.5 Z" />
+
+    <!-- Brim Detail Line -->
     <path
-        android:fillColor="#FFFFB24A"
-        android:pathData="M48.6,62.5 L53.8,62.5 L53.8,64 L48.6,64 Z" />
+        android:fillColor="#00000000"
+        android:strokeColor="#FFCBD5E1"
+        android:strokeWidth="1"
+        android:strokeLineCap="round"
+        android:pathData="M 34,66.5 L 74,66.5" />
+
+    <!-- Worker Body / Base -->
+    <path
+        android:fillColor="#FF1D4ED8"
+        android:pathData="M 35,77 C 40,73.5 47,72 54,72 C 61,72 68,73.5 73,77 C 75.5,78.5 77,81 77,83.5 L 31,83.5 C 31,81 32.5,78.5 35,77 Z" />
+
+    <!-- Identity Collar Badge -->
+    <path
+        android:fillColor="#FFF59E0B"
+        android:pathData="M 51.5,72.5 L 56.5,72.5 L 54,77 Z" />
 </vector>

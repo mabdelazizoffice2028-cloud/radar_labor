@@ -17,7 +17,7 @@ class _ConflictSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          arabic ? 'تعارضات تحتاج مراجعة' : 'Conflicts to review',
+          DashboardStrings.conflictsToReview(arabic),
           style: Theme.of(context).textTheme.titleLarge,
         ),
         for (final row in rows)
@@ -31,7 +31,7 @@ class _ConflictSection extends StatelessWidget {
               subtitle: Text(_conflictLabel(row.flags, arabic)),
               trailing: TextButton(
                 onPressed: onResolve == null ? null : () => onResolve!(row),
-                child: Text(arabic ? 'تسوية' : 'Resolve'),
+                child: Text(DashboardStrings.resolve(arabic)),
               ),
             ),
           ),
@@ -42,12 +42,10 @@ class _ConflictSection extends StatelessWidget {
   String _conflictLabel(Set<StatusFlag> flags, bool arabic) {
     final labels = <String>[];
     if (flags.contains(StatusFlag.housingSiteConflict)) {
-      labels.add(
-        arabic ? 'غياب سكن مع حضور موقع' : 'Campus absence and site presence',
-      );
+      labels.add(DashboardStrings.conflictHousingAndSite(arabic));
     }
     if (flags.contains(StatusFlag.multipleSiteTeams)) {
-      labels.add(arabic ? 'مسجل في أكثر من فريق' : 'Multiple site teams');
+      labels.add(DashboardStrings.conflictMultipleTeams(arabic));
     }
     return labels.join(' • ');
   }
@@ -72,7 +70,7 @@ class _UnknownSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsetsDirectional.only(top: 16, bottom: 4),
           child: Text(
-            arabic ? 'عمال غير معلومين' : 'Unknown workers',
+            DashboardStrings.unknownWorkers(arabic),
             style: Theme.of(context).textTheme.titleLarge,
           ),
         ),
@@ -90,13 +88,11 @@ class _UnknownSection extends StatelessWidget {
               title: Text('${row.worker.fullName} • ${row.worker.code}'),
               subtitle: Text(
                 row.isSlaBreached
-                    ? (arabic ? 'تجاوز مهلة المتابعة' : 'SLA exceeded')
-                    : (arabic
-                          ? 'غياب سكن دون تبرير'
-                          : 'Campus absence without justification'),
+                    ? DashboardStrings.slaExceeded(arabic)
+                    : DashboardStrings.campusAbsenceNoJustification(arabic),
               ),
               trailing: IconButton(
-                tooltip: arabic ? 'إضافة تبرير' : 'Add justification',
+                tooltip: DashboardStrings.addJustification(arabic),
                 onPressed: onJustify == null ? null : () => onJustify!(row),
                 icon: const Icon(Icons.note_add_outlined),
               ),
@@ -117,11 +113,7 @@ class _IntegritySection extends StatelessWidget {
     if (rows.isEmpty) return const SizedBox.shrink();
     return Card(
       child: ExpansionTile(
-        title: Text(
-          arabic
-              ? 'ملاحظات على السجل (${rows.length})'
-              : 'Ledger notices (${rows.length})',
-        ),
+        title: Text(DashboardStrings.ledgerNotices(arabic, rows.length)),
         children: [
           for (final row in rows)
             ListTile(
@@ -136,16 +128,16 @@ class _IntegritySection extends StatelessWidget {
   String _labels(Set<StatusFlag> flags, bool arabic) {
     final values = <String>[];
     if (flags.contains(StatusFlag.inactiveWorkerEvent)) {
-      values.add(arabic ? 'حدث لعامل معطل' : 'Event for inactive worker');
+      values.add(DashboardStrings.noticeInactiveWorker(arabic));
     }
     if (flags.contains(StatusFlag.eventOutsideEmployment)) {
-      values.add(arabic ? 'حدث خارج فترة العمل' : 'Event outside employment');
+      values.add(DashboardStrings.noticeOutsideEmployment(arabic));
     }
     if (flags.contains(StatusFlag.lateEvent)) {
-      values.add(arabic ? 'تسجيل بتاريخ سابق' : 'Late entry');
+      values.add(DashboardStrings.noticeLateEntry(arabic));
     }
     if (flags.contains(StatusFlag.rejectedEvent)) {
-      values.add(arabic ? 'حدث مرفوض' : 'Rejected event');
+      values.add(DashboardStrings.noticeRejectedEvent(arabic));
     }
     return values.join(' • ');
   }

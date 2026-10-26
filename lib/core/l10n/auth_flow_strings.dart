@@ -42,6 +42,45 @@ final class AuthFlowStrings {
   static String switchAccount(bool ar) =>
       ar ? 'تبديل الحساب' : 'Switch account';
 
-  static String welcomeBack(bool ar) =>
-      ar ? 'مرحباً بعودتك' : 'Welcome back';
+  static String welcomeBack(bool ar) => ar ? 'مرحباً بعودتك' : 'Welcome back';
+
+  static String passwordMinLength(bool ar) => ar
+      ? 'كلمة المرور يجب ألا تقل عن 8 أحرف'
+      : 'Must be at least 8 characters';
+
+  static String passwordCannotBe123456(bool ar) =>
+      ar ? 'لا يمكن استخدام 123456' : 'Cannot use 123456';
+
+  static String passwordsDoNotMatch(bool ar) =>
+      ar ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match';
+
+  static String changeTemporaryPasswordTitle(bool ar) =>
+      ar ? 'تغيير كلمة المرور المؤقتة' : 'Change temporary password';
+
+  static String changeTemporaryPasswordDescription(bool ar) => ar
+      ? 'يجب تعيين كلمة مرور جديدة لا تقل عن 8 أحرف ولا تساوي 123456.'
+      : 'You must set a new password of at least 8 characters and not 123456.';
+
+  static String initialSetupDescription(bool ar) => ar
+      ? 'ابدأ باستيراد ملف القوى العاملة (XLSX / CSV). لن يُحفظ رقم الهوية الوطنية.'
+      : 'Start by importing the workforce file. National ID numbers are never saved.';
+
+  static String chooseRosterFile(bool ar) =>
+      ar ? 'اختيار ملف Excel أو CSV' : 'Choose Excel or CSV file';
+
+  static String projectManagerRole(bool ar) =>
+      ar ? 'مدير المشروع' : 'Project manager';
+
+  static String hrRole(bool ar) => ar ? 'الموارد البشرية' : 'HR';
+
+  static String housingSupervisorRole(bool ar) =>
+      ar ? 'مشرف السكن' : 'Campus supervisor';
+
+  static String siteSupervisorRole(bool ar) =>
+      ar ? 'مشرف الموقع' : 'Site supervisor';
+
+  static String viewerRole(bool ar) => ar ? 'مشاهد فقط' : 'View only';
+
+  static String createAdminAccountsAction(bool ar) =>
+      ar ? 'إنشاء حسابي الإدارة' : 'Create Admin Accounts';
 }

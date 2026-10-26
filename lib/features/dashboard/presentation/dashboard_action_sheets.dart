@@ -25,7 +25,7 @@ class _ResolutionSheetState extends State<_ResolutionSheet> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          widget.arabic ? 'تسوية التعارض' : 'Resolve conflict',
+          DashboardStrings.resolveConflictTitle(widget.arabic),
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 12),
@@ -44,14 +44,14 @@ class _ResolutionSheetState extends State<_ResolutionSheet> {
           controller: widget.note,
           maxLines: 2,
           decoration: InputDecoration(
-            labelText: widget.arabic ? 'ملاحظة اختيارية' : 'Optional note',
+            labelText: DashboardStrings.optionalNote(widget.arabic),
           ),
         ),
         const SizedBox(height: 12),
         FilledButton(
           onPressed: () =>
               Navigator.pop(context, (kind: _kind, note: widget.note.text)),
-          child: Text(widget.arabic ? 'حفظ التسوية' : 'Save resolution'),
+          child: Text(DashboardStrings.saveResolution(widget.arabic)),
         ),
       ],
     ),
@@ -83,7 +83,7 @@ class _JustificationSheetState extends State<_JustificationSheet> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          widget.arabic ? 'تبرير الغياب' : 'Justify absence',
+          DashboardStrings.justifyAbsenceTitle(widget.arabic),
           style: Theme.of(context).textTheme.titleLarge,
         ),
         DropdownButtonFormField<String>(
@@ -91,40 +91,40 @@ class _JustificationSheetState extends State<_JustificationSheet> {
           items: [
             DropdownMenuItem(
               value: 'sick',
-              child: Text(widget.arabic ? 'مرض' : 'Sick leave'),
+              child: Text(DashboardStrings.reasonSick(widget.arabic)),
             ),
             DropdownMenuItem(
               value: 'personal_permission',
-              child: Text(widget.arabic ? 'إذن شخصي' : 'Personal permission'),
+              child: Text(
+                DashboardStrings.reasonPersonalPermission(widget.arabic),
+              ),
             ),
             DropdownMenuItem(
               value: 'official_errand',
-              child: Text(widget.arabic ? 'مأمورية' : 'Official errand'),
+              child: Text(DashboardStrings.reasonOfficialErrand(widget.arabic)),
             ),
             DropdownMenuItem(
               value: 'other',
-              child: Text(widget.arabic ? 'سبب آخر' : 'Other'),
+              child: Text(DashboardStrings.reasonOther(widget.arabic)),
             ),
           ],
           onChanged: (value) => setState(() => _quick = value),
           decoration: InputDecoration(
-            labelText: widget.arabic
-                ? 'سبب سريع (اختياري)'
-                : 'Quick reason (optional)',
+            labelText: DashboardStrings.quickReasonOptional(widget.arabic),
           ),
         ),
         TextField(
           controller: widget.note,
           maxLines: 2,
           decoration: InputDecoration(
-            labelText: widget.arabic ? 'ملاحظة (اختيارية)' : 'Note (optional)',
+            labelText: DashboardStrings.noteOptional(widget.arabic),
           ),
         ),
         const SizedBox(height: 12),
         FilledButton(
           onPressed: () =>
               Navigator.pop(context, (quick: _quick, note: widget.note.text)),
-          child: Text(widget.arabic ? 'حفظ التبرير' : 'Save justification'),
+          child: Text(DashboardStrings.saveJustification(widget.arabic)),
         ),
       ],
     ),
@@ -133,11 +133,15 @@ class _JustificationSheetState extends State<_JustificationSheet> {
 
 String _resolutionLabel(ResolutionKind kind, bool arabic) => switch (kind) {
   ResolutionKind.confirmPresentLeftEarly =>
-    arabic ? 'اعتماد الحضور، خرج مبكرًا' : 'Confirm present, left early',
-  ResolutionKind.movedDuringDay =>
-    arabic ? 'انتقل خلال اليوم' : 'Moved during the day',
-  ResolutionKind.housingError => arabic ? 'خطأ من السكن' : 'Campus error',
-  ResolutionKind.siteError => arabic ? 'خطأ من الموقع' : 'Site error',
-  ResolutionKind.officialErrand =>
-    arabic ? 'مأمورية أو إذن' : 'Official errand or permission',
+    DashboardStrings.resolutionConfirmPresentLeftEarly(arabic),
+  ResolutionKind.movedDuringDay => DashboardStrings.resolutionMovedDuringDay(
+    arabic,
+  ),
+  ResolutionKind.housingError => DashboardStrings.resolutionHousingError(
+    arabic,
+  ),
+  ResolutionKind.siteError => DashboardStrings.resolutionSiteError(arabic),
+  ResolutionKind.officialErrand => DashboardStrings.resolutionOfficialErrand(
+    arabic,
+  ),
 };

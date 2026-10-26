@@ -14,7 +14,7 @@ class _DateSelector extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     child: ListTile(
       leading: const Icon(Icons.calendar_month_outlined),
-      title: Text(arabic ? 'يوم العمل' : 'Business date'),
+      title: Text(DashboardStrings.businessDate(arabic)),
       subtitle: Text(date),
       trailing: const Icon(Icons.edit_calendar_outlined),
       onTap: onPressed,
@@ -53,11 +53,11 @@ class _StatusCards extends StatelessWidget {
   );
 
   String _label(WorkerStatus status) => switch (status) {
-    WorkerStatus.onSite => arabic ? 'في الموقع' : 'On site',
-    WorkerStatus.housingOnly => arabic ? 'في السكن فقط' : 'Campus only',
-    WorkerStatus.unknown => arabic ? 'غير معلوم' : 'Unknown',
-    WorkerStatus.justified => arabic ? 'مبرر' : 'Justified',
-    WorkerStatus.notRecorded => arabic ? 'لم يسجل بعد' : 'Not recorded',
+    WorkerStatus.onSite => DashboardStrings.onSiteStatus(arabic),
+    WorkerStatus.housingOnly => DashboardStrings.housingOnlyStatus(arabic),
+    WorkerStatus.unknown => DashboardStrings.unknownStatus(arabic),
+    WorkerStatus.justified => DashboardStrings.justifiedStatus(arabic),
+    WorkerStatus.notRecorded => DashboardStrings.notRecordedStatus(arabic),
   };
 
   IconData _icon(WorkerStatus status) => switch (status) {
@@ -119,12 +119,12 @@ class _CoverageWarnings extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     children: [
       _WarningCard(
-        title: arabic ? 'مساكن لم تسجل بعد' : 'Campuses not checked',
+        title: DashboardStrings.campusesNotChecked(arabic),
         rows: coverage.missingHousings,
         arabic: arabic,
       ),
       _WarningCard(
-        title: arabic ? 'فرق لم تسجل بعد' : 'Teams not submitted',
+        title: DashboardStrings.teamsNotSubmitted(arabic),
         rows: coverage.missingTeams,
         arabic: arabic,
       ),
@@ -162,7 +162,7 @@ class _WarningCard extends StatelessWidget {
     final entityName = arabic ? row.nameAr : (row.nameEn ?? row.nameAr);
     final supervisorText = row.supervisorNames.isEmpty
         ? HistoryStrings.noSupervisorAssigned(arabic)
-        : row.supervisorNames.join(arabic ? '، ' : ', ');
+        : row.supervisorNames.join(DashboardStrings.listSeparator(arabic));
     return '$entityName — ${HistoryStrings.notRecordedBy(arabic, supervisorText)}';
   }
 }

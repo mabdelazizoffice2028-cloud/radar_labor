@@ -24,6 +24,7 @@ final class SiteAttendanceState {
     this.isPastDate = false,
     this.isLoading = false,
     this.isSaving = false,
+    this.searchQuery = '',
     this.rows = const <AttendanceRow>[],
     this.baseline = const AttendanceBaseline(kind: BaselineKind.none),
     this.initialSource = AttendanceInitialSource.empty,
@@ -40,6 +41,7 @@ final class SiteAttendanceState {
   final bool isPastDate;
   final bool isLoading;
   final bool isSaving;
+  final String searchQuery;
   final List<AttendanceRow> rows;
   final AttendanceBaseline baseline;
   final AttendanceInitialSource initialSource;
@@ -63,6 +65,35 @@ final class SiteAttendanceState {
       if (row.isGuest) row.worker.id,
   };
 
+  List<AttendanceRow> get filteredRows {
+    if (searchQuery.trim().isEmpty) return rows;
+    final q = searchQuery.trim().toLowerCase();
+    return rows
+        .where((row) {
+          final nameAr = row.worker.nameAr.toLowerCase();
+          final nameEn = (row.worker.nameEn ?? '').toLowerCase();
+          final code = row.worker.code.toLowerCase();
+          return nameAr.contains(q) || nameEn.contains(q) || code.contains(q);
+        })
+        .toList(growable: false);
+  }
+
+  SiteAttendanceState withLoadedDay(LoadedSiteAttendanceDay d, String today) =>
+      copyWith(
+        selectedTeam: d.team,
+        selectedDate: d.date,
+        todayDate: today,
+        isPastDate: d.isPastDate,
+        isLoading: false,
+        rows: d.rows,
+        baseline: d.baseline,
+        initialSource: d.initialSource,
+        initialSourceDate: d.initialSourceDate,
+        clearInitialSourceDate: d.initialSourceDate == null,
+        skippedDraftCount: d.skippedDraftCount,
+        clearError: true,
+      );
+
   SiteAttendanceState copyWith({
     EntityOption? selectedTeam,
     bool clearSelectedTeam = false,
@@ -71,6 +102,7 @@ final class SiteAttendanceState {
     bool? isPastDate,
     bool? isLoading,
     bool? isSaving,
+    String? searchQuery,
     List<AttendanceRow>? rows,
     AttendanceBaseline? baseline,
     AttendanceInitialSource? initialSource,
@@ -92,6 +124,7 @@ final class SiteAttendanceState {
     isPastDate: isPastDate ?? this.isPastDate,
     isLoading: isLoading ?? this.isLoading,
     isSaving: isSaving ?? this.isSaving,
+    searchQuery: searchQuery ?? this.searchQuery,
     rows: rows ?? this.rows,
     baseline: baseline ?? this.baseline,
     initialSource: initialSource ?? this.initialSource,

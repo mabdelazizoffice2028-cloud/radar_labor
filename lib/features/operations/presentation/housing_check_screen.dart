@@ -1,13 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/constants/operations_constants.dart';
+import 'package:radar_labor/core/l10n/housing_review_strings.dart';
 import 'package:radar_labor/core/l10n/operations_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
+import 'package:radar_labor/features/operations/presentation/state/housing_check_notifier.dart';
 import 'package:radar_labor/features/operations/presentation/state/operations_controller.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/housing_worker_tile.dart';
 
-/// Housing check workflow for housing supervisors and admins (PRD §14).
-final class HousingCheckScreen extends StatefulWidget {
+/// 3-State Housing check screen for housing supervisors and admins (Phase 4).
+final class HousingCheckScreen extends ConsumerStatefulWidget {
   const HousingCheckScreen({
     required this.controller,
     required this.arabic,
@@ -18,29 +24,25 @@ final class HousingCheckScreen extends StatefulWidget {
   final bool arabic;
 
   @override
-  State<HousingCheckScreen> createState() => _HousingCheckScreenState();
+  ConsumerState<HousingCheckScreen> createState() => _HousingCheckScreenState();
 }
 
-final class _HousingCheckScreenState extends State<HousingCheckScreen> {
-  String? _housingId;
-  final Set<String> _absent = {};
-  bool _saving = false;
-
+final class _HousingCheckScreenState extends ConsumerState<HousingCheckScreen> {
   @override
   Widget build(BuildContext context) {
     final ar = widget.arabic;
+    final notifier = ref.read(housingCheckNotifierProvider.notifier);
+    final state = ref.watch(housingCheckNotifierProvider);
+
     return StreamBuilder<List<EntityOption>>(
       stream: widget.controller.watchHousings(),
-      builder: (context, housingState) {
-        final housings = housingState.data ?? const <EntityOption>[];
-        final singleHousing = housings.length == 1 ? housings.first : null;
-        if (singleHousing != null && _housingId != singleHousing.id) {
-          _housingId = singleHousing.id;
-        }
-        final effectiveHousingId = singleHousing?.id ?? _housingId;
-        final selected = housings
-            .where((row) => row.id == effectiveHousingId)
-            .firstOrNull;
+      builder: (context, housingSnapshot) {
+        final housings = housingSnapshot.data ?? const <EntityOption>[];
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) unawaited(notifier.ensureInitialHousing(housings));
+        });
+
+        final selected = state.selectedHousing;
         return Column(
           children: [
             if (housings.length > 1)
@@ -54,67 +56,97 @@ final class _HousingCheckScreenState extends State<HousingCheckScreen> {
                   ),
                   items: housings
                       .map(
-                        (row) => DropdownMenuItem(
-                          value: row.id,
-                          child: Text(row.displayName(arabic: ar)),
+                        (h) => DropdownMenuItem(
+                          value: h.id,
+                          child: Text(h.displayName(arabic: ar)),
                         ),
                       )
                       .toList(),
-                  onChanged: (value) => setState(() {
-                    _housingId = value;
-                    _absent.clear();
-                  }),
+                  onChanged: (id) {
+                    final next = housings.where((h) => h.id == id).firstOrNull;
+                    unawaited(notifier.selectHousing(next));
+                  },
                 ),
               ),
-            Expanded(
-              child: selected == null
-                  ? Center(child: Text(OperationsStrings.addHousingToStart(ar)))
-                  : StreamBuilder<List<WorkerOption>>(
-                      stream: widget.controller.watchHousingWorkers(
-                        selected.id,
+            if (selected != null && state.rows.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTokens.space12,
+                  vertical: AppTokens.space4,
+                ),
+                child: TextField(
+                  key: const ValueKey('housing_worker_search_field'),
+                  decoration: InputDecoration(
+                    hintText: OperationsStrings.searchWorkersHint(ar),
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppTokens.space12,
+                      vertical: AppTokens.space8,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTokens.radius12),
+                    ),
+                    suffixIcon: state.searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () => notifier.setSearchQuery(''),
+                          )
+                        : null,
+                  ),
+                  onChanged: notifier.setSearchQuery,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTokens.space12,
+                  vertical: AppTokens.space4,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${HousingReviewStrings.reviewedCountLabel(ar, state.reviewedCount)} • '
+                        '${HousingReviewStrings.absentCountLabel(ar, state.absentCount)} • '
+                        '${HousingReviewStrings.unreviewedCountLabel(ar, state.unreviewedCount)}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTokens.textSecondary,
+                        ),
                       ),
-                      builder: (context, state) {
-                        final workers = state.data ?? const <WorkerOption>[];
-                        if (workers.isEmpty) {
-                          return Center(
-                            child: Text(
-                              OperationsStrings.noWorkersInHousing(ar),
-                            ),
-                          );
-                        }
-                        return ListView.builder(
-                          itemCount: workers.length,
-                          itemBuilder: (context, index) {
-                            final worker = workers[index];
-                            final marked = _absent.contains(worker.id);
-                            return Card(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: AppTokens.space12,
-                                vertical: AppTokens.space4,
-                              ),
-                              child: CheckboxListTile(
-                                value: marked,
-                                onChanged: (value) => setState(() {
-                                  if (value ?? false) {
-                                    _absent.add(worker.id);
-                                  } else {
-                                    _absent.remove(worker.id);
-                                  }
-                                }),
-                                title: Text(worker.displayName(arabic: ar)),
-                                subtitle: Text(
-                                  '${OperationsStrings.codeLabel(ar)}: ${worker.code}',
-                                ),
-                                secondary: Icon(
-                                  marked
-                                      ? Icons.person_off_outlined
-                                      : Icons.person_outline,
-                                ),
-                                controlAffinity:
-                                    ListTileControlAffinity.leading,
-                              ),
-                            );
-                          },
+                    ),
+                    if (state.unreviewedCount > 0)
+                      TextButton.icon(
+                        key: const ValueKey('mark_remaining_button'),
+                        onPressed: notifier.markRemainingAsReviewed,
+                        icon: const Icon(Icons.done_all, size: 18),
+                        label: Text(
+                          HousingReviewStrings.markRemainingAsReviewed(ar),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+            Expanded(
+              child: state.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : selected == null
+                  ? Center(child: Text(OperationsStrings.addHousingToStart(ar)))
+                  : state.rows.isEmpty
+                  ? Center(
+                      child: Text(OperationsStrings.noWorkersInHousing(ar)),
+                    )
+                  : ListView.builder(
+                      itemCount: state.filteredRows.length,
+                      itemBuilder: (context, index) {
+                        final row = state.filteredRows[index];
+                        return HousingWorkerTile(
+                          row: row,
+                          arabic: ar,
+                          onStateChanged: (nextState) =>
+                              notifier.setReviewState(row.worker.id, nextState),
                         );
                       },
                     ),
@@ -127,23 +159,26 @@ final class _HousingCheckScreenState extends State<HousingCheckScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      OperationsStrings.markedAbsentCount(ar, _absent.length),
+                      OperationsStrings.markedAbsentCount(
+                        ar,
+                        state.absentCount,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppTokens.space8),
                     FilledButton.icon(
-                      onPressed: _saving || selected == null
+                      onPressed: state.isSaving || selected == null
                           ? null
-                          : () => _save(selected),
+                          : () => _handleSave(selected),
                       icon: Icon(
-                        _absent.isEmpty
+                        state.absentCount == 0
                             ? Icons.check_circle_outline
                             : Icons.save_outlined,
                       ),
                       label: Text(
-                        _saving
+                        state.isSaving
                             ? OperationsStrings.savingLabel(ar)
-                            : _absent.isEmpty
+                            : state.absentCount == 0
                             ? OperationsStrings.noAbsencesSaveCheck(ar)
                             : OperationsStrings.confirmAbsencesAndSave(ar),
                       ),
@@ -163,21 +198,44 @@ final class _HousingCheckScreenState extends State<HousingCheckScreen> {
     );
   }
 
-  Future<void> _save(EntityOption housing) async {
+  Future<void> _handleSave(EntityOption housing) async {
     final ar = widget.arabic;
-    final PreparedHousingCheck check;
-    try {
-      check = await widget.controller.prepareHousingCheck(
-        housing: housing,
-        absentIds: Set.unmodifiable(_absent),
-        arabic: ar,
+    final notifier = ref.read(housingCheckNotifierProvider.notifier);
+    final state = ref.read(housingCheckNotifierProvider);
+
+    if (state.unreviewedCount > 0) {
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(
+            HousingReviewStrings.unreviewedWorkersWarning(
+              ar,
+              state.unreviewedCount,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(OperationsStrings.reviewAction(ar)),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(OperationsStrings.confirmAction(ar)),
+            ),
+          ],
+        ),
       );
-    } on Exception {
-      _showSaveError();
-      return;
+      if (proceed != true || !mounted) return;
+      notifier.markRemainingAsReviewed();
     }
+
+    final check = await notifier.prepareSave(
+      controller: widget.controller,
+      arabic: ar,
+    );
+    if (check == null || !mounted) return;
+
     final summary = check.summary;
-    if (!mounted) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -196,55 +254,44 @@ final class _HousingCheckScreenState extends State<HousingCheckScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    setState(() => _saving = true);
-    try {
-      final undo = await widget.controller.saveHousingCheck(check);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(OperationsStrings.housingSavedLocally(ar)),
-          duration: OperationsConstants.undoWindow,
-          action: SnackBarAction(
-            label: OperationsStrings.undoAction(ar),
-            onPressed: () => widget.controller.undoHousingCheck(undo),
-          ),
-        ),
-      );
-      await showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(OperationsStrings.whatsappSummaryTitle(ar)),
-          content: SelectableText(summary.messageText),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                await Clipboard.setData(
-                  ClipboardData(text: summary.messageText),
-                );
-                if (context.mounted) Navigator.pop(context);
-              },
-              child: Text(OperationsStrings.copyTextAction(ar)),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(OperationsStrings.closeAction(ar)),
-            ),
-          ],
-        ),
-      );
-      if (!mounted) return;
-      setState(() => _absent.clear());
-    } on Exception {
-      _showSaveError();
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
 
-  void _showSaveError() {
-    if (!mounted) return;
+    final undo = await notifier.confirmSave(
+      controller: widget.controller,
+      check: check,
+    );
+    if (undo == null || !mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(OperationsStrings.errSaveFailed(widget.arabic))),
+      SnackBar(
+        content: Text(OperationsStrings.housingSavedLocally(ar)),
+        duration: OperationsConstants.undoWindow,
+        action: SnackBarAction(
+          label: OperationsStrings.undoAction(ar),
+          onPressed: () =>
+              unawaited(notifier.undoLastSave(controller: widget.controller)),
+        ),
+      ),
+    );
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(OperationsStrings.whatsappSummaryTitle(ar)),
+        content: SelectableText(summary.messageText),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: summary.messageText));
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: Text(OperationsStrings.copyTextAction(ar)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(OperationsStrings.closeAction(ar)),
+          ),
+        ],
+      ),
     );
   }
 }

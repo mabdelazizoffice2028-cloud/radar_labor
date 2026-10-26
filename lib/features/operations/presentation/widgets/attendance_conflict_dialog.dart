@@ -1,39 +1,43 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/l10n/bidi.dart';
+import 'package:radar_labor/core/l10n/conflict_resolution_strings.dart';
 import 'package:radar_labor/core/l10n/operations_strings.dart';
 import 'package:radar_labor/core/time/time_format.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/operations/domain/conflict_detector.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/attendance_conflict_choice_tile.dart';
 
-/// Dialog requiring explicit resolution for every same-day conflict (PRD §10.2).
+/// Simplified dialog requiring explicit resolution for same-day conflicts (Phase 6).
 class AttendanceConflictDialog extends StatefulWidget {
   const AttendanceConflictDialog({
     required this.conflicts,
     required this.currentTeamName,
     required this.arabic,
+    this.currentDate,
     super.key,
   });
 
   final List<AttendanceConflict> conflicts;
   final String currentTeamName;
   final bool arabic;
+  final String? currentDate;
 
   static Future<Map<String, ConflictResolutionChoice>?> show({
     required BuildContext context,
     required List<AttendanceConflict> conflicts,
     required String currentTeamName,
     required bool arabic,
-  }) {
-    return showDialog<Map<String, ConflictResolutionChoice>>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AttendanceConflictDialog(
-        conflicts: conflicts,
-        currentTeamName: currentTeamName,
-        arabic: arabic,
-      ),
-    );
-  }
+    String? currentDate,
+  }) => showDialog<Map<String, ConflictResolutionChoice>>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => AttendanceConflictDialog(
+      conflicts: conflicts,
+      currentTeamName: currentTeamName,
+      arabic: arabic,
+      currentDate: currentDate,
+    ),
+  );
 
   @override
   State<AttendanceConflictDialog> createState() =>
@@ -41,10 +45,17 @@ class AttendanceConflictDialog extends StatefulWidget {
 }
 
 class _AttendanceConflictDialogState extends State<AttendanceConflictDialog> {
-  final Map<String, ConflictResolutionChoice> _choices =
-      <String, ConflictResolutionChoice>{};
+  final Map<String, ConflictResolutionChoice> _choices = {};
+  bool _isSubmitting = false;
 
   bool get _allResolved => _choices.length == widget.conflicts.length;
+
+  void _onConfirm() {
+    if (!_allResolved || _isSubmitting) return;
+    setState(() => _isSubmitting = true);
+    Navigator.of(context)
+        .pop(Map<String, ConflictResolutionChoice>.from(_choices));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +72,7 @@ class _AttendanceConflictDialogState extends State<AttendanceConflictDialog> {
         ],
       ),
       content: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 460, maxHeight: 460),
+        constraints: const BoxConstraints(maxWidth: 480, maxHeight: 520),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -75,10 +86,14 @@ class _AttendanceConflictDialogState extends State<AttendanceConflictDialog> {
               for (final conflict in widget.conflicts) ...[
                 _ConflictCard(
                   conflict: conflict,
+                  currentTeamName: widget.currentTeamName,
+                  currentDate: widget.currentDate,
                   selectedChoice: _choices[conflict.worker.id],
                   arabic: ar,
                   onSelected: (choice) {
-                    setState(() => _choices[conflict.worker.id] = choice);
+                    if (!_isSubmitting) {
+                      setState(() => _choices[conflict.worker.id] = choice);
+                    }
                   },
                 ),
                 const SizedBox(height: AppTokens.space12),
@@ -88,22 +103,19 @@ class _AttendanceConflictDialogState extends State<AttendanceConflictDialog> {
         ),
       ),
       actions: [
-        SizedBox(
-          height: AppTokens.minTouchTarget,
-          child: TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(OperationsStrings.reviewAction(ar)),
-          ),
+        TextButton(
+          onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+          child: Text(OperationsStrings.reviewAction(ar)),
         ),
-        SizedBox(
-          height: AppTokens.minTouchTarget,
-          child: FilledButton(
-            onPressed: _allResolved
-                ? () => Navigator.of(context)
-                      .pop(Map<String, ConflictResolutionChoice>.from(_choices))
-                : null,
-            child: Text(OperationsStrings.confirmAndSave(ar)),
-          ),
+        FilledButton(
+          onPressed: _allResolved && !_isSubmitting ? _onConfirm : null,
+          child: _isSubmitting
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(OperationsStrings.confirmAndSave(ar)),
         ),
       ],
     );
@@ -113,12 +125,16 @@ class _AttendanceConflictDialogState extends State<AttendanceConflictDialog> {
 class _ConflictCard extends StatelessWidget {
   const _ConflictCard({
     required this.conflict,
+    required this.currentTeamName,
+    required this.currentDate,
     required this.selectedChoice,
     required this.arabic,
     required this.onSelected,
   });
 
   final AttendanceConflict conflict;
+  final String currentTeamName;
+  final String? currentDate;
   final ConflictResolutionChoice? selectedChoice;
   final bool arabic;
   final ValueChanged<ConflictResolutionChoice> onSelected;
@@ -134,119 +150,75 @@ class _ConflictCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppTokens.space12),
       decoration: BoxDecoration(
-        color: AppTokens.statusHousingOnlySoft,
+        color: AppTokens.surface,
         borderRadius: BorderRadius.circular(AppTokens.radius12),
-        border: Border.all(color: AppTokens.statusHousingOnly),
+        border: Border.all(color: AppTokens.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            OperationsStrings.localConflictBody(
-              arabic,
-              workerName,
-              otherTeamName,
-            ),
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            OperationsStrings.localConflictRecordedAt(arabic, timeHhMm),
-            style: Theme.of(context).textTheme.bodySmall,
+            '$workerName • ${conflict.worker.code}',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
           ),
           const SizedBox(height: AppTokens.space8),
-          _ChoiceTile(
-            label: OperationsStrings.resolveAsTransfer(arabic),
-            selected:
-                selectedChoice == ConflictResolutionChoice.transferDuringDay,
-            onTap: () => onSelected(ConflictResolutionChoice.transferDuringDay),
+          Container(
+            padding: const EdgeInsets.all(AppTokens.space8),
+            decoration: BoxDecoration(
+              color: AppTokens.statusHousingOnlySoft,
+              borderRadius: BorderRadius.circular(AppTokens.radius12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${ConflictResolutionStrings.currentRecordTitle(arabic)}: $currentTeamName'
+                  '${currentDate != null ? ' • $currentDate' : ''}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${ConflictResolutionStrings.conflictingRecordTitle(arabic)}: $otherTeamName • $timeHhMm',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTokens.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
-          _ChoiceTile(
-            label: OperationsStrings.resolveAsCorrection(arabic),
+          const SizedBox(height: AppTokens.space8),
+          ConflictChoiceTile(
+            title: ConflictResolutionStrings.resolveAsCorrectionTitle(arabic),
+            description: ConflictResolutionStrings.resolveAsCorrectionDesc(
+              arabic,
+            ),
             selected:
                 selectedChoice == ConflictResolutionChoice.removeFromOtherTeam,
             onTap: () =>
                 onSelected(ConflictResolutionChoice.removeFromOtherTeam),
           ),
-          _ChoiceTile(
-            label: OperationsStrings.resolveSkipWorker(arabic),
+          ConflictChoiceTile(
+            title: ConflictResolutionStrings.resolveAsTransferTitle(arabic),
+            description: ConflictResolutionStrings.resolveAsTransferDesc(
+              arabic,
+            ),
+            selected:
+                selectedChoice == ConflictResolutionChoice.transferDuringDay,
+            onTap: () => onSelected(ConflictResolutionChoice.transferDuringDay),
+          ),
+          ConflictChoiceTile(
+            title: ConflictResolutionStrings.resolveSkipWorkerTitle(arabic),
+            description: ConflictResolutionStrings.resolveSkipWorkerDesc(
+              arabic,
+            ),
             selected: selectedChoice == ConflictResolutionChoice.skipWorker,
             onTap: () => onSelected(ConflictResolutionChoice.skipWorker),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ChoiceTile extends StatelessWidget {
-  const _ChoiceTile({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: AppTokens.space4),
-      child: Semantics(
-        inMutuallyExclusiveGroup: true,
-        selected: selected,
-        button: true,
-        label: label,
-        child: Material(
-          color: selected ? AppTokens.surface : Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTokens.radius12),
-            side: BorderSide(
-              color: selected ? AppTokens.primary : AppTokens.outline,
-            ),
-          ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(AppTokens.radius12),
-            onTap: onTap,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                minHeight: AppTokens.minTouchTarget,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTokens.space8,
-                  vertical: AppTokens.space8,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      selected
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_unchecked,
-                      color: selected
-                          ? AppTokens.primary
-                          : AppTokens.statusNotRecorded,
-                    ),
-                    const SizedBox(width: AppTokens.space8),
-                    Expanded(
-                      child: Text(
-                        label,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: selected
-                              ? FontWeight.w600
-                              : FontWeight.w400,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

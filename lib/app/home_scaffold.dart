@@ -6,7 +6,9 @@ import 'package:radar_labor/app/app_providers.dart';
 import 'package:radar_labor/app/screens/entities_screen.dart';
 import 'package:radar_labor/app/screens/preferences_screen.dart';
 import 'package:radar_labor/app/screens/workers_screen.dart';
+import 'package:radar_labor/app/widgets/home_date_badge.dart';
 import 'package:radar_labor/app/widgets/sync_status_badge.dart';
+import 'package:radar_labor/app/widgets/user_password_change_dialog.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
 import 'package:radar_labor/core/auth/local_auth_repository.dart';
 import 'package:radar_labor/core/auth/role_capabilities.dart';
@@ -16,7 +18,6 @@ import 'package:radar_labor/core/database/local_settings_repository.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
 import 'package:radar_labor/core/l10n/history_strings.dart';
-import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/core/time/clock.dart';
 import 'package:radar_labor/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
@@ -107,17 +108,7 @@ final class _HomeScaffoldState extends ConsumerState<HomeScaffold> {
         title: Text(AppStrings.appTitle(ar)),
         actions: [
           SyncStatusBadge(arabic: ar),
-          IconButton(
-            tooltip: AppStrings.signOut(ar),
-            onPressed: widget.onLogout,
-            icon: const Icon(Icons.logout),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: Center(
-              child: Text(businessDateFor(const SystemClock().nowUtc())),
-            ),
-          ),
+          const HomeDateBadge(),
         ],
       ),
       body: IndexedStack(index: selectedIndex, children: pages),
@@ -220,16 +211,10 @@ final class _HomeScaffoldState extends ConsumerState<HomeScaffold> {
   };
 
   Future<void> _changePassword(bool ar) async {
-    final cur = TextEditingController();
-    final rep = TextEditingController();
-    final conf = TextEditingController();
     final values = await showDialog<(String, String, String)>(
       context: context,
-      builder: (ctx) => _passwordDialog(ctx, ar, cur, rep, conf),
+      builder: (ctx) => UserPasswordChangeDialog(arabic: ar),
     );
-    cur.dispose();
-    rep.dispose();
-    conf.dispose();
     if (values == null || !mounted) return;
     if (values.$2.length < 8 || values.$2 != values.$3) {
       _toast(AppStrings.passwordMismatch(ar));
@@ -257,40 +242,4 @@ final class _HomeScaffoldState extends ConsumerState<HomeScaffold> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }
-
-  AlertDialog _passwordDialog(
-    BuildContext context,
-    bool ar,
-    TextEditingController cur,
-    TextEditingController rep,
-    TextEditingController conf,
-  ) => AlertDialog(
-    title: Text(AppStrings.changePassword(ar)),
-    content: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (final (c, label) in [
-          (cur, AppStrings.currentPassword(ar)),
-          (rep, AppStrings.newPassword(ar)),
-          (conf, AppStrings.confirmPassword(ar)),
-        ])
-          TextField(
-            controller: c,
-            obscureText: true,
-            decoration: InputDecoration(labelText: label),
-          ),
-      ],
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: Text(AppStrings.cancel(ar)),
-      ),
-      FilledButton(
-        onPressed: () =>
-            Navigator.pop(context, (cur.text, rep.text, conf.text)),
-        child: Text(AppStrings.save(ar)),
-      ),
-    ],
-  );
 }

@@ -81,9 +81,8 @@ final class WorkforceImportRepository {
             );
         updated++;
       }
-      accountsCreated = await AccountProvisioningRepository(
-        _database,
-      ).provisionSupervisors(_supervisorSeeds(rows, byCode));
+      accountsCreated = await AccountProvisioningRepository(_database)
+          .provisionSupervisors(_supervisorSeeds(rows, byCode));
     });
     return WorkforceImportResult(
       added: added,
@@ -99,8 +98,10 @@ final class WorkforceImportRepository {
     const resolver = SupervisorRoleResolver();
     return [
       for (final row in rows)
-        if ((resolver.resolve(row), byCode[row.code.toLowerCase()])
-            case (final role?, final employee?))
+        if ((resolver.resolve(row), byCode[row.code.toLowerCase()]) case (
+          final role?,
+          final employee?,
+        ))
           SupervisorSeed(
             employeeUid: employee.employeeUid,
             displayName: row.name,

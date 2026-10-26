@@ -130,11 +130,7 @@ final class _AccountFormDialogState extends State<AccountFormDialog> {
               onChanged: (r) => setState(() => _role = r ?? _role),
             ),
             if (_role == AuthRole.siteSupervisor)
-              _scopeList(
-                widget.teams,
-                _teams,
-                AdminStrings.assignedTeams(_ar),
-              ),
+              _scopeList(widget.teams, _teams, AdminStrings.assignedTeams(_ar)),
             if (_role == AuthRole.housingSupervisor)
               _scopeList(
                 widget.housings,
@@ -175,9 +171,8 @@ final class _AccountFormDialogState extends State<AccountFormDialog> {
           value: selection.contains(o.$1),
           title: Text(o.$2),
           onChanged: (checked) => setState(
-            () => checked == true
-                ? selection.add(o.$1)
-                : selection.remove(o.$1),
+            () =>
+                checked == true ? selection.add(o.$1) : selection.remove(o.$1),
           ),
         ),
     ],

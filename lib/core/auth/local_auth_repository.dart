@@ -4,6 +4,7 @@ import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
 import 'package:radar_labor/core/auth/password_hasher.dart';
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
+import 'package:radar_labor/core/auth/user_scope_storage.dart';
 import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/database/local_settings_repository.dart';
@@ -28,21 +29,20 @@ final class LocalAuthRepository {
 
   /// Live stream of a user's assigned team and housing scopes (PRD §5.4).
   Stream<ScopeSnapshot> watchScopes(String accountId) =>
-      (_database.select(_database.userScopes)
-            ..where((s) => s.userId.equals(accountId)))
-          .watch()
-          .map(
-            (rows) => ScopeSnapshot(
-              teamIds: Set.unmodifiable({
-                for (final r in rows)
-                  if (r.scopeType == ScopeTypes.team) r.scopeId,
-              }),
-              housingIds: Set.unmodifiable({
-                for (final r in rows)
-                  if (r.scopeType == ScopeTypes.housing) r.scopeId,
-              }),
-            ),
-          );
+      (_database.select(
+        _database.userScopes,
+      )..where((s) => s.userId.equals(accountId))).watch().map(
+        (rows) => ScopeSnapshot(
+          teamIds: Set.unmodifiable({
+            for (final r in rows)
+              if (r.scopeType == ScopeTypes.team) r.scopeId,
+          }),
+          housingIds: Set.unmodifiable({
+            for (final r in rows)
+              if (r.scopeType == ScopeTypes.housing) r.scopeId,
+          }),
+        ),
+      );
 
   Future<List<LocalAccount>> accounts({bool activeOnly = false}) async {
     final query = _database.select(_database.appUsers);
@@ -127,9 +127,9 @@ final class LocalAuthRepository {
     required String accountId,
     required String password,
   }) async {
-    final user = await (_database.select(_database.appUsers)
-          ..where((u) => u.id.equals(accountId)))
-        .getSingleOrNull();
+    final user = await (_database.select(
+      _database.appUsers,
+    )..where((u) => u.id.equals(accountId))).getSingleOrNull();
     if (user == null || (role != null && user.role != role.name)) return null;
     if (!user.active) throw const AccountDeactivatedException();
 
@@ -177,9 +177,9 @@ final class LocalAuthRepository {
     if (trimmed == AuthConstants.temporaryPassword) {
       throw ArgumentError('New password cannot be the temporary default');
     }
-    final user = await (_database.select(_database.appUsers)
-          ..where((u) => u.id.equals(account.id)))
-        .getSingle();
+    final user = await (_database.select(
+      _database.appUsers,
+    )..where((u) => u.id.equals(account.id))).getSingle();
     if (currentPassword != null) {
       if (!await _verifyPassword(currentPassword, user)) {
         throw StateError('Current password is incorrect');
@@ -233,21 +233,22 @@ final class LocalAuthRepository {
     required List<String> teamIds,
     required List<String> housingIds,
   }) => _database.transaction(() async {
-    await (_database.delete(_database.userScopes)
-          ..where((s) => s.userId.equals(accountId)))
-        .go();
-    await _saveScopes(accountId, teamIds, housingIds);
+    await (_database.delete(
+      _database.userScopes,
+    )..where((s) => s.userId.equals(accountId))).go();
+    await insertUserScopes(_database, accountId, teamIds, housingIds);
   });
 
-  Future<(String, String)> _hashPassword(String raw) => _hasher.hashEncoded(raw);
+  Future<(String, String)> _hashPassword(String raw) =>
+      _hasher.hashEncoded(raw);
 
   Future<bool> _verifyPassword(String raw, AppUser user) =>
       _hasher.verifyEncoded(raw, salt: user.pwSalt, expectedHash: user.pwHash);
 
   Future<int> _updateUser(String id, AppUsersCompanion companion) =>
-      (_database.update(_database.appUsers)
-            ..where((u) => u.id.equals(id)))
-          .write(companion);
+      (_database.update(
+        _database.appUsers,
+      )..where((u) => u.id.equals(id))).write(companion);
 
   Future<String> _insertUser(
     String? employeeUid,
@@ -259,7 +260,9 @@ final class LocalAuthRepository {
     final id = const Uuid().v4();
     final (salt, hash) = await _hashPassword(AuthConstants.temporaryPassword);
     await _database.transaction(() async {
-      await _database.into(_database.appUsers).insert(
+      await _database
+          .into(_database.appUsers)
+          .insert(
             AppUsersCompanion.insert(
               id: id,
               employeeUid: Value(employeeUid),
@@ -272,29 +275,8 @@ final class LocalAuthRepository {
               createdAt: _clock.nowUtc(),
             ),
           );
-      await _saveScopes(id, teamIds, housingIds);
+      await insertUserScopes(_database, id, teamIds, housingIds);
     });
     return id;
-  }
-
-  Future<void> _saveScopes(
-    String userId,
-    List<String> teamIds,
-    List<String> housingIds,
-  ) async {
-    const uuid = Uuid();
-    for (final (type, sid) in [
-      for (final tid in teamIds) (ScopeTypes.team, tid),
-      for (final hid in housingIds) (ScopeTypes.housing, hid),
-    ]) {
-      await _database.into(_database.userScopes).insert(
-            UserScopesCompanion.insert(
-              id: uuid.v4(),
-              userId: userId,
-              scopeType: type,
-              scopeId: sid,
-            ),
-          );
-    }
   }
 }

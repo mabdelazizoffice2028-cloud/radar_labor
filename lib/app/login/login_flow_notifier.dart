@@ -106,10 +106,7 @@ final class LoginFlowNotifier {
     }
   }
 
-  void setAccounts(
-    List<LocalAccount> accounts, {
-    String? rememberedAccountId,
-  }) {
+  void setAccounts(List<LocalAccount> accounts, {String? rememberedAccountId}) {
     final validRemembered =
         rememberedAccountId != null &&
         accounts.any((a) => a.id == rememberedAccountId && a.active);
@@ -128,10 +125,7 @@ final class LoginFlowNotifier {
 
   void switchAccount() {
     _emit(
-      _state.copyWith(
-        isRememberedMode: false,
-        rememberedAccountId: () => null,
-      ),
+      _state.copyWith(isRememberedMode: false, rememberedAccountId: () => null),
     );
   }
 

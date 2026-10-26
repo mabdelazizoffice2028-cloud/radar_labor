@@ -28,7 +28,9 @@ void main() {
     final accounts = await auth.accounts();
     expect(accounts.length, 2);
     expect(
-      accounts.any((a) => a.role == AuthRole.projectManager && a.mustChangePassword),
+      accounts.any(
+        (a) => a.role == AuthRole.projectManager && a.mustChangePassword,
+      ),
       isTrue,
     );
     expect(
@@ -112,8 +114,12 @@ void main() {
     expect(res.accountsCreated, 2);
 
     final accounts = await auth.accounts();
-    final siteSup = accounts.firstWhere((a) => a.role == AuthRole.siteSupervisor);
-    final housingSup = accounts.firstWhere((a) => a.role == AuthRole.housingSupervisor);
+    final siteSup = accounts.firstWhere(
+      (a) => a.role == AuthRole.siteSupervisor,
+    );
+    final housingSup = accounts.firstWhere(
+      (a) => a.role == AuthRole.housingSupervisor,
+    );
 
     expect(siteSup.displayName, 'أحمد مشرف موقع');
     expect(siteSup.teamIds.length, 1);

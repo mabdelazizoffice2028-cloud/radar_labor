@@ -17,9 +17,11 @@ import 'package:radar_labor/features/operations/data/history_repository.dart';
 import 'package:radar_labor/features/operations/data/operations_repository.dart';
 import 'package:radar_labor/features/operations/data/roster_admin_repository.dart';
 import 'package:radar_labor/features/operations/data/settings_attendance_draft_store.dart';
+import 'package:radar_labor/features/operations/data/settings_housing_draft_store.dart';
 import 'package:radar_labor/features/operations/data/site_attendance_repository.dart';
 import 'package:radar_labor/features/operations/data/team_setup_repository.dart';
 import 'package:radar_labor/features/operations/domain/attendance_draft_store.dart';
+import 'package:radar_labor/features/operations/domain/housing_draft_store.dart';
 import 'package:radar_labor/features/operations/domain/history_models.dart';
 import 'package:radar_labor/features/operations/domain/site_attendance_store.dart';
 import 'package:radar_labor/features/operations/domain/team_setup_store.dart';
@@ -155,6 +157,13 @@ final attendanceDraftStoreProvider = Provider<AttendanceDraftStore>((ref) {
   final settings = ref.watch(settingsRepositoryProvider);
   final clock = ref.watch(clockProvider);
   return SettingsAttendanceDraftStore(settings: settings, clock: clock);
+});
+
+/// Housing check draft store provider.
+final housingDraftStoreProvider = Provider<HousingDraftStore>((ref) {
+  final settings = ref.watch(settingsRepositoryProvider);
+  final clock = ref.watch(clockProvider);
+  return SettingsHousingDraftStore(settings: settings, clock: clock);
 });
 
 /// Smart daily site attendance store provider (PRD §8, §9, §10).

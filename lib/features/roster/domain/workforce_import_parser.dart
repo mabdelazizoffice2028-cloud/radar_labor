@@ -23,9 +23,18 @@ final class WorkforceImportParser {
     final nameIndex = headers.indexOf('name');
     final designationIndex = headers.indexOf('designation');
     final supplierIndex = headers.indexOf('supplier');
-    final roleIndex = _firstIndex(headers, const ['role', 'approle', 'systemrole']);
+    final roleIndex = _firstIndex(headers, const [
+      'role',
+      'approle',
+      'systemrole',
+    ]);
     final teamIndex = _firstIndex(headers, const ['team', 'teamname']);
-    final campusIndex = _firstIndex(headers, const ['campus', 'campusname', 'housing', 'camp']);
+    final campusIndex = _firstIndex(headers, const [
+      'campus',
+      'campusname',
+      'housing',
+      'camp',
+    ]);
     final result = <WorkforceRow>[];
     for (final row in rows.skip(headerIndex + 1)) {
       final code = _cell(row, codeIndex);

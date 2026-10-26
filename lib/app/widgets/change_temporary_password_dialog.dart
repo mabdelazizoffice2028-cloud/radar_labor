@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
+import 'package:radar_labor/core/l10n/auth_flow_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 
 /// Modal dialog prompting the user to update their initial temporary password on first sign-in.
@@ -39,25 +40,21 @@ final class _ChangeTemporaryPasswordDialogState
     final p2 = _confirmCtrl.text.trim();
     if (p1.length < 8) {
       setState(
-        () => _dialogError = widget.arabic
-            ? 'كلمة المرور يجب ألا تقل عن 8 أحرف'
-            : 'Must be at least 8 characters',
+        () => _dialogError = AuthFlowStrings.passwordMinLength(widget.arabic),
       );
       return;
     }
     if (p1 == '123456') {
       setState(
-        () => _dialogError = widget.arabic
-            ? 'لا يمكن استخدام 123456'
-            : 'Cannot use 123456',
+        () => _dialogError = AuthFlowStrings.passwordCannotBe123456(
+          widget.arabic,
+        ),
       );
       return;
     }
     if (p1 != p2) {
       setState(
-        () => _dialogError = widget.arabic
-            ? 'كلمتا المرور غير متطابقتين'
-            : 'Passwords do not match',
+        () => _dialogError = AuthFlowStrings.passwordsDoNotMatch(widget.arabic),
       );
       return;
     }
@@ -66,17 +63,13 @@ final class _ChangeTemporaryPasswordDialogState
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: Text(
-      widget.arabic ? 'تغيير كلمة المرور المؤقتة' : 'Change temporary password',
-    ),
+    title: Text(AuthFlowStrings.changeTemporaryPasswordTitle(widget.arabic)),
     content: SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            widget.arabic
-                ? 'يجب تعيين كلمة مرور جديدة لا تقل عن 8 أحرف ولا تساوي 123456.'
-                : 'You must set a new password of at least 8 characters and not 123456.',
+            AuthFlowStrings.changeTemporaryPasswordDescription(widget.arabic),
             style: const TextStyle(
               fontSize: 13,
               color: AppTokens.textSecondary,
