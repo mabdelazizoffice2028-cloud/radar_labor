@@ -4,6 +4,50 @@ Append one dated handoff entry for each model/session. Keep prior entries so the
 next model can understand decisions and recoveries. The newest handoff is at the
 top of the log.
 
+## 2026-10-26 — Premium App Icon Redesign & Fresh Release APK Overwrite
+
+- **Owner request:**
+  1. Task 1 (Redesign App Icon): Redesign `android/app/src/main/res/drawable/ic_launcher_foreground.xml` to be sleek, minimalist, elegant, and professional combining modern radar waves and workforce hardhat with smooth curves. Redesign `android/app/src/main/res/values/ic_launcher_background.xml` to a rich luxury background color (`#0B132B`).
+  2. Task 2 (Code Health Check): Run `dart format lib test`, `flutter analyze --no-pub` (zero issues), and `flutter test --no-pub` (100% pass).
+  3. Task 3 (Build & Overwrite Release APK): Build release APK via `flutter build apk --release --no-pub` and overwrite/replace `outputs/Radar Labour.apk`.
+  4. Task 4 (Documentation): Calculate exact byte size and SHA-256 hash; record in `docs/WORKLOG.md` and `docs/DEVICE_AND_MODEL_HANDOFF.md`.
+- **Changes applied:**
+  - `android/app/src/main/res/values/ic_launcher_background.xml`: updated to rich midnight luxury navy `#0B132B`.
+  - `android/app/src/main/res/drawable/ic_launcher_foreground.xml`: redesigned with modern cyan/electric-blue radar pulse arcs (`#38BDF8`, `#60A5FA`), ambient scan glow, amber target beacon, crisp aerodynamic hardhat dome in pure white with titanium ridge, and royal blue workforce pedestal `#2563EB`.
+  - `analysis_options.yaml`: added `work/**` to analyzer exclude list so temporary test build files do not cause analyzer noise.
+  - Ran `dart format lib test`: formatted 5 files; 100% of `.dart` files in `lib/` strictly <= 300 lines.
+  - Ran `flutter analyze --no-pub`: `No issues found!`.
+  - Ran `flutter test --no-pub`: `145/145 All tests passed! (100%)`.
+  - Built release APK with `flutter build apk --release --no-pub` in 265.3 seconds.
+  - Force-copied and overwrote `outputs/Radar Labour.apk`.
+  - Computed size: **69,603,907 bytes** (~66.38 MB).
+  - Computed SHA-256: `02BB3E4CE0E77F7848D3C75453C85CDEE184F603ED14F6F328DEAE1FCB0EA393`.
+
+## 2026-10-26 — FAB Overlap Fix, Default Campus Simplification & Real Supabase Gateway
+
+- **Owner request:**
+  1. Task 1 (Fix FAB Overlap & Dialog Polish): Add bottom padding (100px) to `ListView`s in `lib/app/local_accounts_screen.dart`, `lib/app/screens/workers_screen.dart`, and `lib/app/screens/entities_screen.dart` so list items scroll safely above the FAB. In `lib/app/accounts/account_form_dialog.dart`, ensure `SingleChildScrollView` accommodates keyboard insets and dropdowns use `isExpanded: true` to avoid overflow.
+  2. Task 2 (Default Campus Simplification - Zero-Config Housing): Hide FAB on the Housings tab in `lib/app/screens/entities_screen.dart`. Define `defaultHousingId = 'default-campus'` and `defaultHousingName = 'Main Campus'` in `lib/core/constants/app_constants.dart`. Auto-create default housing in `ensureAdminAccounts()`, automatically assign housing supervisors to `defaultHousingId`, and auto-assign workers with empty campus to `defaultHousingId` upon import.
+  3. Task 3 (Fix "Fake Sync" Illusion & Implement Real Supabase Gateway): Update `lib/app/widgets/sync_status_badge.dart` so that when `OfflineRemoteSyncGateway` is active, the badge displays "Local Mode" (محلي) instead of "Synced". Create `lib/core/sync/supabase_sync_gateway.dart` implementing `RemoteSyncGateway` using `Supabase.instance.client` with `uploadBatch` calling `ingest_events` RPC, `fetchSnapshot` reading reference data, robust error handling throwing `OperationException(DatabaseBusy())`. Wire `remoteSyncGatewayProvider` in `lib/app/app_providers.dart` to return `SupabaseSyncGateway` when initialized, falling back to `OfflineRemoteSyncGateway`.
+- **Changes applied:**
+  - `lib/app/local_accounts_screen.dart`: added bottom 100px padding; inlined small text/card helpers to keep file under 300 lines (289 lines).
+  - `lib/app/screens/workers_screen.dart`: added `padding: const EdgeInsets.only(bottom: 100)` to `ListView.builder` (232 lines).
+  - `lib/app/screens/entities_screen.dart`: added bottom 100px padding and conditioned FAB on `widget.teams` (160 lines).
+  - `lib/app/accounts/account_form_dialog.dart`: added keyboard viewInsets padding to `SingleChildScrollView`, set `isExpanded: true` on dropdowns with ellipsis text, and auto-assigned default housing if none selected (189 lines).
+  - `lib/core/constants/app_constants.dart`: added `AppConstants` and `HousingConstants` with `defaultHousingId = 'default-campus'` and `defaultHousingName = 'Main Campus'` (62 lines).
+  - `lib/core/auth/account_provisioning_repository.dart`: `ensureAdminAccounts()` inserts default housing if missing; `_scopeFor` and `updateAccount()` auto-assign `defaultHousingId` to `housingSupervisor` accounts (209 lines).
+  - `lib/app/accounts/accounts_admin_controller.dart`: `create()` auto-assigns `defaultHousingId` when creating housing supervisors (151 lines).
+  - `lib/features/roster/data/workforce_import_repository.dart`: automatically sets `housingId: defaultHousingId` on imported workers when campus is empty (123 lines).
+  - `lib/core/l10n/sync_strings.dart`: added `localMode(bool ar)` ('Local Mode' / 'محلي') (28 lines).
+  - `lib/app/widgets/sync_status_badge.dart`: updated badge text, color, and icon (`Icons.cloud_off_outlined`) to display "Local Mode" (محلي) when offline gateway is used, and "Synced" / "Pending" when real gateway is used (73 lines).
+  - `lib/core/sync/supabase_sync_gateway.dart`: created real gateway with `isReachable()`, `uploadBatch()` calling `ingest_events`, `fetchSnapshot()`, and typed safe error handling (151 lines).
+  - `lib/app/app_providers.dart`: updated `remoteSyncGatewayProvider` to use `SupabaseSyncGateway` when initialized, falling back safely to `OfflineRemoteSyncGateway` (242 lines).
+  - `test/core/sync/supabase_sync_gateway_and_default_campus_test.dart`: added 9 comprehensive tests for FAB hiding, default housing creation/assignment, workforce import default housing, badge status states, and gateway fallbacks (214 lines).
+- **Checks observed:**
+  - File line counts: 100% of `.dart` files in `lib/` strictly <= 300 lines (0 violations).
+  - `flutter analyze --no-pub`: `No issues found! (ran in 11.1s)`.
+  - `flutter test --no-pub`: `145/145 All tests passed!`.
+
 ## 2026-10-26 — Final Polish, UI Minimalism Sweep & Premium Native App Icon Upgrade
 
 - **Owner request:**

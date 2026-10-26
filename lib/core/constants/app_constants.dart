@@ -49,3 +49,14 @@ abstract final class ScopeTypes {
   static const String team = 'team';
   static const String housing = 'housing';
 }
+
+/// Default housing campus configuration (zero-config default housing).
+abstract final class AppConstants {
+  static const String defaultHousingId = 'default-campus';
+  static const String defaultHousingName = 'Main Campus';
+}
+
+abstract final class HousingConstants {
+  static const String defaultHousingId = AppConstants.defaultHousingId;
+  static const String defaultHousingName = AppConstants.defaultHousingName;
+}

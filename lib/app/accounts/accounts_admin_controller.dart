@@ -2,6 +2,7 @@ import 'package:radar_labor/core/auth/account_provisioning_repository.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
 import 'package:radar_labor/core/auth/local_auth_repository.dart';
+import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/features/roster/data/workforce_file_picker.dart';
 import 'package:radar_labor/features/roster/data/workforce_import_repository.dart';
@@ -104,13 +105,22 @@ final class AccountsAdminController {
   Future<WorkforceImportResult> commitImport(ImportPreview preview) =>
       _importer.commit(preview.rows);
 
-  Future<void> create(AccountFormResult form) => _auth.createAccount(
-    employeeUid: form.employeeUid,
-    displayName: form.displayName,
-    role: form.role,
-    teamIds: form.teamIds,
-    housingIds: form.housingIds,
-  );
+  Future<void> create(AccountFormResult form) {
+    final effectiveHousingIds = form.role == AuthRole.housingSupervisor
+        ? (form.housingIds.isEmpty
+              ? [AppConstants.defaultHousingId]
+              : (form.housingIds.contains(AppConstants.defaultHousingId)
+                    ? form.housingIds
+                    : [AppConstants.defaultHousingId, ...form.housingIds]))
+        : form.housingIds;
+    return _auth.createAccount(
+      employeeUid: form.employeeUid,
+      displayName: form.displayName,
+      role: form.role,
+      teamIds: form.teamIds,
+      housingIds: effectiveHousingIds,
+    );
+  }
 
   Future<void> update(LocalAccount account, AccountFormResult form) async {
     if (form.role != AuthRole.projectManager) await _guardLastManager(account);

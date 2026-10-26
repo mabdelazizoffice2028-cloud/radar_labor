@@ -35,8 +35,23 @@ final class AccountProvisioningRepository {
   static const _uuid = Uuid();
 
   /// Guarantees a project manager and an HR account exist (temporary password,
-  /// must change on first sign-in). Existing accounts are never touched.
+  /// must change on first sign-in). Also ensures the zero-config default campus exists.
   Future<void> ensureAdminAccounts() async {
+    final existingHousing =
+        await (_database.select(_database.housings)
+              ..where((h) => h.housingId.equals(AppConstants.defaultHousingId)))
+            .getSingleOrNull();
+    if (existingHousing == null) {
+      await _database
+          .into(_database.housings)
+          .insert(
+            HousingsCompanion.insert(
+              housingId: AppConstants.defaultHousingId,
+              nameAr: 'السكن الرئيسي',
+              nameEn: const Value(AppConstants.defaultHousingName),
+            ),
+          );
+    }
     await _auth.ensureAccountForRole(
       AuthRole.projectManager,
       AuthConstants.defaultProjectManagerName,
@@ -93,6 +108,13 @@ final class AccountProvisioningRepository {
   }) {
     final name = displayName.trim();
     if (name.isEmpty) throw ArgumentError('Display name is required');
+    final effectiveHousingIds = role == AuthRole.housingSupervisor
+        ? (housingIds.isEmpty
+              ? [AppConstants.defaultHousingId]
+              : (housingIds.contains(AppConstants.defaultHousingId)
+                    ? housingIds
+                    : [AppConstants.defaultHousingId, ...housingIds]))
+        : const <String>[];
     return _database.transaction(() async {
       await (_database.update(
         _database.appUsers,
@@ -102,7 +124,7 @@ final class AccountProvisioningRepository {
       await _auth.updateScopes(
         accountId,
         teamIds: role == AuthRole.siteSupervisor ? teamIds : const [],
-        housingIds: role == AuthRole.housingSupervisor ? housingIds : const [],
+        housingIds: effectiveHousingIds,
       );
     });
   }
@@ -113,8 +135,11 @@ final class AccountProvisioningRepository {
     if (seed.role == AuthRole.siteSupervisor && team.isNotEmpty) {
       return ([await _findOrCreateTeam(team)], const <String>[]);
     }
-    if (seed.role == AuthRole.housingSupervisor && campus.isNotEmpty) {
-      return (const <String>[], [await _findOrCreateHousing(campus)]);
+    if (seed.role == AuthRole.housingSupervisor) {
+      final housingId = campus.isNotEmpty
+          ? await _findOrCreateHousing(campus)
+          : AppConstants.defaultHousingId;
+      return (const <String>[], [housingId]);
     }
     return (const <String>[], const <String>[]);
   }

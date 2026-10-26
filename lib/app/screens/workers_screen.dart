@@ -204,6 +204,7 @@ final class _WorkersScreenState extends State<WorkersScreen> {
                 );
               }
               return ListView.builder(
+                padding: const EdgeInsets.only(bottom: 100),
                 itemCount: workers.length,
                 itemBuilder: (context, i) {
                   final worker = workers[i];

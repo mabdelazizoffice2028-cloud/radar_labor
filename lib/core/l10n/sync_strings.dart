@@ -4,6 +4,8 @@ final class SyncStrings {
 
   static String syncedStatus(bool ar) => ar ? 'تمت المزامنة' : 'Synced';
 
+  static String localMode(bool ar) => ar ? 'محلي' : 'Local Mode';
+
   static String pendingUploadStatus(bool ar, int count) {
     if (ar) {
       return 'بانتظار الرفع ($count)';

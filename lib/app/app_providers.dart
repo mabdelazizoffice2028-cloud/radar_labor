@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:radar_labor/core/audit/audit_log_repository.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
@@ -8,8 +9,10 @@ import 'package:radar_labor/core/database/local_settings_repository.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/core/sync/outbox_repository.dart';
 import 'package:radar_labor/core/sync/remote_gateway.dart';
+import 'package:radar_labor/core/sync/supabase_sync_gateway.dart';
 import 'package:radar_labor/core/sync/sync_engine.dart';
 import 'package:radar_labor/core/time/clock.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:radar_labor/features/dashboard/data/dashboard_actions_repository.dart';
 import 'package:radar_labor/features/dashboard/data/dashboard_coverage_repository.dart';
 import 'package:radar_labor/features/dashboard/data/status_snapshot_repository.dart';
@@ -216,9 +219,18 @@ final pendingOutboxCountProvider = StreamProvider<int>((ref) {
   return outbox.watchPendingCount();
 });
 
-/// Remote sync gateway provider (defaults to offline-first local gateway).
+/// Remote sync gateway provider (uses SupabaseSyncGateway if available, otherwise offline gateway).
 final remoteSyncGatewayProvider = Provider<RemoteSyncGateway>((ref) {
-  return const OfflineRemoteSyncGateway();
+  try {
+    final client = Supabase.instance.client;
+    return SupabaseSyncGateway(client: client);
+  } on Exception catch (error) {
+    debugPrint('Supabase not available for sync: $error');
+    return const OfflineRemoteSyncGateway();
+  } catch (error) {
+    // Supabase.instance throws (e.g. AssertionError) when uninitialized.
+    return const OfflineRemoteSyncGateway();
+  }
 });
 
 /// Automatic offline-first sync engine provider (PRD §23.6).

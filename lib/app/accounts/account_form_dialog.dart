@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/accounts/accounts_admin_controller.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
+import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/l10n/admin_strings.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
@@ -62,12 +63,11 @@ final class _AccountFormDialogState extends State<AccountFormDialog> {
       setState(() => _error = AdminStrings.nameRequired(_ar));
       return;
     }
-    if (_role == AuthRole.housingSupervisor &&
-        widget.housings.isNotEmpty &&
-        _housings.isEmpty) {
-      setState(() => _error = AdminStrings.assignHousingRequired(_ar));
-      return;
-    }
+    final effectiveHousings = _role == AuthRole.housingSupervisor
+        ? (_housings.isEmpty
+              ? [AppConstants.defaultHousingId]
+              : _housings.toList())
+        : const <String>[];
     Navigator.pop(
       context,
       AccountFormResult(
@@ -75,9 +75,7 @@ final class _AccountFormDialogState extends State<AccountFormDialog> {
         displayName: name,
         role: _role,
         teamIds: _role == AuthRole.siteSupervisor ? _teams.toList() : const [],
-        housingIds: _role == AuthRole.housingSupervisor
-            ? _housings.toList()
-            : const [],
+        housingIds: effectiveHousings,
       ),
     );
   }
@@ -90,18 +88,25 @@ final class _AccountFormDialogState extends State<AccountFormDialog> {
     content: SizedBox(
       width: 420,
       child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom + AppTokens.space16,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (_adding)
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _employeeUid,
                 decoration: InputDecoration(
                   labelText: AdminStrings.employeeLabel(_ar),
                 ),
                 items: [
                   for (final e in widget.employees)
-                    DropdownMenuItem(value: e.$1, child: Text(e.$2)),
+                    DropdownMenuItem(
+                      value: e.$1,
+                      child: Text(e.$2, overflow: TextOverflow.ellipsis),
+                    ),
                 ],
                 onChanged: (uid) => setState(() {
                   _employeeUid = uid;
@@ -116,6 +121,7 @@ final class _AccountFormDialogState extends State<AccountFormDialog> {
               ),
             ),
             DropdownButtonFormField<AuthRole>(
+              isExpanded: true,
               initialValue: _role,
               decoration: InputDecoration(
                 labelText: AdminStrings.roleLabel(_ar),
@@ -124,7 +130,10 @@ final class _AccountFormDialogState extends State<AccountFormDialog> {
                 for (final r in AuthRole.values)
                   DropdownMenuItem(
                     value: r,
-                    child: Text(r.label(arabic: _ar)),
+                    child: Text(
+                      r.label(arabic: _ar),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
               ],
               onChanged: (r) => setState(() => _role = r ?? _role),

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:radar_labor/core/auth/account_provisioning_repository.dart';
+import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/features/roster/domain/supervisor_role_resolver.dart';
 import 'package:radar_labor/features/roster/domain/workforce_row.dart';
@@ -37,6 +38,9 @@ final class WorkforceImportRepository {
       for (final row in rows) {
         final existing = byCode[row.code.toLowerCase()];
         final category = row.designation.isEmpty ? 'Worker' : row.designation;
+        final housingId = row.campus.trim().isEmpty
+            ? AppConstants.defaultHousingId
+            : null;
         if (existing == null) {
           final employeeUid = const Uuid().v4();
           await _database
@@ -49,6 +53,7 @@ final class WorkforceImportRepository {
                   fullNameEn: Value(row.name),
                   category: category,
                   supplier: Value(row.supplier.isEmpty ? null : row.supplier),
+                  housingId: Value(housingId),
                 ),
               );
           added++;
@@ -60,7 +65,7 @@ final class WorkforceImportRepository {
             category: category,
             supplier: row.supplier.isEmpty ? null : row.supplier,
             currentTeamId: null,
-            housingId: null,
+            housingId: housingId,
             isActive: true,
             rowVersion: 1,
           );
@@ -75,6 +80,10 @@ final class WorkforceImportRepository {
                 fullNameEn: Value(row.name),
                 category: Value(category),
                 supplier: Value(row.supplier.isEmpty ? null : row.supplier),
+                housingId:
+                    row.campus.trim().isEmpty && existing.housingId == null
+                    ? const Value(AppConstants.defaultHousingId)
+                    : const Value.absent(),
                 isActive: const Value(true),
                 rowVersion: Value(existing.rowVersion + 1),
               ),

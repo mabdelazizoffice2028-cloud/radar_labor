@@ -4,16 +4,15 @@
 `README.md` و`docs/README.md` و`DEVICE_AND_MODEL_HANDOFF.md` و`DECISIONS.md` وهذا
 الملف. بعد ذلك راجع `WORKLOG.md` و`BUGS.md` و`ROADMAP.md` و`SECURITY_AND_SYNC_PLAN_V1_5.md`.
 
-## الحالة الحالية (بعد إكمال المراحل 1-6 والتنقيح النهائي للبساطة والأيقونة المتجهة)
+## الحالة الحالية (بعد تنفيذ المهام الثلاث: حل تداخل FAB، تبسيط السكن الافتراضي، وبوابة Supabase الحقيقية)
 
-- جميع ملفات `.dart` في `lib/` (باستثناء الملفات المولدة `*.g.dart`) تلتزم بالحد الصارم **<= 300 سطر** بعد تشغيل `dart format`.
-- شريط `AppBar` في `HomeScaffold` مبسط ونظيف بالكامل: تمت إزالة زر الخروج المكرر، وعزل شارة تاريخ العمل في `HomeDateBadge` وحوار كلمة المرور في `UserPasswordChangeDialog` (الملف 246 سطراً).
-- أيقونة التطبيق المتجهة Android Adaptive Vector Drawable رسمية وعالية الدقة تجمع الرادار وخوذة العمل في `ic_launcher_foreground.xml` مع خلفية كحلية `#0F172A`.
+- جميع ملفات `.dart` في `lib/` (باستثناء الملفات المولدة `*.g.dart`) تلتزم بالحد الصارم **<= 300 سطر** (100% نجاح، 0 ملفات تتجاوز الحد).
 - الفحص الساكن: `flutter analyze --no-pub` نجح بدون أي تحذير أو خطأ (**No issues found!**).
-- الاختبارات الآلية: `flutter test --no-pub` نجح بالكامل (**136/136 All tests passed!**).
-- نسخة الإطلاق النهائية مبنية ومنسوخة في `outputs/Radar Labour.apk`:
-  - الحجم: **69,521,863 بايت** (~66.30 MB)
-  - بصمة SHA-256: `9607A0AED30803529BD8AE1D1CC980AFA20095F1CDF0D3FC4694DE60089B8036`
+- الاختبارات الآلية: `flutter test --no-pub` نجح بالكامل (**145/145 All tests passed!** بمعدل 100%).
+- تفاصيل التحديثات المنجزة:
+  1. **حل تداخل FAB وتهيئة الحوارات:** إضافة هامش سفلي 100 بكسل لقوائم `LocalAccountsScreen` و `WorkersScreen` و `EntitiesScreen` للتمرير الآمن فوق زر FAB، وتوسيع الحوار مع تعويض لوحة المفاتيح `viewInsets` ومنع overflow في القوائم المنسدلة عبر `isExpanded: true`.
+  2. **تبسيط السكن الافتراضي (Zero-Config Housing):** إخفاء زر إضافة السكن اليدوي في `EntitiesScreen`، وإدراج السكن الافتراضي `default-campus` ('السكن الرئيسي' / 'Main Campus') تلقائياً في `ensureAdminAccounts`، وتعيينه تلقائياً لمشرفي السكن في `_scopeFor` و `updateAccount` و `create`، وتعيينه للعمال المستوردين ذوي السكن الفارغ في `WorkforceImportRepository`.
+  3. **إلغاء وهم المزامنة وبوابة Supabase:** شارة المزامنة `SyncStatusBadge` تعرض الآن بدقة "Local Mode" (محلي) عند العمل عبر `OfflineRemoteSyncGateway`، وبناء `SupabaseSyncGateway` الحقيقية في `lib/core/sync/supabase_sync_gateway.dart` لدفع الأحداث عبر RPC `ingest_events` وجلب مراجع القوى مع معالجة الأخطاء وشبكة العمل، وربطها في `app_providers.dart` مع الرجوع الآمن للأوفلاين.
 
 ## ما أُنجز في المراحل 3، 4، 5، و6 (UX/UI & Localization Overhaul)
 

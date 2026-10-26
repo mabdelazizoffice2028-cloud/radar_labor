@@ -216,12 +216,30 @@ final class _LocalAccountsScreenState extends State<LocalAccountsScreen> {
                   : Text(_error!),
             )
           : ListView(
-              padding: const EdgeInsets.all(AppTokens.space16),
+              padding: const EdgeInsets.fromLTRB(
+                AppTokens.space16,
+                AppTokens.space16,
+                AppTokens.space16,
+                100,
+              ),
               children: [
                 if (_busy) const LinearProgressIndicator(),
-                if (_error != null) _ErrorText(_error!),
+                if (_error != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppTokens.space8),
+                    child: Text(
+                      _error!,
+                      style: const TextStyle(color: AppTokens.statusUnknown),
+                    ),
+                  ),
                 if (!data.hasSupervisors)
-                  _HintCard(AdminStrings.noNamesHint(_ar)),
+                  Card(
+                    color: AppTokens.primarySoft,
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppTokens.space12),
+                      child: Text(AdminStrings.noNamesHint(_ar)),
+                    ),
+                  ),
                 for (final account in data.accounts) _card(account),
               ],
             ),
@@ -268,32 +286,4 @@ final class _LocalAccountsScreenState extends State<LocalAccountsScreen> {
     ),
     _ => AdminStrings.scopeFullApp(_ar),
   };
-}
-
-final class _ErrorText extends StatelessWidget {
-  const _ErrorText(this.message);
-  final String message;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: AppTokens.space8),
-    child: Text(
-      message,
-      style: const TextStyle(color: AppTokens.statusUnknown),
-    ),
-  );
-}
-
-final class _HintCard extends StatelessWidget {
-  const _HintCard(this.message);
-  final String message;
-
-  @override
-  Widget build(BuildContext context) => Card(
-    color: AppTokens.primarySoft,
-    child: Padding(
-      padding: const EdgeInsets.all(AppTokens.space12),
-      child: Text(message),
-    ),
-  );
 }

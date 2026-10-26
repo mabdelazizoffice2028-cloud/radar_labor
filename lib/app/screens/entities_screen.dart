@@ -124,11 +124,13 @@ final class _EntitiesScreenState extends State<EntitiesScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _add,
-        icon: const Icon(Icons.add),
-        label: Text(AppStrings.add(widget.arabic)),
-      ),
+      floatingActionButton: widget.teams
+          ? FloatingActionButton.extended(
+              onPressed: _add,
+              icon: const Icon(Icons.add),
+              label: Text(AppStrings.add(widget.arabic)),
+            )
+          : null,
       body: StreamBuilder<List<String>>(
         stream: stream,
         builder: (context, state) {
@@ -137,6 +139,7 @@ final class _EntitiesScreenState extends State<EntitiesScreen> {
             return Center(child: Text(AppStrings.noDataYet(widget.arabic)));
           }
           return ListView.builder(
+            padding: const EdgeInsets.only(bottom: 100),
             itemCount: rows.length,
             itemBuilder: (context, i) {
               final name = rows[i];
