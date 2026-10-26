@@ -4,7 +4,7 @@ abstract final class AppStrings {
   static String homeTab(bool ar) => ar ? 'الرئيسية' : 'Home';
   static String workersTab(bool ar) => ar ? 'العمال' : 'Workers';
   static String teamsTab(bool ar) => ar ? 'الفرق' : 'Teams';
-  static String housingTab(bool ar) => ar ? 'السكن' : 'Housing';
+  static String housingTab(bool ar) => ar ? 'السكن' : 'Campus';
   static String checkInTab(bool ar) => ar ? 'التسجيل اليومي' : 'Daily check-in';
   static String settingsTab(bool ar) => ar ? 'الإعدادات' : 'Settings';
   static String signOut(bool ar) => ar ? 'تسجيل الخروج' : 'Sign out';
@@ -47,18 +47,18 @@ abstract final class AppStrings {
       ar ? 'الاسم بالإنجليزية' : 'English name';
   static String currentTeam(bool ar) => ar ? 'الفريق الحالي' : 'Current team';
   static String currentHousing(bool ar) =>
-      ar ? 'السكن الحالي' : 'Current housing';
+      ar ? 'السكن الحالي' : 'Current campus';
   static String noTeam(bool ar) => ar ? 'بدون فريق' : 'No team';
-  static String noHousing(bool ar) => ar ? 'بدون سكن' : 'No housing';
+  static String noHousing(bool ar) => ar ? 'بدون سكن' : 'No campus';
   static String markOnSite(bool ar) => ar ? 'تسجيل بالموقع' : 'Mark on site';
   static String markAbsent(bool ar) => ar ? 'تسجيل غياب' : 'Mark absent';
   static String assignTeamHousingFirst(bool ar) => ar
       ? 'عيّن العامل إلى فريق وسكن أولاً'
-      : 'Assign the worker to a team and housing first';
+      : 'Assign the worker to a team and campus first';
   static String workerCodeExists(bool ar) =>
       ar ? 'رقم العامل مستخدم بالفعل' : 'Worker code already exists';
   static String addTeam(bool ar) => ar ? 'إضافة فريق' : 'Add team';
-  static String addHousing(bool ar) => ar ? 'إضافة سكن' : 'Add housing';
+  static String addHousing(bool ar) => ar ? 'إضافة سكن' : 'Add campus';
   static String add(bool ar) => ar ? 'إضافة' : 'Add';
   static String noDataYet(bool ar) =>
       ar ? 'لا توجد بيانات بعد — اضغط إضافة' : 'Nothing here yet — tap Add';

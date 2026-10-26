@@ -43,7 +43,7 @@ class _ConflictSection extends StatelessWidget {
     final labels = <String>[];
     if (flags.contains(StatusFlag.housingSiteConflict)) {
       labels.add(
-        arabic ? 'غياب سكن مع حضور موقع' : 'Housing absence and site presence',
+        arabic ? 'غياب سكن مع حضور موقع' : 'Campus absence and site presence',
       );
     }
     if (flags.contains(StatusFlag.multipleSiteTeams)) {
@@ -93,7 +93,7 @@ class _UnknownSection extends StatelessWidget {
                     ? (arabic ? 'تجاوز مهلة المتابعة' : 'SLA exceeded')
                     : (arabic
                           ? 'غياب سكن دون تبرير'
-                          : 'Housing absence without justification'),
+                          : 'Campus absence without justification'),
               ),
               trailing: IconButton(
                 tooltip: arabic ? 'إضافة تبرير' : 'Add justification',

@@ -136,7 +136,7 @@ String _resolutionLabel(ResolutionKind kind, bool arabic) => switch (kind) {
     arabic ? 'اعتماد الحضور، خرج مبكرًا' : 'Confirm present, left early',
   ResolutionKind.movedDuringDay =>
     arabic ? 'انتقل خلال اليوم' : 'Moved during the day',
-  ResolutionKind.housingError => arabic ? 'خطأ من السكن' : 'Housing error',
+  ResolutionKind.housingError => arabic ? 'خطأ من السكن' : 'Campus error',
   ResolutionKind.siteError => arabic ? 'خطأ من الموقع' : 'Site error',
   ResolutionKind.officialErrand =>
     arabic ? 'مأمورية أو إذن' : 'Official errand or permission',

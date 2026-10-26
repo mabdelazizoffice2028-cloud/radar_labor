@@ -164,13 +164,13 @@ abstract final class OperationsStrings {
   // Housing & Site screen common strings
   static String selectTeam(bool ar) => ar ? 'اختر الفريق' : 'Select team';
 
-  static String selectHousing(bool ar) => ar ? 'اختر السكن' : 'Select housing';
+  static String selectHousing(bool ar) => ar ? 'اختر السكن' : 'Select campus';
 
   static String addTeamToStart(bool ar) =>
       ar ? 'أضف فريقًا ثم ابدأ التسجيل' : 'Add a team to start';
 
   static String addHousingToStart(bool ar) =>
-      ar ? 'أضف سكنًا ثم ابدأ الفحص' : 'Add housing to start a check';
+      ar ? 'أضف سكنًا ثم ابدأ الفحص' : 'Add a campus to start a check';
 
   static String noWorkersInTeam(bool ar) => ar
       ? 'لا يوجد عمال مسندون لهذا الفريق'
@@ -178,7 +178,7 @@ abstract final class OperationsStrings {
 
   static String noWorkersInHousing(bool ar) => ar
       ? 'لا يوجد عمال مسندون لهذا السكن'
-      : 'No workers assigned to this housing';
+      : 'No workers assigned to this campus';
 
   static String codeLabel(bool ar) => ar ? 'الكود' : 'Code';
 
@@ -203,7 +203,7 @@ abstract final class OperationsStrings {
       ar ? 'تأكيد تسجيل الموقع' : 'Confirm site attendance';
 
   static String confirmHousingCheckTitle(bool ar) =>
-      ar ? 'تأكيد فحص السكن' : 'Confirm housing check';
+      ar ? 'تأكيد فحص السكن' : 'Confirm campus check';
 
   static String reviewAction(bool ar) => ar ? 'مراجعة' : 'Review';
 
@@ -224,7 +224,7 @@ abstract final class OperationsStrings {
 
   static String closeAction(bool ar) => ar ? 'إغلاق' : 'Close';
 
-  static String housingCheckTab(bool ar) => ar ? 'فحص السكن' : 'Housing check';
+  static String housingCheckTab(bool ar) => ar ? 'فحص السكن' : 'Campus check';
 
   static String siteAttendanceTab(bool ar) =>
       ar ? 'تسجيل الموقع' : 'Site attendance';

@@ -24,6 +24,23 @@ final class PasswordHasher {
     )).extractBytes(),
   );
 
+  /// Hashes [raw] with a fresh random salt; returns base64url `(salt, hash)`.
+  Future<(String, String)> hashEncoded(String raw) async {
+    final salt = randomBytes(AuthConstants.saltByteLength);
+    final digest = await hash(raw, salt);
+    return (base64UrlEncode(salt), base64UrlEncode(digest));
+  }
+
+  /// Verifies [raw] against base64url-encoded [salt] and [expectedHash].
+  Future<bool> verifyEncoded(
+    String raw, {
+    required String salt,
+    required String expectedHash,
+  }) async {
+    final candidate = await hash(raw, base64Url.decode(salt));
+    return constantTimeEquals(candidate, base64Url.decode(expectedHash));
+  }
+
   List<int> randomBytes(int length) {
     final random = Random.secure();
     return Uint8List.fromList(

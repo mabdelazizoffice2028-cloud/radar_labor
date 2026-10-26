@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:drift/drift.dart';
 import 'package:radar_labor/core/auth/auth_exceptions.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
@@ -28,24 +26,23 @@ final class LocalAuthRepository {
   final Clock _clock;
   final PasswordHasher _hasher;
 
-  static const String _defaultKdf = '{"m":19456,"t":2,"p":1}';
-
   /// Live stream of a user's assigned team and housing scopes (PRD §5.4).
   Stream<ScopeSnapshot> watchScopes(String accountId) =>
-      (_database.select(
-        _database.userScopes,
-      )..where((s) => s.userId.equals(accountId))).watch().map(
-        (rows) => ScopeSnapshot(
-          teamIds: Set.unmodifiable({
-            for (final r in rows)
-              if (r.scopeType == 'team') r.scopeId,
-          }),
-          housingIds: Set.unmodifiable({
-            for (final r in rows)
-              if (r.scopeType == 'housing') r.scopeId,
-          }),
-        ),
-      );
+      (_database.select(_database.userScopes)
+            ..where((s) => s.userId.equals(accountId)))
+          .watch()
+          .map(
+            (rows) => ScopeSnapshot(
+              teamIds: Set.unmodifiable({
+                for (final r in rows)
+                  if (r.scopeType == ScopeTypes.team) r.scopeId,
+              }),
+              housingIds: Set.unmodifiable({
+                for (final r in rows)
+                  if (r.scopeType == ScopeTypes.housing) r.scopeId,
+              }),
+            ),
+          );
 
   Future<List<LocalAccount>> accounts({bool activeOnly = false}) async {
     final query = _database.select(_database.appUsers);
@@ -57,7 +54,7 @@ final class LocalAuthRepository {
     final teamsMap = <String, List<String>>{};
     final housingsMap = <String, List<String>>{};
     for (final s in scopeRows) {
-      final target = s.scopeType == 'team' ? teamsMap : housingsMap;
+      final target = s.scopeType == ScopeTypes.team ? teamsMap : housingsMap;
       (target[s.userId] ??= []).add(s.scopeId);
     }
 
@@ -95,7 +92,9 @@ final class LocalAuthRepository {
     });
   }
 
-  Future<void> createAccount({
+  /// Creates an account with the temporary password and returns its id.
+  /// Deactivated (deleted) accounts never block re-creating the same person.
+  Future<String> createAccount({
     String? employeeUid,
     required String displayName,
     required AuthRole role,
@@ -106,7 +105,7 @@ final class LocalAuthRepository {
         (employeeUid == null || employeeUid.trim().isEmpty)) {
       throw ArgumentError('Non-viewer roles require an employeeUid');
     }
-    final existing = await accounts();
+    final existing = await accounts(activeOnly: true);
     final needle = displayName.trim().toLowerCase();
     final conflict = employeeUid != null
         ? existing.any((a) => a.employeeUid == employeeUid && a.role == role)
@@ -114,7 +113,7 @@ final class LocalAuthRepository {
             (a) => a.role == role && a.displayName.toLowerCase() == needle,
           );
     if (conflict) throw const AuthConflictException();
-    await _insertUser(
+    return _insertUser(
       employeeUid,
       displayName.trim(),
       role,
@@ -128,9 +127,9 @@ final class LocalAuthRepository {
     required String accountId,
     required String password,
   }) async {
-    final user = await (_database.select(
-      _database.appUsers,
-    )..where((u) => u.id.equals(accountId))).getSingleOrNull();
+    final user = await (_database.select(_database.appUsers)
+          ..where((u) => u.id.equals(accountId)))
+        .getSingleOrNull();
     if (user == null || (role != null && user.role != role.name)) return null;
     if (!user.active) throw const AccountDeactivatedException();
 
@@ -178,9 +177,9 @@ final class LocalAuthRepository {
     if (trimmed == AuthConstants.temporaryPassword) {
       throw ArgumentError('New password cannot be the temporary default');
     }
-    final user = await (_database.select(
-      _database.appUsers,
-    )..where((u) => u.id.equals(account.id))).getSingle();
+    final user = await (_database.select(_database.appUsers)
+          ..where((u) => u.id.equals(account.id)))
+        .getSingle();
     if (currentPassword != null) {
       if (!await _verifyPassword(currentPassword, user)) {
         throw StateError('Current password is incorrect');
@@ -203,6 +202,18 @@ final class LocalAuthRepository {
   Future<void> deactivateAccount(String accountId) =>
       _updateUser(accountId, const AppUsersCompanion(active: Value(false)));
 
+  /// Creates a built-in [role] account (no employee link) only when no account
+  /// of that role exists at all, so deactivating it is respected later.
+  Future<bool> ensureAccountForRole(AuthRole role, String displayName) =>
+      _database.transaction(() async {
+        final query = _database.select(_database.appUsers)
+          ..where((u) => u.role.equals(role.name))
+          ..limit(1);
+        if (await query.getSingleOrNull() != null) return false;
+        await _insertUser(null, displayName, role);
+        return true;
+      });
+
   Future<void> resetPassword(String accountId) async {
     final (salt, hash) = await _hashPassword(AuthConstants.temporaryPassword);
     await _updateUser(
@@ -222,29 +233,23 @@ final class LocalAuthRepository {
     required List<String> teamIds,
     required List<String> housingIds,
   }) => _database.transaction(() async {
-    await (_database.delete(
-      _database.userScopes,
-    )..where((s) => s.userId.equals(accountId))).go();
+    await (_database.delete(_database.userScopes)
+          ..where((s) => s.userId.equals(accountId)))
+        .go();
     await _saveScopes(accountId, teamIds, housingIds);
   });
 
-  Future<(String, String)> _hashPassword(String raw) async {
-    final salt = _hasher.randomBytes(AuthConstants.saltByteLength);
-    final hash = await _hasher.hash(raw, salt);
-    return (base64UrlEncode(salt), base64UrlEncode(hash));
-  }
+  Future<(String, String)> _hashPassword(String raw) => _hasher.hashEncoded(raw);
 
-  Future<bool> _verifyPassword(String raw, AppUser user) async {
-    final candidate = await _hasher.hash(raw, base64Url.decode(user.pwSalt));
-    return _hasher.constantTimeEquals(candidate, base64Url.decode(user.pwHash));
-  }
+  Future<bool> _verifyPassword(String raw, AppUser user) =>
+      _hasher.verifyEncoded(raw, salt: user.pwSalt, expectedHash: user.pwHash);
 
   Future<int> _updateUser(String id, AppUsersCompanion companion) =>
-      (_database.update(
-        _database.appUsers,
-      )..where((u) => u.id.equals(id))).write(companion);
+      (_database.update(_database.appUsers)
+            ..where((u) => u.id.equals(id)))
+          .write(companion);
 
-  Future<void> _insertUser(
+  Future<String> _insertUser(
     String? employeeUid,
     String displayName,
     AuthRole role, [
@@ -254,9 +259,7 @@ final class LocalAuthRepository {
     final id = const Uuid().v4();
     final (salt, hash) = await _hashPassword(AuthConstants.temporaryPassword);
     await _database.transaction(() async {
-      await _database
-          .into(_database.appUsers)
-          .insert(
+      await _database.into(_database.appUsers).insert(
             AppUsersCompanion.insert(
               id: id,
               employeeUid: Value(employeeUid),
@@ -264,13 +267,14 @@ final class LocalAuthRepository {
               role: role.name,
               pwHash: hash,
               pwSalt: salt,
-              kdfParams: _defaultKdf,
+              kdfParams: AuthConstants.kdfParamsJson,
               mustChange: const Value(true),
               createdAt: _clock.nowUtc(),
             ),
           );
       await _saveScopes(id, teamIds, housingIds);
     });
+    return id;
   }
 
   Future<void> _saveScopes(
@@ -280,12 +284,10 @@ final class LocalAuthRepository {
   ) async {
     const uuid = Uuid();
     for (final (type, sid) in [
-      for (final tid in teamIds) ('team', tid),
-      for (final hid in housingIds) ('housing', hid),
+      for (final tid in teamIds) (ScopeTypes.team, tid),
+      for (final hid in housingIds) (ScopeTypes.housing, hid),
     ]) {
-      await _database
-          .into(_database.userScopes)
-          .insert(
+      await _database.into(_database.userScopes).insert(
             UserScopesCompanion.insert(
               id: uuid.v4(),
               userId: userId,

@@ -13,9 +13,9 @@ final class AuthFlowStrings {
   static String singleAccountNotice(bool ar, String name) =>
       ar ? 'الحساب: $name' : 'Account: $name';
 
-  static String noAccountsForRole(bool ar) => ar
-      ? 'لا يوجد حساب نشط لهذا الدور بعد. راجع الإدارة.'
-      : 'No active account exists for this role yet. Contact administration.';
+  static String noNamesYet(bool ar) => ar
+      ? 'لا توجد أسماء بعد، اطلب من الإداري استيراد القائمة'
+      : 'No names yet. Ask the administrator to import the list.';
 
   static String enterPasswordLabel(bool ar) => ar ? 'رقم السر' : 'Password';
 

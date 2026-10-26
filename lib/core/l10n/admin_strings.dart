@@ -19,11 +19,11 @@ final class AdminStrings {
       : 'Assigned teams (optional for site supervisor)';
 
   static String assignedHousing(bool ar) =>
-      ar ? 'المساكن المسندة' : 'Assigned housing';
+      ar ? 'المساكن المسندة' : 'Assigned campus';
 
   static String assignHousingRequired(bool ar) => ar
       ? 'اختر مسكنًا واحدًا على الأقل لمشرف السكن'
-      : 'Assign at least one housing unit for housing supervisor';
+      : 'Assign at least one campus for the campus supervisor';
 
   static String accountConflictError(bool ar) => ar
       ? 'هذا المستخدم موجود بالفعل لهذا الدور'
@@ -43,6 +43,47 @@ final class AdminStrings {
       ar ? 'تعطيل الحساب' : 'Deactivate account';
 
   static String accountDeactivatedBadge(bool ar) => ar ? 'معطل' : 'Deactivated';
+
+  static String importNamesAction(bool ar) =>
+      ar ? 'استيراد Excel' : 'Import Excel';
+
+  static String importReviewTitle(bool ar) =>
+      ar ? 'معاينة الاستيراد' : 'Review import';
+
+  static String importReviewBody(bool ar, int workers, int supervisors) => ar
+      ? 'سيتم استيراد $workers اسماً، منهم $supervisors مشرفاً سيُنشأ لهم حساب تلقائياً. أرقام الهويات لا تُحفظ.'
+      : '$workers names will be imported; $supervisors supervisors will get an account automatically. Identity numbers are never saved.';
+
+  static String importConfirm(bool ar) => ar ? 'استيراد' : 'Import';
+
+  static String importDone(bool ar, int added, int updated, int accounts) => ar
+      ? 'تمت إضافة $added وتحديث $updated، وإنشاء $accounts حساب مشرف'
+      : 'Added $added, updated $updated, created $accounts supervisor accounts';
+
+  static String importFailed(bool ar) =>
+      ar ? 'تعذر استيراد الملف' : 'Could not import the file';
+
+  static String noNamesHint(bool ar) => ar
+      ? 'لا توجد أسماء بعد. استورد ملف Excel لإنشاء حسابات المشرفين تلقائياً.'
+      : 'No names yet. Import an Excel file to create supervisor accounts automatically.';
+
+  static String editUser(bool ar) => ar ? 'تعديل' : 'Edit';
+
+  static String deleteUser(bool ar) => ar ? 'حذف من قائمة الدخول' : 'Remove';
+
+  static String deleteUserConfirm(bool ar, String name) => ar
+      ? 'حذف "$name" من قائمة الدخول؟ يبقى السجل التاريخي محفوظاً.'
+      : 'Remove "$name" from the sign-in list? History is kept.';
+
+  static String lastManagerError(bool ar) => ar
+      ? 'لا يمكن حذف آخر حساب مدير مشروع'
+      : 'The last project manager account cannot be removed';
+
+  static String accountUpdateError(bool ar) =>
+      ar ? 'تعذر حفظ التعديل' : 'Could not save changes';
+
+  static String nameRequired(bool ar) =>
+      ar ? 'الاسم مطلوب' : 'Name is required';
 
   static String wipeRosterTitle(bool ar) =>
       ar ? 'مسح القوى العاملة' : 'Wipe workforce roster';
@@ -75,9 +116,9 @@ final class AdminStrings {
     'team_created' => ar ? 'إنشاء فريق' : 'Team created',
     'team_updated' => ar ? 'تعديل فريق' : 'Team updated',
     'team_deactivated' => ar ? 'تعطيل فريق' : 'Team deactivated',
-    'housing_created' => ar ? 'إنشاء سكن' : 'Housing created',
-    'housing_updated' => ar ? 'تعديل سكن' : 'Housing updated',
-    'housing_deactivated' => ar ? 'تعطيل سكن' : 'Housing deactivated',
+    'housing_created' => ar ? 'إنشاء سكن' : 'Campus created',
+    'housing_updated' => ar ? 'تعديل سكن' : 'Campus updated',
+    'housing_deactivated' => ar ? 'تعطيل سكن' : 'Campus deactivated',
     'account_created' => ar ? 'إنشاء حساب' : 'Account created',
     'account_deactivated' => ar ? 'تعطيل حساب' : 'Account deactivated',
     'password_reset' => ar ? 'إعادة تعيين رقم سر' : 'Password reset',

@@ -23,6 +23,9 @@ final class WorkforceImportParser {
     final nameIndex = headers.indexOf('name');
     final designationIndex = headers.indexOf('designation');
     final supplierIndex = headers.indexOf('supplier');
+    final roleIndex = _firstIndex(headers, const ['role', 'approle', 'systemrole']);
+    final teamIndex = _firstIndex(headers, const ['team', 'teamname']);
+    final campusIndex = _firstIndex(headers, const ['campus', 'campusname', 'housing', 'camp']);
     final result = <WorkforceRow>[];
     for (final row in rows.skip(headerIndex + 1)) {
       final code = _cell(row, codeIndex);
@@ -37,6 +40,9 @@ final class WorkforceImportParser {
           name: name,
           designation: _cell(row, designationIndex),
           supplier: _cell(row, supplierIndex),
+          role: _cell(row, roleIndex),
+          team: _cell(row, teamIndex),
+          campus: _cell(row, campusIndex),
         ),
       );
     }
@@ -59,6 +65,15 @@ final class WorkforceImportParser {
 
   String _normalizeHeader(String value) =>
       value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+
+  /// Index of the first optional header present, or -1 when absent.
+  int _firstIndex(List<String> headers, List<String> candidates) {
+    for (final name in candidates) {
+      final index = headers.indexOf(name);
+      if (index >= 0) return index;
+    }
+    return -1;
+  }
 
   String _cell(List<String> row, int index) =>
       index < 0 || index >= row.length ? '' : row[index].trim();

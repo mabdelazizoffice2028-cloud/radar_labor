@@ -54,7 +54,7 @@ class _StatusCards extends StatelessWidget {
 
   String _label(WorkerStatus status) => switch (status) {
     WorkerStatus.onSite => arabic ? 'في الموقع' : 'On site',
-    WorkerStatus.housingOnly => arabic ? 'في السكن فقط' : 'Housing only',
+    WorkerStatus.housingOnly => arabic ? 'في السكن فقط' : 'Campus only',
     WorkerStatus.unknown => arabic ? 'غير معلوم' : 'Unknown',
     WorkerStatus.justified => arabic ? 'مبرر' : 'Justified',
     WorkerStatus.notRecorded => arabic ? 'لم يسجل بعد' : 'Not recorded',
@@ -119,7 +119,7 @@ class _CoverageWarnings extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     children: [
       _WarningCard(
-        title: arabic ? 'مساكن لم تسجل بعد' : 'Housings not checked',
+        title: arabic ? 'مساكن لم تسجل بعد' : 'Campuses not checked',
         rows: coverage.missingHousings,
         arabic: arabic,
       ),

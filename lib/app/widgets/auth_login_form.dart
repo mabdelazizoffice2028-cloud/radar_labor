@@ -121,7 +121,7 @@ final class _AuthLoginFormState extends State<AuthLoginForm> {
             const SizedBox(height: AppTokens.space16),
             if (roleAccounts.isEmpty)
               _ErrorBanner(
-                message: AuthFlowStrings.noAccountsForRole(widget.arabic),
+                message: AuthFlowStrings.noNamesYet(widget.arabic),
               )
             else ...[
               if (state.showNameDropdown) ...[

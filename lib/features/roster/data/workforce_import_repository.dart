@@ -1,15 +1,25 @@
 import 'package:drift/drift.dart';
+import 'package:radar_labor/core/auth/account_provisioning_repository.dart';
 import 'package:radar_labor/core/database/app_database.dart';
+import 'package:radar_labor/features/roster/domain/supervisor_role_resolver.dart';
 import 'package:radar_labor/features/roster/domain/workforce_row.dart';
 import 'package:uuid/uuid.dart';
 
 final class WorkforceImportResult {
-  const WorkforceImportResult({required this.added, required this.updated});
+  const WorkforceImportResult({
+    required this.added,
+    required this.updated,
+    this.accountsCreated = 0,
+  });
   final int added;
   final int updated;
+
+  /// Supervisor login accounts created automatically by this import.
+  final int accountsCreated;
 }
 
 /// Imports the reviewed roster atomically and preserves existing assignments.
+/// Supervisors found in the file get a login account linked to their scope.
 final class WorkforceImportRepository {
   const WorkforceImportRepository(this._database);
   final AppDatabase _database;
@@ -17,6 +27,7 @@ final class WorkforceImportRepository {
   Future<WorkforceImportResult> commit(List<WorkforceRow> rows) async {
     var added = 0;
     var updated = 0;
+    var accountsCreated = 0;
     await _database.transaction(() async {
       final existingRows = await _database.select(_database.employees).get();
       final byCode = {
@@ -70,7 +81,33 @@ final class WorkforceImportRepository {
             );
         updated++;
       }
+      accountsCreated = await AccountProvisioningRepository(
+        _database,
+      ).provisionSupervisors(_supervisorSeeds(rows, byCode));
     });
-    return WorkforceImportResult(added: added, updated: updated);
+    return WorkforceImportResult(
+      added: added,
+      updated: updated,
+      accountsCreated: accountsCreated,
+    );
+  }
+
+  List<SupervisorSeed> _supervisorSeeds(
+    List<WorkforceRow> rows,
+    Map<String, Employee> byCode,
+  ) {
+    const resolver = SupervisorRoleResolver();
+    return [
+      for (final row in rows)
+        if ((resolver.resolve(row), byCode[row.code.toLowerCase()])
+            case (final role?, final employee?))
+          SupervisorSeed(
+            employeeUid: employee.employeeUid,
+            displayName: row.name,
+            role: role,
+            teamName: row.team,
+            campusName: row.campus,
+          ),
+    ];
   }
 }

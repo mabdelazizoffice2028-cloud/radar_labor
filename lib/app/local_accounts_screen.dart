@@ -1,4 +1,6 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:radar_labor/app/accounts/account_form_dialog.dart';
+import 'package:radar_labor/app/accounts/accounts_admin_controller.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
 import 'package:radar_labor/core/auth/local_auth_repository.dart';
@@ -8,7 +10,8 @@ import 'package:radar_labor/core/l10n/admin_strings.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 
-/// Local administrator screen for creating accounts, resetting PINs, and assigning scopes.
+/// Administrator screen for the sign-in names: import Excel, add, edit
+/// (name, role, scope), reset password, and remove from the sign-in list.
 final class LocalAccountsScreen extends StatefulWidget {
   const LocalAccountsScreen({
     required this.database,
@@ -23,15 +26,11 @@ final class LocalAccountsScreen extends StatefulWidget {
 }
 
 final class _LocalAccountsScreenState extends State<LocalAccountsScreen> {
-  late final _auth = LocalAuthRepository(widget.database);
-  List<LocalAccount> _accounts = const [];
-  List<Employee> _employees = const [];
-  List<Team> _teams = const [];
-  List<Housing> _housings = const [];
+  late final _controller = AccountsAdminController(widget.database);
+  AccountsAdminData? _data;
   String? _error;
-  bool _loading = true, _busy = false;
+  bool _busy = false;
   bool get _ar => widget.arabic;
-  String t(String ar, String en) => _ar ? ar : en;
 
   @override
   void initState() {
@@ -41,257 +40,244 @@ final class _LocalAccountsScreenState extends State<LocalAccountsScreen> {
 
   Future<void> _reload() async {
     try {
-      final db = widget.database;
-      final v = await Future.wait<Object>([
-        _auth.accounts(),
-        (db.select(db.employees)..where((r) => r.isActive)).get(),
-        (db.select(db.teams)..where((r) => r.isActive)).get(),
-        (db.select(db.housings)..where((r) => r.isActive)).get(),
-      ]);
-      if (!mounted) return;
-      setState(() {
-        _accounts = v[0] as List<LocalAccount>;
-        _employees = v[1] as List<Employee>;
-        _teams = v[2] as List<Team>;
-        _housings = v[3] as List<Housing>;
-        _loading = false;
-        _error = null;
-      });
-    } on Exception catch (error) {
-      if (mounted) setState(() => (_loading = false, _error = '$error'));
+      final data = await _controller.load();
+      if (mounted) setState(() => (_data = data, _error = null));
+    } on Exception catch (_) {
+      if (mounted) setState(() => _error = AdminStrings.accountUpdateError(_ar));
     }
   }
 
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(AdminStrings.userAccountsTitle(_ar))),
-    floatingActionButton: FloatingActionButton.extended(
-      onPressed: _busy ? null : _add,
-      icon: const Icon(Icons.person_add_alt_1),
-      label: Text(AdminStrings.addUser(_ar)),
-    ),
-    body: _loading
-        ? const Center(child: CircularProgressIndicator())
-        : ListView(
-            padding: const EdgeInsets.all(AppTokens.space16),
-            children: [
-              if (_error != null) Text(_error!),
-              for (final account in _accounts) _buildAccountCard(account),
-            ],
+  /// Runs [action] with a busy flag, mapping failures to a localized message.
+  Future<void> _run(Future<void> Function() action, String failure) async {
+    setState(() => (_busy = true, _error = null));
+    try {
+      await action();
+      await _reload();
+    } on LastManagerException catch (_) {
+      if (mounted) setState(() => _error = AdminStrings.lastManagerError(_ar));
+    } on AuthConflictException catch (_) {
+      if (mounted) {
+        setState(() => _error = AdminStrings.accountConflictError(_ar));
+      }
+    } on Object catch (_) {
+      if (mounted) setState(() => _error = failure);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _toast(String message) => ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(message)));
+
+  Future<void> _import() => _run(() async {
+    final preview = await _controller.pickImport();
+    if (preview == null || !mounted) return;
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AdminStrings.importReviewTitle(_ar)),
+        content: Text(
+          AdminStrings.importReviewBody(
+            _ar,
+            preview.rows.length,
+            preview.supervisorCount,
           ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppStrings.cancel(_ar)),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(AdminStrings.importConfirm(_ar)),
+          ),
+        ],
+      ),
+    );
+    if (accepted != true) return;
+    final r = await _controller.commitImport(preview);
+    if (mounted) {
+      _toast(AdminStrings.importDone(_ar, r.added, r.updated, r.accountsCreated));
+    }
+  }, AdminStrings.importFailed(_ar));
+
+  AccountFormDialog _dialog(AccountsAdminData d, [LocalAccount? initial]) =>
+      AccountFormDialog(
+        arabic: _ar,
+        initial: initial,
+        employees: [
+          for (final e in d.employees)
+            (e.employeeUid, _ar ? e.fullNameAr : (e.fullNameEn ?? e.fullNameAr)),
+        ],
+        teams: [for (final t in d.teams) (t.teamId, _label(t.nameAr, t.nameEn))],
+        housings: [
+          for (final h in d.housings) (h.housingId, _label(h.nameAr, h.nameEn)),
+        ],
+      );
+
+  Future<void> _add() async {
+    final data = _data;
+    if (data == null || data.employees.isEmpty) return;
+    final form = await AccountFormDialog.show(context, _dialog(data));
+    if (form == null) return;
+    await _run(
+      () => _controller.create(form),
+      AdminStrings.accountCreateError(_ar),
+    );
+  }
+
+  Future<void> _onAction(LocalAccount account, String action) async {
+    final data = _data;
+    if (data == null) return;
+    switch (action) {
+      case 'edit':
+        final form = await AccountFormDialog.show(
+          context,
+          _dialog(data, account),
+        );
+        if (form == null) return;
+        await _run(
+          () => _controller.update(account, form),
+          AdminStrings.accountUpdateError(_ar),
+        );
+      case 'reset_pin':
+        await _run(() async {
+          await _controller.resetPassword(account.id);
+          if (mounted) {
+            _toast(
+              AdminStrings.resetPasswordDone(
+                _ar,
+                AuthConstants.temporaryPassword,
+              ),
+            );
+          }
+        }, AdminStrings.accountUpdateError(_ar));
+      case 'remove':
+        if (await _confirmRemove(account) != true) return;
+        await _run(
+          () => _controller.remove(account),
+          AdminStrings.accountUpdateError(_ar),
+        );
+    }
+  }
+
+  Future<bool?> _confirmRemove(LocalAccount account) => showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      content: Text(AdminStrings.deleteUserConfirm(_ar, account.displayName)),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(AppStrings.cancel(_ar)),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(AdminStrings.deleteUser(_ar)),
+        ),
+      ],
+    ),
   );
 
-  Widget _buildAccountCard(LocalAccount account) => Card(
+  @override
+  Widget build(BuildContext context) {
+    final data = _data;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(AdminStrings.userAccountsTitle(_ar)),
+        actions: [
+          TextButton.icon(
+            key: const ValueKey('import_names_button'),
+            onPressed: _busy ? null : _import,
+            style: TextButton.styleFrom(foregroundColor: AppTokens.onPrimary),
+            icon: const Icon(Icons.upload_file),
+            label: Text(AdminStrings.importNamesAction(_ar)),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _busy || (data?.employees.isEmpty ?? true) ? null : _add,
+        icon: const Icon(Icons.person_add_alt_1),
+        label: Text(AdminStrings.addUser(_ar)),
+      ),
+      body: data == null
+          ? Center(
+              child: _error == null
+                  ? const CircularProgressIndicator()
+                  : Text(_error!),
+            )
+          : ListView(
+              padding: const EdgeInsets.all(AppTokens.space16),
+              children: [
+                if (_busy) const LinearProgressIndicator(),
+                if (_error != null) _ErrorText(_error!),
+                if (!data.hasSupervisors)
+                  _HintCard(AdminStrings.noNamesHint(_ar)),
+                for (final account in data.accounts) _card(account),
+              ],
+            ),
+    );
+  }
+
+  Widget _card(LocalAccount account) => Card(
     child: ListTile(
-      leading: Icon(
-        account.active ? Icons.account_circle_outlined : Icons.block_outlined,
-        color: account.active ? AppTokens.primary : AppTokens.textSecondary,
+      leading: const Icon(
+        Icons.account_circle_outlined,
+        color: AppTokens.primary,
       ),
       title: Text(account.displayName),
-      subtitle: Text(
-        '${account.role.label(arabic: _ar)} · ${_scopeLabel(account)}'
-        '${account.active ? '' : ' · ${AdminStrings.accountDeactivatedBadge(_ar)}'}',
-      ),
+      subtitle: Text('${account.role.label(arabic: _ar)} · ${_scope(account)}'),
       trailing: PopupMenuButton<String>(
         key: ValueKey('account_menu_${account.id}'),
-        onSelected: (action) => _onAccountAction(account, action),
+        enabled: !_busy,
+        onSelected: (action) => _onAction(account, action),
         itemBuilder: (context) => [
+          PopupMenuItem(value: 'edit', child: Text(AdminStrings.editUser(_ar))),
           PopupMenuItem(
             value: 'reset_pin',
             child: Text(AdminStrings.resetPasswordAction(_ar)),
           ),
-          if (account.active)
-            PopupMenuItem(
-              value: 'deactivate',
-              child: Text(AdminStrings.deactivateAccountAction(_ar)),
-            ),
+          PopupMenuItem(
+            value: 'remove',
+            child: Text(AdminStrings.deleteUser(_ar)),
+          ),
         ],
       ),
     ),
   );
 
-  Future<void> _onAccountAction(LocalAccount account, String action) async {
-    setState(() => _busy = true);
-    try {
-      if (action == 'reset_pin') {
-        await _auth.resetPassword(account.id);
-        await _reload();
-        if (mounted) {
-          final msg = AdminStrings.resetPasswordDone(
-            _ar,
-            AuthConstants.temporaryPassword,
-          );
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(msg)));
-        }
-      } else if (action == 'deactivate') {
-        await _auth.deactivateAccount(account.id);
-        await _reload();
-      }
-    } on Exception catch (e) {
-      if (mounted) setState(() => _error = e.toString());
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
+  String _label(String ar, String? en) => _ar ? ar : (en ?? ar);
 
-  Future<void> _add() async {
-    if (_employees.isEmpty) return;
-    final emp = ValueNotifier<String?>(_employees.first.employeeUid);
-    final role = ValueNotifier<AuthRole>(AuthRole.siteSupervisor);
-    final teams = ValueNotifier<Set<String>>({});
-    final housings = ValueNotifier<Set<String>>({});
-    final created = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => _buildAddDialog(ctx, role, emp, teams, housings),
-    );
-    void disposeAll() {
-      for (final n in [emp, role, teams, housings]) {
-        n.dispose();
-      }
-    }
-
-    if (created != true) return disposeAll();
-    if (role.value == AuthRole.housingSupervisor && housings.value.isEmpty) {
-      setState(() => _error = AdminStrings.assignHousingRequired(_ar));
-      return disposeAll();
-    }
-    final empRow = _employees.firstWhere((e) => e.employeeUid == emp.value);
-    setState(() => (_busy = true, _error = null));
-    try {
-      await _auth.createAccount(
-        employeeUid: empRow.employeeUid,
-        displayName: _name(empRow),
-        role: role.value,
-        teamIds: teams.value.toList(),
-        housingIds: housings.value.toList(),
-      );
-      await _reload();
-    } on Exception catch (e) {
-      if (!mounted) return;
-      final conflict = e is AuthConflictException;
-      setState(
-        () => _error = conflict
-            ? AdminStrings.accountConflictError(_ar)
-            : AdminStrings.accountCreateError(_ar),
-      );
-    } finally {
-      disposeAll();
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  AlertDialog _buildAddDialog(
-    BuildContext context,
-    ValueNotifier<AuthRole> role,
-    ValueNotifier<String?> emp,
-    ValueNotifier<Set<String>> teams,
-    ValueNotifier<Set<String>> housings,
-  ) => AlertDialog(
-    title: Text(AdminStrings.addUser(_ar)),
-    content: SizedBox(
-      width: 420,
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _roleField(role),
-            _employeeField(emp),
-            ValueListenableBuilder(
-              valueListenable: role,
-              builder: (context, r, _) => switch (r) {
-                AuthRole.siteSupervisor => _assignmentList(
-                  [
-                    for (final t in _teams)
-                      (t.teamId, _entityName(t.nameAr, t.nameEn)),
-                  ],
-                  teams,
-                  AdminStrings.assignedTeams(_ar),
-                ),
-                AuthRole.housingSupervisor => _assignmentList(
-                  [
-                    for (final h in _housings)
-                      (h.housingId, _entityName(h.nameAr, h.nameEn)),
-                  ],
-                  housings,
-                  AdminStrings.assignedHousing(_ar),
-                ),
-                _ => const SizedBox.shrink(),
-              },
-            ),
-          ],
-        ),
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context, false),
-        child: Text(AppStrings.cancel(_ar)),
-      ),
-      FilledButton(
-        onPressed: () => Navigator.pop(context, true),
-        child: Text(t('إنشاء', 'Create')),
-      ),
-    ],
-  );
-
-  Widget _roleField(ValueNotifier<AuthRole> role) => ValueListenableBuilder(
-    valueListenable: role,
-    builder: (context, value, _) => DropdownButtonFormField<AuthRole>(
-      initialValue: value,
-      decoration: InputDecoration(labelText: AdminStrings.roleLabel(_ar)),
-      items: [
-        for (final r in AuthRole.values)
-          DropdownMenuItem(
-            value: r,
-            child: Text(r.label(arabic: _ar)),
-          ),
-      ],
-      onChanged: (next) => next == null ? null : role.value = next,
-    ),
-  );
-
-  Widget _employeeField(ValueNotifier<String?> emp) => ValueListenableBuilder(
-    valueListenable: emp,
-    builder: (context, value, _) => DropdownButtonFormField<String>(
-      initialValue: value,
-      decoration: InputDecoration(labelText: AdminStrings.employeeLabel(_ar)),
-      items: [
-        for (final e in _employees)
-          DropdownMenuItem(value: e.employeeUid, child: Text(_name(e))),
-      ],
-      onChanged: (next) => emp.value = next,
-    ),
-  );
-
-  Widget _assignmentList(
-    List<(String, String)> options,
-    ValueNotifier<Set<String>> selection,
-    String title,
-  ) => ValueListenableBuilder<Set<String>>(
-    valueListenable: selection,
-    builder: (context, sel, _) => ExpansionTile(
-      title: Text(title),
-      children: [
-        for (final o in options)
-          CheckboxListTile(
-            value: sel.contains(o.$1),
-            title: Text(o.$2),
-            onChanged: (c) =>
-                selection.value = {...sel, if (c == true) o.$1}
-                  ..removeWhere((id) => c == false && id == o.$1),
-          ),
-      ],
-    ),
-  );
-
-  String _name(Employee r) =>
-      _ar ? r.fullNameAr : (r.fullNameEn ?? r.fullNameAr);
-  String _entityName(String ar, String? en) => _ar ? ar : (en ?? ar);
-  String _scopeLabel(LocalAccount a) => switch (a.role) {
+  String _scope(LocalAccount a) => switch (a.role) {
     AuthRole.housingSupervisor =>
-      '${a.housingIds.length} ${t('مساكن', 'housing')}',
-    AuthRole.siteSupervisor => '${a.teamIds.length} ${t('فرق', 'teams')}',
-    _ => t('كامل التطبيق', 'Full app'),
+      '${a.housingIds.length} ${_ar ? 'مساكن' : 'campus'}',
+    AuthRole.siteSupervisor => '${a.teamIds.length} ${_ar ? 'فرق' : 'teams'}',
+    _ => _ar ? 'كامل التطبيق' : 'Full app',
   };
+}
+
+final class _ErrorText extends StatelessWidget {
+  const _ErrorText(this.message);
+  final String message;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: AppTokens.space8),
+    child: Text(message, style: const TextStyle(color: AppTokens.statusUnknown)),
+  );
+}
+
+final class _HintCard extends StatelessWidget {
+  const _HintCard(this.message);
+  final String message;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    color: AppTokens.primarySoft,
+    child: Padding(
+      padding: const EdgeInsets.all(AppTokens.space12),
+      child: Text(message),
+    ),
+  );
 }

@@ -1,8 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/login/login_flow_notifier.dart';
 import 'package:radar_labor/app/widgets/auth_login_form.dart';
-import 'package:radar_labor/app/widgets/auth_setup_view.dart';
 import 'package:radar_labor/app/widgets/change_temporary_password_dialog.dart';
+import 'package:radar_labor/core/auth/account_provisioning_repository.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
 import 'package:radar_labor/core/auth/local_auth_repository.dart';
@@ -11,9 +11,6 @@ import 'package:radar_labor/core/database/local_settings_repository.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
 import 'package:radar_labor/core/l10n/auth_flow_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
-import 'package:radar_labor/features/roster/data/workforce_file_picker.dart';
-import 'package:radar_labor/features/roster/data/workforce_import_repository.dart';
-import 'package:radar_labor/features/roster/domain/workforce_import_parser.dart';
 
 typedef AuthenticatedBuilder = Widget Function(
   LocalAccount account,
@@ -33,18 +30,17 @@ final class AuthGate extends StatefulWidget {
 
 final class _AuthGateState extends State<AuthGate> {
   late final _auth = LocalAuthRepository(widget.database);
-  late final _importer = WorkforceImportRepository(widget.database);
+  late final _provisioning = AccountProvisioningRepository(
+    widget.database,
+    _auth,
+  );
   final _flowNotifier = LoginFlowNotifier();
 
-  List<LocalAccount> _accounts = const [];
-  List<Employee> _employees = const [];
   LocalAccount? _activeAccount;
   String _locale = 'en';
   String? _error;
   bool _loading = true;
   bool _busy = false;
-  String? _selectedManagerUid;
-  String? _selectedHrUid;
 
   bool get _arabic => _locale == 'ar';
 
@@ -65,19 +61,14 @@ final class _AuthGateState extends State<AuthGate> {
     try {
       final settings = LocalSettingsRepository(widget.database);
       final locale = await settings.read('locale');
+      // Project manager and HR can always sign in, even on an empty database.
+      await _provisioning.ensureAdminAccounts();
       final accounts = await _auth.accounts(activeOnly: true);
-      final employees = await (widget.database.select(
-        widget.database.employees,
-      )..where((e) => e.isActive)).get();
 
       if (!mounted) return;
       _flowNotifier.setAccounts(accounts);
       setState(() {
         _locale = locale ?? 'en';
-        _accounts = accounts;
-        _employees = employees;
-        _selectedManagerUid = employees.firstOrNull?.employeeUid;
-        _selectedHrUid = employees.skip(1).firstOrNull?.employeeUid;
         _loading = false;
         _error = null;
       });
@@ -144,87 +135,6 @@ final class _AuthGateState extends State<AuthGate> {
     _load();
   }
 
-  Future<void> _pickRoster() async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      final file = await WorkforceFilePicker().pick();
-      if (file == null || !mounted) return;
-      final rows = const WorkforceImportParser().parse(
-        filename: file.name,
-        bytes: file.bytes,
-      );
-      final accepted = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(_arabic ? 'معاينة الاستيراد' : 'Review import'),
-          content: Text(
-            _arabic
-                ? 'سيتم استيراد ${rows.length} عاملاً وتجاهل أرقام الهويات بالكامل.'
-                : '${rows.length} workers will be imported. Identity numbers will be discarded.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(AppStrings.cancel(_arabic)),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(_arabic ? 'استيراد' : 'Import'),
-            ),
-          ],
-        ),
-      );
-      if (accepted != true) return;
-      await _importer.commit(rows);
-      await _load();
-    } on Object catch (_) {
-      if (mounted) {
-        setState(
-          () => _error = _arabic
-              ? 'تعذر استيراد الملف'
-              : 'Could not import workforce file',
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  Future<void> _createAdmins() async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      final manager = _employees.firstWhere(
-        (e) => e.employeeUid == _selectedManagerUid,
-      );
-      final hr = _employees.firstWhere((e) => e.employeeUid == _selectedHrUid);
-      await _auth.createInitialAccounts(
-        projectManagerEmployeeUid: manager.employeeUid,
-        hrEmployeeUid: hr.employeeUid,
-        projectManagerName: _arabic
-            ? manager.fullNameAr
-            : (manager.fullNameEn ?? manager.fullNameAr),
-        hrName: _arabic ? hr.fullNameAr : (hr.fullNameEn ?? hr.fullNameAr),
-      );
-      await _load();
-    } on Object catch (_) {
-      if (mounted) {
-        setState(
-          () => _error = _arabic
-              ? 'تعذر إنشاء الحسابين'
-              : 'Could not create initial accounts',
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_activeAccount != null) {
@@ -249,20 +159,6 @@ final class _AuthGateState extends State<AuthGate> {
                   ? const Padding(
                       padding: EdgeInsets.all(AppTokens.space32),
                       child: Center(child: CircularProgressIndicator()),
-                    )
-                  : _accounts.isEmpty
-                  ? AuthSetupView(
-                      employees: _employees,
-                      selectedManagerUid: _selectedManagerUid,
-                      selectedHrUid: _selectedHrUid,
-                      onManagerChanged: (v) =>
-                          setState(() => _selectedManagerUid = v),
-                      onHrChanged: (v) => setState(() => _selectedHrUid = v),
-                      onPickRoster: _pickRoster,
-                      onCreateAdmins: _createAdmins,
-                      busy: _busy,
-                      errorMessage: _error,
-                      arabic: _arabic,
                     )
                   : StreamBuilder<LoginFlowState>(
                       stream: _flowNotifier.stream,
