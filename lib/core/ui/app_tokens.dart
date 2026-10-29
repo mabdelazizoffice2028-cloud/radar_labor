@@ -25,6 +25,9 @@ abstract final class AppTokens {
   static const statusNotRecorded = Color(0xFF64748B);
   static const statusNotRecordedSoft = Color(0xFFE2E8F0);
 
+  // Translucent so row state colours (present/absent) remain visible.
+  static const searchHighlight = Color(0x40F59E0B);
+
   // Spacing & Layout
   static const double space4 = 4.0;
   static const double space8 = 8.0;

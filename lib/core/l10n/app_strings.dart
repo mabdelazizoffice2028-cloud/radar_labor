@@ -30,6 +30,15 @@ abstract final class AppStrings {
       : 'Passwords do not match or are under 8 characters';
   static String passwordIncorrect(bool ar) =>
       ar ? 'كلمة المرور الحالية غير صحيحة' : 'Current password is incorrect';
+  static String passwordChangeFailed(bool ar) => ar
+      ? 'تعذر تغيير كلمة المرور. حاول مرة أخرى.'
+      : 'Could not change the password. Please try again.';
+  static String settingsGeneral(bool ar) => ar ? 'عام' : 'General';
+  static String settingsAccount(bool ar) => ar ? 'الحساب' : 'Account';
+  static String settingsAdministration(bool ar) =>
+      ar ? 'الإدارة' : 'Administration';
+  static String settingsAboutDevice(bool ar) =>
+      ar ? 'حول هذا الجهاز' : 'About this device';
   static String encryptedDatabase(bool ar) =>
       ar ? 'قاعدة بيانات مشفرة محلياً' : 'Encrypted local database';
   static String worksOffline(bool ar) =>
@@ -57,6 +66,9 @@ abstract final class AppStrings {
       : 'Assign the worker to a team and campus first';
   static String workerCodeExists(bool ar) =>
       ar ? 'رقم العامل مستخدم بالفعل' : 'Worker code already exists';
+  static String workerSaveFailed(bool ar) => ar
+      ? 'تعذر حفظ العامل. حاول مرة أخرى.'
+      : 'Could not save the worker. Please try again.';
   static String addTeam(bool ar) => ar ? 'إضافة فريق' : 'Add team';
   static String addHousing(bool ar) => ar ? 'إضافة سكن' : 'Add campus';
   static String add(bool ar) => ar ? 'إضافة' : 'Add';

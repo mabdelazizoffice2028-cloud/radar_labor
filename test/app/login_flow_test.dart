@@ -247,12 +247,15 @@ void main() {
           ),
         );
 
+        expect(find.byKey(const ValueKey('role_dropdown')), findsOneWidget);
         expect(
           find.byKey(const ValueKey('role_card_siteSupervisor')),
-          findsOneWidget,
+          findsNothing,
         );
+        await tester.tap(find.byKey(const ValueKey('role_dropdown')));
+        await tester.pumpAndSettle();
         await tester.tap(
-          find.byKey(const ValueKey('role_card_siteSupervisor')),
+          find.byKey(const ValueKey('role_option_siteSupervisor')).last,
         );
         await tester.pumpAndSettle();
 
@@ -270,6 +273,127 @@ void main() {
         expect(submittedRole, AuthRole.siteSupervisor);
         expect(submittedAccountId, 'sup-1');
         expect(submittedPassword, '123456');
+      },
+    );
+
+    testWidgets(
+      'projectManager enters password directly without selecting name',
+      (tester) async {
+        final notifier = LoginFlowNotifier([
+          makeAccount(
+            id: 'pm-1',
+            name: 'مدير المشروع',
+            role: AuthRole.projectManager,
+          ),
+        ]);
+
+        AuthRole? submittedRole;
+        String? submittedAccountId;
+        String? submittedPassword;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: StreamBuilder<LoginFlowState>(
+                  stream: notifier.stream,
+                  initialData: notifier.state,
+                  builder: (context, snapshot) {
+                    final state = snapshot.data ?? notifier.state;
+                    return AuthLoginForm(
+                      flowState: state,
+                      onRoleSelected: notifier.selectRole,
+                      onAccountChanged: notifier.selectAccount,
+                      onSignIn: (role, accountId, password) async {
+                        submittedRole = role;
+                        submittedAccountId = accountId;
+                        submittedPassword = password;
+                      },
+                      busy: false,
+                      errorMessage: null,
+                      arabic: true,
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.byKey(const ValueKey('role_dropdown')));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const ValueKey('role_option_projectManager')).last,
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const ValueKey('account_dropdown_projectManager')),
+          findsNothing,
+        );
+        expect(find.byKey(const ValueKey('password_field')), findsOneWidget);
+
+        await tester.enterText(
+          find.byKey(const ValueKey('password_field')),
+          '123456',
+        );
+        await tester.tap(find.byKey(const ValueKey('login_submit_button')));
+        await tester.pump();
+
+        expect(submittedRole, AuthRole.projectManager);
+        expect(submittedAccountId, 'pm-1');
+        expect(submittedPassword, '123456');
+      },
+    );
+
+    testWidgets(
+      'supervisor with no names displays noNamesYet message banner',
+      (tester) async {
+        final notifier = LoginFlowNotifier([
+          makeAccount(
+            id: 'pm-1',
+            name: 'مدير المشروع',
+            role: AuthRole.projectManager,
+          ),
+        ]);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: StreamBuilder<LoginFlowState>(
+                  stream: notifier.stream,
+                  initialData: notifier.state,
+                  builder: (context, snapshot) {
+                    final state = snapshot.data ?? notifier.state;
+                    return AuthLoginForm(
+                      flowState: state,
+                      onRoleSelected: notifier.selectRole,
+                      onAccountChanged: notifier.selectAccount,
+                      onSignIn: (role, accountId, password) async {},
+                      busy: false,
+                      errorMessage: null,
+                      arabic: true,
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.byKey(const ValueKey('role_dropdown')));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const ValueKey('role_option_housingSupervisor')).last,
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('لا توجد أسماء بعد، اطلب من الإداري استيراد القائمة'),
+          findsOneWidget,
+        );
+        expect(find.byKey(const ValueKey('password_field')), findsNothing);
       },
     );
 

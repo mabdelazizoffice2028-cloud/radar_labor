@@ -1,9 +1,7 @@
-import 'dart:async';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:radar_labor/app/app_providers.dart';
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
-import 'package:radar_labor/core/constants/operations_constants.dart';
 import 'package:radar_labor/core/l10n/name_collation.dart';
 import 'package:radar_labor/features/operations/domain/attendance_summary.dart';
 import 'package:radar_labor/features/operations/domain/conflict_detector.dart';
@@ -12,19 +10,20 @@ import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
 import 'package:radar_labor/features/operations/domain/site_attendance_store.dart';
 import 'package:radar_labor/features/operations/presentation/state/site_attendance_state.dart';
+import 'package:radar_labor/features/operations/presentation/state/site_draft_persistence.dart';
 
 export 'package:radar_labor/features/operations/presentation/state/site_attendance_state.dart'
     show scopedSiteTeamsProvider;
 
 /// Controller for smart daily site attendance (PRD §8, §9, §10).
-final class SiteAttendanceNotifier extends Notifier<SiteAttendanceState> {
-  Timer? _draftTimer;
+final class SiteAttendanceNotifier extends Notifier<SiteAttendanceState>
+    with SiteDraftPersistence {
   ActorContext? _overrideActor;
   ScopeSnapshot? _overrideScope;
 
   @override
   SiteAttendanceState build() {
-    ref.onDispose(() => _draftTimer?.cancel());
+    ref.onDispose(() => draftTimer?.cancel());
     final today = _store.currentBusinessDate();
     return SiteAttendanceState(selectedDate: today, todayDate: today);
   }
@@ -119,7 +118,7 @@ final class SiteAttendanceNotifier extends Notifier<SiteAttendanceState> {
         arabic: _isArabic,
       );
       state = state.withLoadedDay(d, today);
-    } on OperationException catch (error) {
+    } on Exception catch (error) {
       _setFailure(error);
     }
   }
@@ -183,11 +182,7 @@ final class SiteAttendanceNotifier extends Notifier<SiteAttendanceState> {
       skippedDraftCount: 0,
       clearError: true,
     );
-    _draftTimer?.cancel();
-    _draftTimer = Timer(
-      OperationsConstants.draftDebounce,
-      () => unawaited(flushDraft()),
-    );
+    scheduleDraftWrite();
   }
 
   Future<List<CrossTeamWorkerOption>> searchGuests(String query) =>
@@ -212,7 +207,7 @@ final class SiteAttendanceNotifier extends Notifier<SiteAttendanceState> {
         baseline: state.baseline,
         arabic: _isArabic,
       );
-    } on OperationException catch (e) {
+    } on Exception catch (e) {
       _setFailure(e);
       return null;
     }
@@ -222,7 +217,7 @@ final class SiteAttendanceNotifier extends Notifier<SiteAttendanceState> {
     required PreparedSiteSave prepared,
     required Map<String, ConflictResolutionChoice> resolutions,
   }) async {
-    _draftTimer?.cancel();
+    draftTimer?.cancel();
     final ctx = _actorAndScope();
     if (ctx == null) return null;
     state = state.copyWith(isSaving: true, clearError: true);
@@ -241,7 +236,7 @@ final class SiteAttendanceNotifier extends Notifier<SiteAttendanceState> {
         lastSummary: res.summary,
       );
       return res;
-    } on OperationException catch (e) {
+    } on Exception catch (e) {
       _setFailure(e);
       return null;
     }
@@ -262,31 +257,23 @@ final class SiteAttendanceNotifier extends Notifier<SiteAttendanceState> {
       state = state.copyWith(clearUndoPlan: true, clearSummary: true);
       await _load(team: team, date: state.selectedDate);
       return true;
-    } on OperationException catch (e) {
+    } on Exception catch (e) {
       _setFailure(e);
       return false;
     }
   }
 
-  Future<void> flushDraft() async {
-    final pending = _draftTimer;
-    if (pending == null || !pending.isActive) return;
-    pending.cancel();
-    final team = state.selectedTeam;
-    if (team == null) return;
-    final drafts = ref.read(attendanceDraftStoreProvider);
-    await drafts.writeDraft(
-      teamId: team.id,
-      date: state.selectedDate,
-      workerIds: state.selectedActiveWorkerIds,
+  void _setFailure(Exception e) {
+    if (e is! OperationException) {
+      debugPrint('Site save/load: ${e.runtimeType}');
+    }
+    final failure = e is OperationException ? e.failure : const SaveFailed();
+    state = state.copyWith(
+      isLoading: false,
+      isSaving: false,
+      errorMessage: OperationFailureMessage.of(failure, _isArabic),
     );
   }
-
-  void _setFailure(OperationException e) => state = state.copyWith(
-    isLoading: false,
-    isSaving: false,
-    errorMessage: OperationFailureMessage.of(e.failure, _isArabic),
-  );
 }
 
 final siteAttendanceNotifierProvider =

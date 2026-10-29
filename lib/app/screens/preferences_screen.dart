@@ -1,11 +1,12 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/local_accounts_screen.dart';
+import 'package:radar_labor/app/widgets/settings_section_header.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
 
-/// Screen for application settings and user preferences.
+/// Screen for application settings, organized into labelled groups.
 final class PreferencesScreen extends StatelessWidget {
   const PreferencesScreen({
     required this.arabic,
@@ -26,6 +27,9 @@ final class PreferencesScreen extends StatelessWidget {
   final VoidCallback onLogout;
   final VoidCallback onChangePassword;
 
+  bool get _canManageUsers =>
+      account.role == AuthRole.projectManager || account.role == AuthRole.hr;
+
   @override
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.all(16),
@@ -34,7 +38,7 @@ final class PreferencesScreen extends StatelessWidget {
         AppStrings.settingsTab(arabic),
         style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
       ),
-      const SizedBox(height: 12),
+      SettingsSectionHeader(title: AppStrings.settingsGeneral(arabic)),
       Card(
         child: ListTile(
           leading: const Icon(Icons.translate),
@@ -57,6 +61,7 @@ final class PreferencesScreen extends StatelessWidget {
           ),
         ),
       ),
+      SettingsSectionHeader(title: AppStrings.settingsAccount(arabic)),
       Card(
         child: ListTile(
           leading: const Icon(Icons.key_outlined),
@@ -64,8 +69,15 @@ final class PreferencesScreen extends StatelessWidget {
           onTap: onChangePassword,
         ),
       ),
-      if (account.role == AuthRole.projectManager ||
-          account.role == AuthRole.hr)
+      Card(
+        child: ListTile(
+          leading: const Icon(Icons.logout),
+          title: Text(AppStrings.signOut(arabic)),
+          onTap: onLogout,
+        ),
+      ),
+      if (_canManageUsers) ...[
+        SettingsSectionHeader(title: AppStrings.settingsAdministration(arabic)),
         Card(
           child: ListTile(
             leading: const Icon(Icons.manage_accounts_outlined),
@@ -78,13 +90,8 @@ final class PreferencesScreen extends StatelessWidget {
             ),
           ),
         ),
-      Card(
-        child: ListTile(
-          leading: const Icon(Icons.logout),
-          title: Text(AppStrings.signOut(arabic)),
-          onTap: onLogout,
-        ),
-      ),
+      ],
+      SettingsSectionHeader(title: AppStrings.settingsAboutDevice(arabic)),
       Card(
         child: ListTile(
           leading: const Icon(Icons.lock_outline),

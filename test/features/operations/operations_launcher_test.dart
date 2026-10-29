@@ -25,8 +25,11 @@ void main() {
     (tester) async {
       final db = AppDatabase(NativeDatabase.memory());
       final clock = _FixedClock();
-      final events =
-          EventRepository(database: db, deviceId: 'dev-1', clock: clock);
+      final events = EventRepository(
+        database: db,
+        deviceId: 'dev-1',
+        clock: clock,
+      );
       final repo = OperationsRepository(database: db, events: events);
 
       final controller = OperationsController(

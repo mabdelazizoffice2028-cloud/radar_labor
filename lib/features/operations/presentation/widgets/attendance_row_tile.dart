@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/l10n/operations_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/operations/domain/site_attendance_store.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/search_highlight_text.dart';
 
 /// Accessible 64dp worker row tile for smart daily check-in (PRD §8.1, §17.1).
 class AttendanceRowTile extends StatelessWidget {
@@ -10,6 +11,7 @@ class AttendanceRowTile extends StatelessWidget {
     required this.arabic,
     required this.onToggle,
     this.onRemoveGuest,
+    this.searchQuery = '',
     super.key,
   });
 
@@ -17,6 +19,7 @@ class AttendanceRowTile extends StatelessWidget {
   final bool arabic;
   final VoidCallback onToggle;
   final VoidCallback? onRemoveGuest;
+  final String searchQuery;
 
   @override
   Widget build(BuildContext context) {
@@ -74,8 +77,9 @@ class AttendanceRowTile extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            name,
+                          SearchHighlightText(
+                            text: name,
+                            query: searchQuery,
                             style: Theme.of(context).textTheme.bodyLarge
                                 ?.copyWith(fontWeight: FontWeight.w600),
                           ),
@@ -84,8 +88,9 @@ class AttendanceRowTile extends StatelessWidget {
                             spacing: AppTokens.space8,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
-                              Text(
-                                row.worker.code,
+                              SearchHighlightText(
+                                text: row.worker.code,
+                                query: searchQuery,
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                               if (badgeText != null)

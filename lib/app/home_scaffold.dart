@@ -252,8 +252,13 @@ final class _HomeScaffoldState extends ConsumerState<HomeScaffold> {
       if (verified == null) return _toast(AppStrings.passwordIncorrect(ar));
       await auth.changePassword(verified, values.$2);
       _toast(AppStrings.passwordChanged(ar));
-    } on Exception {
-      _toast(AppStrings.passwordIncorrect(ar));
+    } on AccountLockedException {
+      _toast(AppStrings.accountLocked(ar));
+    } on AccountDeactivatedException {
+      _toast(AppStrings.accountDisabled(ar));
+    } on Exception catch (error) {
+      debugPrint('Password change failed (${error.runtimeType}).');
+      _toast(AppStrings.passwordChangeFailed(ar));
     }
   }
 

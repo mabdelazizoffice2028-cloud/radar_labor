@@ -141,6 +141,16 @@ final class _WorkersScreenState extends State<WorkersScreen> {
     }
 
     try {
+      final trimmedCode = code.text.trim();
+      final existing =
+          await (widget.database.select(widget.database.employees)..where(
+                (e) => e.employeeCode.lower().equals(trimmedCode.toLowerCase()),
+              ))
+              .get();
+      if (existing.isNotEmpty) {
+        _showMessage(AppStrings.workerCodeExists(widget.arabic));
+        return;
+      }
       await widget.database
           .into(widget.database.employees)
           .insert(
@@ -158,13 +168,16 @@ final class _WorkersScreenState extends State<WorkersScreen> {
               housingId: drift.Value(selectedHousing),
             ),
           );
-    } on Exception {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.workerCodeExists(widget.arabic))),
-        );
-      }
+    } on Exception catch (error) {
+      debugPrint('Add worker failed (${error.runtimeType}).');
+      _showMessage(AppStrings.workerSaveFailed(widget.arabic));
     }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override

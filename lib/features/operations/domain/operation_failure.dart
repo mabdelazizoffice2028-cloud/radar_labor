@@ -59,6 +59,11 @@ final class RosterWipeNotConfirmed extends OperationFailure {
   const RosterWipeNotConfirmed();
 }
 
+/// Server synchronization failed for a reason other than being offline.
+final class SyncFailed extends OperationFailure {
+  const SyncFailed();
+}
+
 /// Typed exception wrapping an [OperationFailure] (replaces OperationPermissionException).
 final class OperationException implements Exception {
   const OperationException(this.failure);
@@ -85,5 +90,6 @@ abstract final class OperationFailureMessage {
     SessionRevoked() => OperationsStrings.errSessionRevoked(ar),
     ActivationRequired() => OperationsStrings.errActivationRequired(ar),
     RosterWipeNotConfirmed() => OperationsStrings.errRosterWipeNotConfirmed(ar),
+    SyncFailed() => OperationsStrings.errSyncFailed(ar),
   };
 }

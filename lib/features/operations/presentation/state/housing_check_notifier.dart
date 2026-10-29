@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:radar_labor/app/app_providers.dart';
 import 'package:radar_labor/core/constants/operations_constants.dart';
@@ -8,6 +9,7 @@ import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/core/time/clock.dart';
 import 'package:radar_labor/features/operations/domain/attendance_ledger.dart';
 import 'package:radar_labor/features/operations/domain/housing_draft_store.dart';
+import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
 import 'package:radar_labor/features/operations/domain/operations_store.dart';
 import 'package:radar_labor/features/operations/presentation/state/housing_check_state.dart';
@@ -26,6 +28,17 @@ final class HousingCheckNotifier extends Notifier<HousingCheckState> {
   }
 
   Clock get _clock => ref.read(clockProvider);
+  bool get _isArabic => ref.read(appLocaleProvider) == 'ar';
+
+  /// Maps any failure to a localized message; never exposes technical text.
+  String _failureMessage(Exception error) {
+    if (error is OperationException) {
+      return OperationFailureMessage.of(error.failure, _isArabic);
+    }
+    debugPrint('Housing check failed (${error.runtimeType}).');
+    return OperationFailureMessage.of(const SaveFailed(), _isArabic);
+  }
+
   OperationsStore get _opsStore => ref.read(operationsRepositoryProvider);
   HousingDraftStore get _draftStore => ref.read(housingDraftStoreProvider);
   EventRepository get _eventRepo => ref.read(eventRepositoryProvider);
@@ -114,7 +127,11 @@ final class HousingCheckNotifier extends Notifier<HousingCheckState> {
   }
 
   void _updateRows(List<HousingWorkerRow> rows) {
-    state = state.copyWith(rows: List.unmodifiable(rows), clearError: true);
+    state = state.copyWith(
+      rows: List.unmodifiable(rows),
+      clearError: true,
+      hasUnsavedChanges: true,
+    );
     _draftTimer?.cancel();
     _draftTimer = Timer(
       OperationsConstants.draftDebounce,
@@ -122,20 +139,27 @@ final class HousingCheckNotifier extends Notifier<HousingCheckState> {
     );
   }
 
-  Future<void> flushDraft() async {
-    final pending = _draftTimer;
-    if (pending != null && pending.isActive) pending.cancel();
+  /// Persists pending edits now. Returns false when the draft write failed.
+  Future<bool> flushDraft() async {
+    _draftTimer?.cancel();
     final housing = state.selectedHousing;
     if (housing == null || state.rows.isEmpty || state.hasSavedRecordToday) {
-      return;
+      return true;
     }
-    await _draftStore.writeDraft(
-      housingId: housing.id,
-      date: state.selectedDate,
-      reviewedWorkerIds: state.reviewedWorkerIds,
-      absentWorkerIds: state.absentWorkerIds,
-    );
-    state = state.copyWith(hasDraftSaved: true);
+    if (!state.hasUnsavedChanges) return true;
+    try {
+      await _draftStore.writeDraft(
+        housingId: housing.id,
+        date: state.selectedDate,
+        reviewedWorkerIds: state.reviewedWorkerIds,
+        absentWorkerIds: state.absentWorkerIds,
+      );
+      state = state.copyWith(hasDraftSaved: true, hasUnsavedChanges: false);
+      return true;
+    } on Exception catch (error) {
+      state = state.copyWith(errorMessage: _failureMessage(error));
+      return false;
+    }
   }
 
   Future<void> _load({
@@ -150,72 +174,38 @@ final class HousingCheckNotifier extends Notifier<HousingCheckState> {
       isPastDate: date.compareTo(today) < 0,
       isLoading: true,
       clearError: true,
+      hasUnsavedChanges: false,
     );
 
     try {
       final workers = await _opsStore.watchHousingWorkers(housing.id).first;
-      final events = await _eventRepo.readBusinessDate(date);
-      final ledger = AttendanceLedger(events);
-
-      if (ledger.isHousingChecked(housing.id)) {
-        final absent = ledger.absentWorkerIdsForHousing(housing.id);
-        final rows = [
-          for (final w in workers)
-            HousingWorkerRow(
-              worker: w,
-              reviewState: absent.contains(w.id)
-                  ? HousingReviewState.absent
-                  : HousingReviewState.reviewedPresent,
-            ),
-        ];
-        state = state.copyWith(
-          isLoading: false,
-          rows: List.unmodifiable(rows),
-          hasSavedRecordToday: true,
-          hasDraftSaved: false,
-        );
-        return;
-      }
-
-      final draft = await _draftStore.readDraft(
-        housingId: housing.id,
-        date: date,
-      );
-      if (draft != null) {
-        final absentSet = draft.absentWorkerIds.toSet();
-        final rows = [
-          for (final w in workers)
-            HousingWorkerRow(
-              worker: w,
-              reviewState: absentSet.contains(w.id)
-                  ? HousingReviewState.absent
-                  : HousingReviewState.reviewedPresent,
-            ),
-        ];
-        state = state.copyWith(
-          isLoading: false,
-          rows: List.unmodifiable(rows),
-          hasSavedRecordToday: false,
-          hasDraftSaved: true,
-        );
-        return;
-      }
-
-      final rows = [
-        for (final w in workers)
-          HousingWorkerRow(
-            worker: w,
-            reviewState: HousingReviewState.reviewedPresent,
-          ),
-      ];
+      final ledger = AttendanceLedger(await _eventRepo.readBusinessDate(date));
+      final saved = ledger.isHousingChecked(housing.id);
+      final draft = saved
+          ? null
+          : await _draftStore.readDraft(housingId: housing.id, date: date);
+      final absent = saved
+          ? ledger.absentWorkerIdsForHousing(housing.id)
+          : draft?.absentWorkerIds.toSet();
       state = state.copyWith(
         isLoading: false,
-        rows: List.unmodifiable(rows),
-        hasSavedRecordToday: false,
-        hasDraftSaved: false,
+        rows: List.unmodifiable([
+          for (final w in workers)
+            HousingWorkerRow(
+              worker: w,
+              reviewState: (absent?.contains(w.id) ?? false)
+                  ? HousingReviewState.absent
+                  : HousingReviewState.reviewedPresent,
+            ),
+        ]),
+        hasSavedRecordToday: saved,
+        hasDraftSaved: draft != null,
       );
     } on Exception catch (error) {
-      state = state.copyWith(isLoading: false, errorMessage: error.toString());
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: _failureMessage(error),
+      );
     }
   }
 
@@ -254,7 +244,10 @@ final class HousingCheckNotifier extends Notifier<HousingCheckState> {
       );
       return undo;
     } on Exception catch (error) {
-      state = state.copyWith(isSaving: false, errorMessage: error.toString());
+      state = state.copyWith(
+        isSaving: false,
+        errorMessage: _failureMessage(error),
+      );
       return null;
     }
   }
@@ -270,7 +263,7 @@ final class HousingCheckNotifier extends Notifier<HousingCheckState> {
       }
       return true;
     } on Exception catch (error) {
-      state = state.copyWith(errorMessage: error.toString());
+      state = state.copyWith(errorMessage: _failureMessage(error));
       return false;
     }
   }

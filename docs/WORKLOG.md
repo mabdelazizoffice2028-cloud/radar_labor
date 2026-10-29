@@ -4,6 +4,55 @@ Append one dated handoff entry for each model/session. Keep prior entries so the
 next model can understand decisions and recoveries. The newest handoff is at the
 top of the log.
 
+## 2026-10-26 — Senior Engineering Overhaul (Phases 1-5: Error Boundaries, Team Entry Point, Login UX, Focused Task Screens & Field Improvements)
+
+- **Owner request:**
+  1. Phase 1 (Error Boundaries & Sync Outcome): Replace swallowed catches and technical error messages with typed `OperationException`, `OperationFailureMessage.of()`, and localized user feedback in `auth_gate.dart`, `workers_screen.dart`, `local_accounts_screen.dart`, and `operation_sync_helper.dart`. Show offline only when offline is verified; show distinct localized failure when sync fails.
+  2. Phase 2 (Missing Team Entry Point): Observe scoped `watchTeams()` in `operations_screen.dart` for `siteSupervisor`. Distinguish loading, error, and empty-team states. Show `noTeamsYetSupervisor` guidance with `createNewTeam` button launching `TeamWizardScreen`.
+  3. Phase 3 (Login UX): Replace role cards with localized dropdown in `RolePicker`. Update housing supervisor role label to "Campus" / "السكن". Make login form compact and top-aligned with responsive password/login row. Add `MediaQuery.viewInsetsOf(context).bottom` so keyboard never blocks login.
+  4. Phase 4 (Focused Task & Settings Screens): Keep Site Attendance screen focused on team, date, workers, count, and save action. Move secondary actions (clear all, add guest, edit team) to `SiteAttendanceMoreMenu`. Organize Preferences into labelled sections (`SettingsSectionHeader`).
+  5. Phase 5 (Field-Use Improvements): Light haptic feedback (`FieldHaptics`) on worker attendance toggle. Translucent search query highlighting (`SearchHighlightText`). Warn on exit only when changes are unsaved (`UnsavedChangesGuard`), safely treating persisted local drafts as stored data. Green SnackBar feedback only on confirmed server sync (`OperationSyncOutcome.synced`).
+  6. Code & Verification Standards: All `.dart` files strictly under 300 lines. Standalone extracted widget files. Zero issues in `flutter analyze --no-pub`. 100% pass in `flutter test --no-pub`.
+- **Changes applied:**
+  - `lib/features/operations/domain/operation_failure.dart`: Added `SyncFailed` domain failure and localized mapping.
+  - `lib/features/operations/domain/operation_sync_outcome.dart`: Created typed `OperationSyncOutcome` enum with classification and `isConfirmedSuccess`.
+  - `lib/features/operations/presentation/widgets/operation_sync_helper.dart`: Rewrote sync helper with accurate statusSnackBar (green only on confirmed server sync, amber for offline/pending).
+  - `lib/core/l10n/operations_strings.dart`: Added `syncPendingMessage`, `errSyncFailed`, `teamsLoadFailed`, `unsavedChangesTitle`, `unsavedChangesBody`, `stayAction`, `leaveAction`.
+  - `lib/core/l10n/auth_flow_strings.dart`: Changed `housingSupervisorRole` to "Campus" / "السكن"; added `loadFailed`.
+  - `lib/core/l10n/app_strings.dart`: Added `passwordChangeFailed`, `workerSaveFailed`, and Preferences section titles (`settingsGeneral`, `settingsAccount`, `settingsAdministration`, `settingsAboutDevice`).
+  - `lib/core/l10n/admin_strings.dart`: Added `accountsLoadError`.
+  - `lib/app/auth_gate.dart`: Top-aligned layout with `viewInsets.bottom` padding to prevent keyboard overlap; replaced raw exception string with localized `loadFailed`.
+  - `lib/app/login/role_picker.dart`: Replaced large cards with compact localized `DropdownButtonFormField<AuthRole>`.
+  - `lib/app/widgets/auth_login_form.dart`: Compact top-aligned layout. Extracted `LoginPasswordRow`, `LoginAccountPicker`, `LoginErrorBanner`.
+  - `lib/app/screens/workers_screen.dart`: Prevent duplicate worker code check before insert; localized error messages.
+  - `lib/app/screens/preferences_screen.dart`: Organized settings into clear semantic groups with `SettingsSectionHeader`.
+  - `lib/features/operations/presentation/widgets/no_teams_empty_state.dart`: Extracted empty-state guidance with `createNewTeam` button.
+  - `lib/features/operations/presentation/widgets/site_supervisor_teams_gate.dart`: Scoped team stream gate handling loading, error, empty, and populated team states.
+  - `lib/features/operations/presentation/operations_screen.dart`: Integrated `SiteSupervisorTeamsGate` for `siteSupervisor`.
+  - `lib/features/operations/presentation/widgets/site_attendance_more_menu.dart`: Extracted overflow menu for low-frequency actions (clear all, add guest, edit team).
+  - `lib/features/operations/presentation/widgets/site_attendance_header.dart`: Streamlined header to primary team dropdown, date bar, and select-all button.
+  - `lib/core/ui/field_haptics.dart`: Added safe light impact haptic feedback for field toggles.
+  - `lib/features/operations/domain/search_match.dart`: Pure segment splitter for search query matches.
+  - `lib/features/operations/presentation/widgets/search_highlight_text.dart`: Translucent highlighted text widget preserving present/absent state styling.
+  - `lib/features/operations/presentation/widgets/attendance_row_tile.dart` & `housing_worker_tile.dart`: Integrated `SearchHighlightText`.
+  - `lib/features/operations/presentation/widgets/unsaved_changes_guard.dart`: Exit guard checking unsaved edits, automatically flushing local drafts without false warnings.
+  - `lib/features/operations/presentation/state/site_draft_persistence.dart`: Extracted draft persistence mixin for site attendance.
+  - `lib/features/operations/presentation/state/site_attendance_state.dart` & `housing_check_state.dart`: Added `hasUnsavedChanges` tracking.
+  - `lib/features/operations/presentation/site_attendance_screen.dart` & `housing_check_screen.dart`: Wrapped in `UnsavedChangesGuard`, added haptics on toggle.
+  - `test/app/login_flow_test.dart`: Updated login tests for role dropdown and keyboard/form layout.
+  - `test/features/operations/team_entry_point_test.dart`: Added 5 unit/widget tests for site supervisor loading, error, and empty-team states.
+  - `test/features/operations/field_use_and_sync_test.dart`: Added 9 unit/widget tests covering search highlighting, sync outcomes, unsaved changes guard, and secondary menu.
+- **Verification observed:**
+  - Architecture tests: `test/architecture/architecture_test.dart` passed 5/5.
+  - File size compliance: 100% of `.dart` files in `lib/` are `<= 300` lines (max file is 299 lines).
+  - Static analysis: `flutter analyze --no-pub` reported **No issues found!**.
+  - Automated tests: `flutter test --no-pub` ran **160/160 tests passed (100% pass rate)**.
+  - Release build: `flutter build apk --release --no-pub` completed successfully in 206.5s.
+  - Overwrote release APK at `outputs/Radar Labour.apk`:
+    - Exact file size: **70,013,143 bytes** (~66.77 MB).
+    - SHA-256: `21DB373CD088D8336B4B50D36CC372067059AAC11EA4198401F1AAF36DAA0EB0`.
+
+
 ## 2026-10-26 — Strict Architectural & UX Refactoring (Launcher Hub, Binary Housing & Explicit Sync)
 
 - **Owner request:**

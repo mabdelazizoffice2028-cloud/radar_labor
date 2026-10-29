@@ -78,9 +78,10 @@ final class _AuthGateState extends State<AuthGate> {
         _error = null;
       });
     } on Object catch (e) {
+      debugPrint('Sign-in data load failed (${e.runtimeType}).');
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          _error = AuthFlowStrings.loadFailed(_arabic);
           _loading = false;
         });
       }
@@ -130,7 +131,8 @@ final class _AuthGateState extends State<AuthGate> {
       if (mounted) setState(() => _error = AppStrings.accountLocked(_arabic));
     } on AccountDeactivatedException catch (_) {
       if (mounted) setState(() => _error = AppStrings.accountDisabled(_arabic));
-    } on Object catch (_) {
+    } on Object catch (e) {
+      debugPrint('Sign-in failed (${e.runtimeType}).');
       if (mounted) {
         setState(() => _error = AuthFlowStrings.signInFailed(_arabic));
       }
@@ -140,8 +142,12 @@ final class _AuthGateState extends State<AuthGate> {
   }
 
   Future<void> _switchAccount() async {
-    final settings = LocalSettingsRepository(widget.database);
-    await settings.delete(AppSettingKeys.lastLoggedInAccountId);
+    try {
+      final settings = LocalSettingsRepository(widget.database);
+      await settings.delete(AppSettingKeys.lastLoggedInAccountId);
+    } on Exception catch (e) {
+      debugPrint('Forgetting remembered account failed (${e.runtimeType}).');
+    }
     _flowNotifier.switchAccount();
     if (mounted) setState(() => _error = null);
   }
@@ -163,8 +169,16 @@ final class _AuthGateState extends State<AuthGate> {
         title: Text(AppStrings.appTitle(_arabic)),
         centerTitle: true,
       ),
-      body: Center(
+      resizeToAvoidBottomInset: false,
+      body: Align(
+        alignment: Alignment.topCenter,
         child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            AppTokens.space8,
+            AppTokens.space8,
+            AppTokens.space8,
+            AppTokens.space8 + MediaQuery.viewInsetsOf(context).bottom,
+          ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
             child: Card(
@@ -202,10 +216,6 @@ final class _AuthGateState extends State<AuthGate> {
                           onRoleSelected: (role) {
                             setState(() => _error = null);
                             _flowNotifier.selectRole(role);
-                          },
-                          onClearRole: () {
-                            setState(() => _error = null);
-                            _flowNotifier.clearRole();
                           },
                           onAccountChanged: (id) {
                             setState(() => _error = null);

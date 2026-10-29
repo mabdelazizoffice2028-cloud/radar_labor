@@ -44,9 +44,10 @@ final class _LocalAccountsScreenState extends State<LocalAccountsScreen> {
       if (mounted) {
         setState(() => (_data = data, _error = null));
       }
-    } on Exception catch (_) {
+    } on Exception catch (e) {
+      debugPrint('Accounts load failed (${e.runtimeType}).');
       if (mounted) {
-        setState(() => _error = AdminStrings.accountUpdateError(_ar));
+        setState(() => _error = AdminStrings.accountsLoadError(_ar));
       }
     }
   }
@@ -63,7 +64,8 @@ final class _LocalAccountsScreenState extends State<LocalAccountsScreen> {
       if (mounted) {
         setState(() => _error = AdminStrings.accountConflictError(_ar));
       }
-    } on Object catch (_) {
+    } on Object catch (e) {
+      debugPrint('Account action failed (${e.runtimeType}).');
       if (mounted) setState(() => _error = failure);
     } finally {
       if (mounted) setState(() => _busy = false);

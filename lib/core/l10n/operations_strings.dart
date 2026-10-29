@@ -24,6 +24,9 @@ abstract final class OperationsStrings {
   static String noTeamsYetSupervisor(bool ar) => ar
       ? 'ليس لديك فريق بعد. أنشئ فريقًا لتبدأ التسجيل.'
       : 'You have no team yet. Create one to start recording.';
+  static String teamsLoadFailed(bool ar) => ar
+      ? 'تعذر تحميل فرقك. أغلق الشاشة وافتحها من جديد.'
+      : 'Could not load your teams. Close this screen and open it again.';
 
   static String workersSelected(bool ar, int n) {
     if (!ar) {
@@ -177,6 +180,16 @@ abstract final class OperationsStrings {
   static String syncOfflineFallbackMessage(bool ar) => ar
       ? 'تم الحفظ محلياً (سيتم الرفع عند توفر الشبكة)'
       : 'Saved locally (will upload when online)';
+  static String syncPendingMessage(bool ar) => ar
+      ? 'تم الحفظ على هذا الجهاز، والمزامنة مع السيرفر معلّقة.'
+      : 'Saved on this device. Server sync is still pending.';
+  static String unsavedChangesTitle(bool ar) =>
+      ar ? 'تغييرات غير محفوظة' : 'Unsaved changes';
+  static String unsavedChangesBody(bool ar) => ar
+      ? 'تعذر حفظ تغييراتك على هذا الجهاز. إذا غادرت الآن ستفقدها.'
+      : 'Your changes could not be stored on this device. Leaving now will lose them.';
+  static String stayAction(bool ar) => ar ? 'البقاء' : 'Stay';
+  static String leaveAction(bool ar) => ar ? 'مغادرة' : 'Leave';
   static String selectAbsentWorkersHint(bool ar) => ar
       ? 'ضع علامة على العامل الغائب فقط'
       : 'Check only the workers who are ABSENT';
@@ -218,6 +231,9 @@ abstract final class OperationsStrings {
   static String errActivationRequired(bool ar) => ar
       ? 'اتصل بالإنترنت مرة واحدة لتفعيل هذا الجهاز.'
       : 'Connect to the internet once to activate this device.';
+  static String errSyncFailed(bool ar) => ar
+      ? 'تم الحفظ على هذا الجهاز، لكن فشلت المزامنة مع السيرفر. بياناتك محفوظة وستبقى معلّقة.'
+      : 'Saved on this device, but syncing with the server failed. Your data is safe and stays pending.';
   static String errRosterWipeNotConfirmed(bool ar) => ar
       ? 'أكّد المسح وصدّر نسخة احتياطية أولًا.'
       : 'Confirm the wipe and export a backup first.';

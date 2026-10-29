@@ -33,6 +33,7 @@ final class SiteAttendanceState {
     this.lastUndoPlan,
     this.lastSummary,
     this.errorMessage,
+    this.hasUnsavedChanges = false,
   });
 
   final EntityOption? selectedTeam;
@@ -50,6 +51,9 @@ final class SiteAttendanceState {
   final LedgerUndoPlan? lastUndoPlan;
   final AttendanceSummary? lastSummary;
   final String? errorMessage;
+
+  /// True while edits are not yet persisted as a local draft (or a draft write failed).
+  final bool hasUnsavedChanges;
 
   int get presentCount => rows.where((row) => row.isPresent).length;
 
@@ -92,6 +96,7 @@ final class SiteAttendanceState {
         clearInitialSourceDate: d.initialSourceDate == null,
         skippedDraftCount: d.skippedDraftCount,
         clearError: true,
+        hasUnsavedChanges: false,
       );
 
   SiteAttendanceState copyWith({
@@ -115,6 +120,7 @@ final class SiteAttendanceState {
     bool clearSummary = false,
     String? errorMessage,
     bool clearError = false,
+    bool? hasUnsavedChanges,
   }) => SiteAttendanceState(
     selectedTeam: clearSelectedTeam
         ? null
@@ -135,5 +141,6 @@ final class SiteAttendanceState {
     lastUndoPlan: clearUndoPlan ? null : (lastUndoPlan ?? this.lastUndoPlan),
     lastSummary: clearSummary ? null : (lastSummary ?? this.lastSummary),
     errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+    hasUnsavedChanges: hasUnsavedChanges ?? this.hasUnsavedChanges,
   );
 }

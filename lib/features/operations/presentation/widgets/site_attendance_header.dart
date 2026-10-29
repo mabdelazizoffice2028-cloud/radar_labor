@@ -4,6 +4,7 @@ import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
 import 'package:radar_labor/features/operations/presentation/state/site_attendance_state.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/attendance_date_bar.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/site_attendance_more_menu.dart';
 
 /// Top controls for team selection, date picker, bulk actions, and guest search.
 class SiteAttendanceHeader extends StatelessWidget {
@@ -31,6 +32,12 @@ class SiteAttendanceHeader extends StatelessWidget {
   final VoidCallback? onEditTeam;
   final ValueChanged<bool> onSelectAll;
   final VoidCallback onAddGuest;
+
+  void _onMenuAction(SiteAttendanceMenuAction action) => switch (action) {
+    SiteAttendanceMenuAction.clearAll => onSelectAll(false),
+    SiteAttendanceMenuAction.addFromAnotherTeam => onAddGuest(),
+    SiteAttendanceMenuAction.editTeam => onEditTeam?.call(),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -70,14 +77,11 @@ class SiteAttendanceHeader extends StatelessWidget {
                         onChanged: onTeamChanged,
                       ),
               ),
-              if (canEditTeam && onEditTeam != null) ...[
-                const SizedBox(width: AppTokens.space4),
-                IconButton(
-                  tooltip: OperationsStrings.editTeam(arabic),
-                  onPressed: onEditTeam,
-                  icon: const Icon(Icons.group_add_outlined),
-                ),
-              ],
+              SiteAttendanceMoreMenu(
+                arabic: arabic,
+                canEditTeam: canEditTeam && onEditTeam != null,
+                onSelected: _onMenuAction,
+              ),
             ],
           ),
           const SizedBox(height: AppTokens.space8),
@@ -92,26 +96,13 @@ class SiteAttendanceHeader extends StatelessWidget {
             onDateSelected: onDateSelected,
           ),
           const SizedBox(height: AppTokens.space8),
-          Wrap(
-            spacing: AppTokens.space8,
-            runSpacing: AppTokens.space4,
-            children: [
-              OutlinedButton.icon(
-                onPressed: () => onSelectAll(true),
-                icon: const Icon(Icons.done_all, size: 18),
-                label: Text(OperationsStrings.selectAll(arabic)),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => onSelectAll(false),
-                icon: const Icon(Icons.deselect, size: 18),
-                label: Text(OperationsStrings.clearAll(arabic)),
-              ),
-              OutlinedButton.icon(
-                onPressed: onAddGuest,
-                icon: const Icon(Icons.person_add_alt_1_outlined, size: 18),
-                label: Text(OperationsStrings.addFromAnotherTeam(arabic)),
-              ),
-            ],
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: OutlinedButton.icon(
+              onPressed: () => onSelectAll(true),
+              icon: const Icon(Icons.done_all, size: 18),
+              label: Text(OperationsStrings.selectAll(arabic)),
+            ),
           ),
         ],
       ),

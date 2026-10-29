@@ -6,6 +6,7 @@ import 'package:radar_labor/core/auth/scope_snapshot.dart';
 import 'package:radar_labor/core/constants/operations_constants.dart';
 import 'package:radar_labor/core/l10n/operations_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
+import 'package:radar_labor/core/ui/field_haptics.dart';
 import 'package:radar_labor/features/operations/domain/conflict_detector.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
 import 'package:radar_labor/features/operations/domain/team_setup_store.dart';
@@ -21,6 +22,7 @@ import 'package:radar_labor/features/operations/presentation/widgets/operation_s
 import 'package:radar_labor/features/operations/presentation/widgets/operation_whatsapp_dialog.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/site_attendance_header.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/site_worker_list_view.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/unsaved_changes_guard.dart';
 
 /// Smart daily site attendance screen with dedicated back button navigation.
 final class SiteAttendanceScreen extends ConsumerStatefulWidget {
@@ -241,7 +243,10 @@ final class _SiteAttendanceScreenState
                 state: state,
                 selected: selected,
                 arabic: ar,
-                onToggle: notifier.toggleWorker,
+                onToggle: (id) {
+                  unawaited(FieldHaptics.attendanceChanged());
+                  notifier.toggleWorker(id);
+                },
                 onRemoveGuest: notifier.removeGuestWorker,
               ),
             ),
@@ -262,7 +267,12 @@ final class _SiteAttendanceScreenState
         appBar: AppBar(
           title: Text(OperationsStrings.startSiteAttendanceAction(ar)),
         ),
-        body: content,
+        body: UnsavedChangesGuard(
+          hasUnsavedChanges: state.hasUnsavedChanges,
+          persistDraft: notifier.flushDraft,
+          arabic: ar,
+          child: content,
+        ),
       );
     }
     return content;

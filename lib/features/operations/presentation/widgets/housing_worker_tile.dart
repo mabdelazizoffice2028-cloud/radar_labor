@@ -3,6 +3,7 @@ import 'package:radar_labor/core/l10n/housing_review_strings.dart';
 import 'package:radar_labor/core/l10n/operations_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/operations/presentation/state/housing_check_state.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/search_highlight_text.dart';
 
 /// Single worker card with clean binary absence checkbox (Phase 4 refactored).
 final class HousingWorkerTile extends StatelessWidget {
@@ -10,12 +11,19 @@ final class HousingWorkerTile extends StatelessWidget {
     required this.row,
     required this.arabic,
     required this.onStateChanged,
+    this.searchQuery = '',
     super.key,
   });
 
   final HousingWorkerRow row;
   final bool arabic;
   final ValueChanged<HousingReviewState> onStateChanged;
+  final String searchQuery;
+
+  static const _codeStyle = TextStyle(
+    color: AppTokens.textSecondary,
+    fontSize: 13,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -61,20 +69,28 @@ final class HousingWorkerTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      worker.displayName(arabic: arabic),
+                    SearchHighlightText(
+                      text: worker.displayName(arabic: arabic),
+                      query: searchQuery,
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      '${OperationsStrings.codeLabel(arabic)}: ${worker.code}',
-                      style: const TextStyle(
-                        color: AppTokens.textSecondary,
-                        fontSize: 13,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${OperationsStrings.codeLabel(arabic)}: ',
+                          style: _codeStyle,
+                        ),
+                        SearchHighlightText(
+                          text: worker.code,
+                          query: searchQuery,
+                          style: _codeStyle,
+                        ),
+                      ],
                     ),
                   ],
                 ),

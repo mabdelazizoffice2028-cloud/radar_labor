@@ -47,6 +47,7 @@ final class HousingCheckState {
     this.hasDraftSaved = false,
     this.lastUndo,
     this.errorMessage,
+    this.hasUnsavedChanges = false,
   });
 
   final EntityOption? selectedHousing;
@@ -61,6 +62,9 @@ final class HousingCheckState {
   final bool hasDraftSaved;
   final HousingCheckUndo? lastUndo;
   final String? errorMessage;
+
+  /// True while edits are not yet persisted as a local draft (or a draft write failed).
+  final bool hasUnsavedChanges;
 
   int get totalCount => rows.length;
   int get unreviewedCount =>
@@ -110,6 +114,7 @@ final class HousingCheckState {
     bool clearUndo = false,
     String? errorMessage,
     bool clearError = false,
+    bool? hasUnsavedChanges,
   }) => HousingCheckState(
     selectedHousing: clearSelectedHousing
         ? null
@@ -125,5 +130,6 @@ final class HousingCheckState {
     hasDraftSaved: hasDraftSaved ?? this.hasDraftSaved,
     lastUndo: clearUndo ? null : (lastUndo ?? this.lastUndo),
     errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+    hasUnsavedChanges: hasUnsavedChanges ?? this.hasUnsavedChanges,
   );
 }

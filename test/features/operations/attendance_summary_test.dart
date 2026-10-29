@@ -130,7 +130,7 @@ void main() {
       summary.messageText,
       [
         'Date: 2026-10-23',
-        'Housing: Housing',
+        'Campus: Housing',
         'Total Absent: 0',
         '',
         'No absences',

@@ -80,7 +80,8 @@ final class AppLocaleNotifier extends Notifier<String> {
       if (saved != null && (saved == 'en' || saved == 'ar')) {
         state = saved;
       }
-    } on Exception {
+    } on Exception catch (error) {
+      debugPrint('Locale read failed (${error.runtimeType}).');
       // Fall back to default English locale if read fails.
     }
   }
@@ -91,7 +92,8 @@ final class AppLocaleNotifier extends Notifier<String> {
     try {
       final settings = ref.read(settingsRepositoryProvider);
       await settings.write('locale', locale);
-    } on Exception {
+    } on Exception catch (error) {
+      debugPrint('Locale save failed (${error.runtimeType}).');
       // Keep in-memory locale if persistence fails.
     }
   }
@@ -229,6 +231,9 @@ final remoteSyncGatewayProvider = Provider<RemoteSyncGateway>((ref) {
     return const OfflineRemoteSyncGateway();
   } catch (error) {
     // Supabase.instance throws (e.g. AssertionError) when uninitialized.
+    debugPrint(
+      'Supabase uninitialized; using offline gateway (${error.runtimeType}).',
+    );
     return const OfflineRemoteSyncGateway();
   }
 });

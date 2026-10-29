@@ -44,6 +44,7 @@ class SiteWorkerListView extends StatelessWidget {
         return AttendanceRowTile(
           row: row,
           arabic: arabic,
+          searchQuery: state.searchQuery,
           onToggle: () => onToggle(row.worker.id),
           onRemoveGuest: row.isGuest
               ? () => onRemoveGuest(row.worker.id)

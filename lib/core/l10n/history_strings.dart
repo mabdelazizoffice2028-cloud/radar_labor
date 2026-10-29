@@ -40,7 +40,7 @@ abstract final class HistoryStrings {
 
   static String whatsappTeamLabel(bool ar) => ar ? 'الفريق' : 'Team';
 
-  static String whatsappHousingLabel(bool ar) => ar ? 'السكن' : 'Housing';
+  static String whatsappHousingLabel(bool ar) => ar ? 'السكن' : 'Campus';
 
   static String whatsappTotalPresent(bool ar) =>
       ar ? 'إجمالي الحضور' : 'Total Present';

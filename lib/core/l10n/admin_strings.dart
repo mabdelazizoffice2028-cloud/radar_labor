@@ -82,6 +82,9 @@ final class AdminStrings {
   static String accountUpdateError(bool ar) =>
       ar ? 'تعذر حفظ التعديل' : 'Could not save changes';
 
+  static String accountsLoadError(bool ar) =>
+      ar ? 'تعذر تحميل الحسابات' : 'Could not load accounts';
+
   static String nameRequired(bool ar) =>
       ar ? 'الاسم مطلوب' : 'Name is required';
 

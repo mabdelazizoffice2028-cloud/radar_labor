@@ -6,6 +6,7 @@ import 'package:radar_labor/core/auth/scope_snapshot.dart';
 import 'package:radar_labor/core/constants/operations_constants.dart';
 import 'package:radar_labor/core/l10n/operations_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
+import 'package:radar_labor/core/ui/field_haptics.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
 import 'package:radar_labor/features/operations/presentation/state/housing_check_notifier.dart';
 import 'package:radar_labor/features/operations/presentation/state/operations_controller.dart';
@@ -13,6 +14,7 @@ import 'package:radar_labor/features/operations/presentation/widgets/housing_wor
 import 'package:radar_labor/features/operations/presentation/widgets/operation_confirm_sync_dialog.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/operation_sync_helper.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/operation_whatsapp_dialog.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/unsaved_changes_guard.dart';
 
 /// Dedicated full-screen Campus Absences check screen with back navigation.
 final class HousingCheckScreen extends ConsumerStatefulWidget {
@@ -42,143 +44,163 @@ final class _HousingCheckScreenState extends ConsumerState<HousingCheckScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(OperationsStrings.startCampusCheckAction(ar))),
-      body: StreamBuilder<List<EntityOption>>(
-        stream: widget.controller.watchHousings(),
-        builder: (context, housingSnapshot) {
-          final housings = housingSnapshot.data ?? const <EntityOption>[];
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) unawaited(notifier.ensureInitialHousing(housings));
-          });
+      body: UnsavedChangesGuard(
+        hasUnsavedChanges: state.hasUnsavedChanges,
+        persistDraft: notifier.flushDraft,
+        arabic: ar,
+        child: StreamBuilder<List<EntityOption>>(
+          stream: widget.controller.watchHousings(),
+          builder: (context, housingSnapshot) {
+            final housings = housingSnapshot.data ?? const <EntityOption>[];
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) unawaited(notifier.ensureInitialHousing(housings));
+            });
 
-          final selected = state.selectedHousing;
-          return Column(
-            children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTokens.space16,
-                  vertical: AppTokens.space8,
-                ),
-                color: AppTokens.statusUnknownSoft,
-                child: Text(
-                  OperationsStrings.selectAbsentWorkersHint(ar),
-                  style: const TextStyle(
-                    color: AppTokens.statusUnknown,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              if (housings.length > 1)
-                Padding(
+            final selected = state.selectedHousing;
+            return Column(
+              children: [
+                Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppTokens.space12,
-                    vertical: AppTokens.space4,
+                    horizontal: AppTokens.space16,
+                    vertical: AppTokens.space8,
                   ),
-                  child: DropdownButtonFormField<String>(
-                    initialValue: selected?.id,
-                    decoration: InputDecoration(
-                      labelText: OperationsStrings.selectHousing(ar),
-                      border: const OutlineInputBorder(),
+                  color: AppTokens.statusUnknownSoft,
+                  child: Text(
+                    OperationsStrings.selectAbsentWorkersHint(ar),
+                    style: const TextStyle(
+                      color: AppTokens.statusUnknown,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
                     ),
-                    items: housings
-                        .map(
-                          (h) => DropdownMenuItem(
-                            value: h.id,
-                            child: Text(h.displayName(arabic: ar)),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                if (state.errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.all(AppTokens.space8),
+                    child: Text(
+                      state.errorMessage!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ),
+                if (housings.length > 1)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTokens.space12,
+                      vertical: AppTokens.space4,
+                    ),
+                    child: DropdownButtonFormField<String>(
+                      initialValue: selected?.id,
+                      decoration: InputDecoration(
+                        labelText: OperationsStrings.selectHousing(ar),
+                        border: const OutlineInputBorder(),
+                      ),
+                      items: housings
+                          .map(
+                            (h) => DropdownMenuItem(
+                              value: h.id,
+                              child: Text(h.displayName(arabic: ar)),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (id) {
+                        final next = housings
+                            .where((h) => h.id == id)
+                            .firstOrNull;
+                        unawaited(notifier.selectHousing(next));
+                      },
+                    ),
+                  ),
+                if (selected != null && state.rows.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTokens.space12,
+                      vertical: AppTokens.space4,
+                    ),
+                    child: TextField(
+                      key: const ValueKey('housing_worker_search_field'),
+                      decoration: InputDecoration(
+                        hintText: OperationsStrings.searchWorkersHint(ar),
+                        prefixIcon: const Icon(Icons.search, size: 20),
+                        isDense: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppTokens.radius12,
                           ),
-                        )
-                        .toList(),
-                    onChanged: (id) {
-                      final next = housings
-                          .where((h) => h.id == id)
-                          .firstOrNull;
-                      unawaited(notifier.selectHousing(next));
-                    },
-                  ),
-                ),
-              if (selected != null && state.rows.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTokens.space12,
-                    vertical: AppTokens.space4,
-                  ),
-                  child: TextField(
-                    key: const ValueKey('housing_worker_search_field'),
-                    decoration: InputDecoration(
-                      hintText: OperationsStrings.searchWorkersHint(ar),
-                      prefixIcon: const Icon(Icons.search, size: 20),
-                      isDense: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTokens.radius12),
+                        ),
+                        suffixIcon: state.searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, size: 18),
+                                onPressed: () => notifier.setSearchQuery(''),
+                              )
+                            : null,
                       ),
-                      suffixIcon: state.searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear, size: 18),
-                              onPressed: () => notifier.setSearchQuery(''),
-                            )
-                          : null,
+                      onChanged: notifier.setSearchQuery,
                     ),
-                    onChanged: notifier.setSearchQuery,
+                  ),
+                Expanded(
+                  child: state.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : selected == null
+                      ? Center(
+                          child: Text(OperationsStrings.addHousingToStart(ar)),
+                        )
+                      : state.rows.isEmpty
+                      ? Center(
+                          child: Text(OperationsStrings.noWorkersInHousing(ar)),
+                        )
+                      : ListView.builder(
+                          itemCount: state.filteredRows.length,
+                          itemBuilder: (context, index) {
+                            final row = state.filteredRows[index];
+                            return HousingWorkerTile(
+                              row: row,
+                              arabic: ar,
+                              searchQuery: state.searchQuery,
+                              onStateChanged: (_) {
+                                unawaited(FieldHaptics.attendanceChanged());
+                                notifier.toggleAbsent(row.worker.id);
+                              },
+                            );
+                          },
+                        ),
+                ),
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppTokens.space16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          OperationsStrings.markedAbsentCount(
+                            ar,
+                            state.absentCount,
+                          ),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: AppTokens.space8),
+                        FilledButton(
+                          onPressed: state.isSaving || selected == null
+                              ? null
+                              : () => _handleSave(selected),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(56),
+                          ),
+                          child: Text(OperationsStrings.nextConfirmAction(ar)),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              Expanded(
-                child: state.isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : selected == null
-                    ? Center(
-                        child: Text(OperationsStrings.addHousingToStart(ar)),
-                      )
-                    : state.rows.isEmpty
-                    ? Center(
-                        child: Text(OperationsStrings.noWorkersInHousing(ar)),
-                      )
-                    : ListView.builder(
-                        itemCount: state.filteredRows.length,
-                        itemBuilder: (context, index) {
-                          final row = state.filteredRows[index];
-                          return HousingWorkerTile(
-                            row: row,
-                            arabic: ar,
-                            onStateChanged: (_) =>
-                                notifier.toggleAbsent(row.worker.id),
-                          );
-                        },
-                      ),
-              ),
-              SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.all(AppTokens.space16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        OperationsStrings.markedAbsentCount(
-                          ar,
-                          state.absentCount,
-                        ),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: AppTokens.space8),
-                      FilledButton(
-                        onPressed: state.isSaving || selected == null
-                            ? null
-                            : () => _handleSave(selected),
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size.fromHeight(56),
-                        ),
-                        child: Text(OperationsStrings.nextConfirmAction(ar)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }

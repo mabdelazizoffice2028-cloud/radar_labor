@@ -36,6 +36,10 @@ final class AuthFlowStrings {
       ? 'تعذر تسجيل الدخول، أعد المحاولة'
       : 'Could not sign in. Please retry.';
 
+  static String loadFailed(bool ar) => ar
+      ? 'تعذر تحميل بيانات الدخول، أعد المحاولة'
+      : 'Could not load sign-in data. Please retry.';
+
   static String newPasswordTitle(bool ar) =>
       ar ? 'إنشاء رقم سر جديد' : 'Create a new password';
 
@@ -73,8 +77,7 @@ final class AuthFlowStrings {
 
   static String hrRole(bool ar) => ar ? 'الموارد البشرية' : 'HR';
 
-  static String housingSupervisorRole(bool ar) =>
-      ar ? 'مشرف السكن' : 'Campus supervisor';
+  static String housingSupervisorRole(bool ar) => ar ? 'السكن' : 'Campus';
 
   static String siteSupervisorRole(bool ar) =>
       ar ? 'مشرف الموقع' : 'Site supervisor';
