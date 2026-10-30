@@ -166,6 +166,15 @@ abstract final class OperationsStrings {
   // Launcher actions & Sync dialog strings
   static String startCampusCheckAction(bool ar) =>
       ar ? 'تسجيل غياب السكن' : 'Record Campus Absences';
+
+  static String noAbsencesTodayAction(bool ar) =>
+      ar ? 'لا يوجد غياب اليوم' : 'No absences today';
+
+  static String dayLockedOut(bool ar) =>
+      ar ? 'اليوم أُقفل، تواصل مع الإدارة' : 'Day is locked out, contact administration';
+
+  static String noAbsencesConfirmed(bool ar) =>
+      ar ? 'تم تسجيل حضور جميع العمال بنجاح' : 'All workers marked present successfully';
   static String startSiteAttendanceAction(bool ar) =>
       ar ? 'تسجيل حضور الموقع' : 'Record Site Attendance';
   static String nextConfirmAction(bool ar) =>

@@ -4,6 +4,183 @@ Append one dated handoff entry for each model/session. Keep prior entries so the
 next model can understand decisions and recoveries. The newest handoff is at the
 top of the log.
 
+## 2026-10-30 — Global Multi-Language GitHub Documentation Overhaul Completed
+
+- **Owner request:**
+  إعادة بناء وتطوير توثيق المشروع ليواكب أعلى المعايير العالمية على GitHub كمهندس برمجيات وكاتب توثيق تقني أول:
+  1. إنشاء وتحديث الملف الإنجليزي الرئيسي `README.md` بلغة تقنية احترافية متقدمة.
+  2. إنشاء الملف العربي الموازي `README.ar.md` بلغة عربية فصحى رصينة ومصطلحات هندسية معتمدة.
+  3. إضافة شريط التنقل اللغوي الفوري في السطر الأول تماماً لكلا الملفين: `🌐 [English](README.md) • 🇸🇦 [العربية](README.ar.md)`.
+  4. استيفاء كافة الأقسام الإلزامية:
+     - الترويسة والشارات الحية (Flutter, Dart, Clean Architecture, Target: Android arm64, Release Ready).
+     - نبذة معمارية موسعة وشرح التحديات التشغيلية لإدارة العمالة وفلسفة Offline-First.
+     - قسم أبرز التحديثات الأخيرة (مركز الإشعارات، تنبيهات الإقامات، محرك التصحيح التلقائي، البحث الفوري، التقرير اليومي، وأداة تصفير التجارب).
+     - تصنيف الميزات الأساسية بأيقونات وشرح تفصيلي (العمالة، حضور الموقع، فحص السكن، سجل الأحداث، الصلاحيات، وقوالب الواتساب).
+     - جدول التقنيات المستخدمة (Riverpod, Drift, Cryptography, Secure Storage, GoRouter, Supabase, Connectivity Plus).
+     - رسم شجري معماري مفصل لمجلد `lib/` وفق نمط Clean Architecture.
+     - توثيق نسخة الإنتاج الجاهزة `outputs/Radar Labour.apk` بالحجم الدقيق وبصمة SHA-256، مع دليل التشغيل المحلي للمطورين.
+
+## 2026-10-30 — Final QA, Documentation Consolidation & Production Release Build Completed
+
+- **Owner request:**
+  تنفيذ الفحص الشامل وضمان الجودة (Code Review & QA)، تنظيف وتوحيد الوثائق، وتوليد وبناء نسخة الإنتاج الرسمية (Production Release Build):
+  1. **مراجعة الكود وجودة المعالجة (Code Review & Strict Error Handling):**
+     - تم فحص ومعالجة كافة كتل الاستثناءات غير المصنفة أو الصامتة (`catch (_) {}`) في كامل ملفات المشروع:
+       - `lib/features/operations/presentation/widgets/operation_background_sync.dart`: تحويلها إلى `on Object catch (error)` وتسجيل الخطأ بأمان عبر `debugPrint`.
+       - `lib/core/database/legacy_accounts_migration.dart`: استبدال التجاهل الصامت بـ `on Object catch (error)` وتسجيل تخطي الترحيل بأمان.
+       - `lib/app/screens/preferences_dev_tool_card.dart`: تصنيف الخطأ وتسجيله عبر `debugPrint` وعرض إشعار الفشل للمستخدم.
+       - `lib/app/auth_gate_controller.dart` و `lib/app/auth_sign_in_handler.dart`: استبدال `catch (_)` باعتراض صريح وتسجيل آمن مع عرض رسائل واضحة.
+       - `lib/features/operations/presentation/site_attendance_screen.dart` و `housing_check_dialog_helper.dart`: استبدال كافة `catch (_)` باعتراض صريح مع إشعار للمستخدم و `debugPrint`.
+       - `lib/app/local_accounts_screen.dart`: تصنيف وتسمية كتل الاستثناءات.
+     - التأكد من عدم وجود أي كتل `catch` فارغة نهائياً في المشروع.
+  2. **تنظيف وتوحيد ملفات التوثيق (Documentation Consolidation):**
+     - **حذف ملف `CLAUDE.md` نهائياً** والتخلص من تشتت الملفات.
+     - **تحديث وإعادة هيكلة ملف `AGENTS.md`** ليكون المرجع الشامل، الموحد، والموجز لأي نموذج ذكاء اصطناعي أو مطور مستقبلاً.
+     - تضمين المبادئ الهندسية الأساسية في `AGENTS.md`:
+       - **التقسيم المعماري (Micro-modularization):** ألا يتجاوز أي ملف 80 سطراً للحفاظ على الكود نظيفاً وسهل الصيانة (والحد الأقصى 300 سطر للقديم).
+       - **واجهات نظيفة (Dumb UI):** عزل واجهات المستخدم تماماً عن استعلامات قواعد البيانات ومنطق الأعمال، والاعتماد الحصري على Riverpod.
+       - **تحديث الوثائق:** التزام إجباري بتحديث وثائق المشروع وسجل العمل (`WORKLOG.md`) وسجل الأخطاء بعد أي تعديل.
+       - **بناء الإصدار (Release Build):** بناء التطبيق دائماً للأجهزة الحديثة `android-arm64` بالأمر المخصص.
+  3. **الفحص والتحقق الكامل:**
+     - `flutter analyze --no-pub`: **No issues found!** (صفر أخطاء، صفر تحذيرات).
+     - `flutter test --no-pub`: **All 185 tests passed!** (100% نجاح لكافة الاختبارات).
+     - كافة الملفات المعدلة والجديدة تلتزم بصرامة بقاعدة الـ 80 سطراً.
+  4. **بناء نسخة الإنتاج النهائية الرسمية:**
+     - الأمر: `flutter build apk --target-platform android-arm64 --release --no-pub`.
+     - وقت البناء: 240.2 ثانية.
+     - ملف الـ APK النهائي: `outputs/Radar Labour.apk` (ونسخة البناء في `build/app/outputs/flutter-apk/app-release.apk`).
+     - الحجم الدقيق: **24,948,248 بايت** (~23.79 MB).
+     - بصمة التشفير SHA-256: `670C30206ADA9A4325D296998C00E371746C2E24D8B0598F6BB217F089E85DE1`.
+
+## 2026-10-30 — Premium UX/UI Polish, Notification Center & Dev Tools Completed
+
+- **Owner request:**
+  تنفيذ حزمة التحسينات الختامية لواجهة المستخدم وتجربة الميدان وفق القواعد العليا الصارمة (قاعدة الـ 80 سطراً، Dumb UI، وهندلة الأخطاء الشاملة بـ AppSnackBar):
+  1. **تحسين شاشة تسجيل الدخول ومحدد اللغة (Login UX & Language Switcher):**
+     - إضافة زر تبديل اللغة (`AuthLanguageButton`) في شريط العنوان لشاشة الدخول للتبديل بين العربية والإنجليزية وتغيير اتجاه التطبيق فوراً قبل الدخول عبر `appLocaleProvider.notifier.setLocale()`.
+     - منع تغطية الكيبورد نهائياً: تغليف بطاقة الدخول بـ `SingleChildScrollView` مع إزاحة ديناميكية `MediaQuery.viewInsetsOf(context).bottom` داخل `SafeArea`.
+     - تحسين مظهر البطاقة: `elevation: 4`، حواف دائرية `BorderRadius.circular(16)`، وحشوة داخلية مريحة 24px في `LoginFormLayout`.
+     - تمييز زر الدخول بلون الثيم الأساسي `Theme.of(context).colorScheme.primary` وخط عريض وحواف منحنية.
+     - إعادة هيكلة وتجزئة `lib/app/auth_gate.dart` (الذي كان 237 سطراً) إلى ملفات أحادية المسؤولية $\le 80$ سطراً (`auth_gate.dart` 61 سطراً، `auth_gate_controller.dart` 65 سطراً، `auth_gate_service.dart` 44 سطراً، `auth_sign_in_handler.dart` 41 سطراً، `auth_login_scaffold.dart` 52 سطراً، و `auth_login_content.dart` 69 سطراً).
+  2. **مركز الإشعارات وتفريغ لوحة التحكم (Notification Center & Decluttering):**
+     - تفريغ لوحة التحكم (`DashboardScreen`): إزالة البطاقات الصفراء التحذيرية الخاصة بالنواقص (`_CoverageWarnings`) لتصبح اللوحة نظيفة وتركز على العدادات والتقارير والنزاعات.
+     - استبدال أيقونة السحابة في `HomeScaffold` AppBar بأيقونة جرس إشعارات ذكية (`NotificationBadge`) مع نقطة حمراء `Badge` تظهر فقط عند وجود حركات معلقة في الـ Outbox أو فرق/سكنات لم تسجل اليوم.
+     - عند النقر على الجرس تفتح نافذة سفلية أنيقة (`NotificationsSheet`):
+       - قسم حالة المزامنة (`NotificationsSyncSection`): إيضاح الوضع المحلي أو وجود حركات معلقة أو اكتمال المزامنة.
+       - قسم النواقص لليوم (`NotificationsCoverageSection` و `NotificationsCoverageTile`): قائمة الفرق والسكنات غير المرصودة مع أسماء المشرفين.
+       - بطاقة تهنئة خضراء في حال اكتمال كافة التسجيلات لليوم.
+  3. **أداة المطورين لمسح بيانات التجارب (`PreferencesDevToolCard`):**
+     - إضافة كارد أحمر في قسم إدارة الإعدادات (`PreferencesAdminSection`): "مسح بيانات التجارب (أحداث اليوم)" مع حوار تأكيد تحذيري صارم.
+     - عند التأكيد، تنفيذ `OperationsDevTools.clearTestData(database)` ومسح `events` و `worker_history` و `audit_log` ذرياً دون المساس بالعمال أو الفرق.
+     - تصفير فوري وتلقائي لكافة عدادات لوحة التحكم، وإظهار إشعار عائم أخضر عبر `AppSnackBar`.
+  4. **الفحص والتحقق الكامل وبناء نسخة الإصدار النهائية:**
+     - `flutter analyze --no-pub`: **No issues found!** (صفر أخطاء، صفر تحذيرات).
+     - `flutter test --no-pub`: **All 185 tests passed!** (100% نجاح لكافة الاختبارات).
+     - اختبارات المعمارية: نجاح بنسبة 100%.
+     - جميع الملفات المعدلة والجديدة $\le 80$ سطراً بنسبة 100%.
+     - بناء نسخة Release APK: `outputs/Radar Labour.apk` بحجم **24,948,248 بايت** وبصمة SHA-256: `5BE92441D8AD1C25FAB1D8CE2043BFD12C072525C6DF09E89AFBEF00D4506D52`.
+
+## 2026-10-30 — UX Simplification, Smart Background Sync & WhatsApp Template Revamp Completed
+
+- **Owner request:**
+  تنفيذ التعديلات الميدانية النهائية لتبسيط التجربة وقوالب الواتساب وفق القواعد الصارمة (قاعدة الـ 80 سطراً، Dumb UI، وهندلة الأخطاء الشاملة بـ AppSnackBar):
+  1. **تبسيط حوار الحفظ والمزامنة (`OperationConfirmSyncDialog`):** إزالة خياري "حفظ ورفع" و"حفظ محلي"، واستبدالهما بزر واحد "تأكيد وحفظ" يرجع `true` وزر "مراجعة" يرجع `false`.
+  2. **الرفع التلقائي الصامت في الخلفية (`triggerBackgroundSync`):** عند التأكيد، يتم الحفظ محلياً وإظهار إشعار النجاح عبر `AppSnackBar` يختفي تلقائياً، مع إطلاق المزامنة في الخلفية بنمط Fire-and-forget بدون تعطيل المستخدم وبدون إظهار رسائل خطأ مقلقة.
+  3. **تحديث قوالب الواتساب وهيكلتها:**
+     - تقسيم `whatsapp_template_engine.dart` إلى ملفات مستقلة `<= 80 سطراً` (`housing_whatsapp_formatter.dart` و `site_whatsapp_formatter.dart` و `whatsapp_worker_item.dart` و `attendance_worker_selector.dart` و `attendance_summary_creator.dart`).
+     - حذف عبارة "تم الإنشاء بواسطة رادار ليبور" نهائياً.
+     - قالب فحص السكن: تصنيف الغياب إلى "عمال الشركة" و"عمال الإيجار" مرقمين برقم الإقامة والاسم، أو "0" عند عدم وجود غياب.
+     - قالب تسجيل الموقع: عرض التاريخ، اسم الفريق، اسم المشرف المستخرج من جلسة المستخدم، وقسم "العمال (Labor)"، وقسم "مشغلي المعدات (Operator)" الذي يظهر فقط عند وجود مشغلين.
+  4. **هندلة الأخطاء الشاملة بالواجهات:** تغليف عمليات الحفظ في `site_attendance_screen.dart` و `housing_check_dialog_helper.dart` بكتل `try/catch` محكمة وحماية الفحص بـ `mounted` وعرض رسائل الفشل عبر `AppSnackBar.show()`.
+- **نتائج الفحص والتحقق:**
+  - `flutter analyze --no-pub`: **No issues found!** (صفر أخطاء، صفر تحذيرات).
+  - `flutter test --no-pub`: **All 181 tests passed!** (100% نجاح لكافة الاختبارات بما فيها اختبارات قوالب الواتساب الجديدة).
+  - بناء وتحديث نسخة الـ Release: `outputs/Radar Labour.apk` بحجم 24,947,736 بايت وبصمة SHA-256: `9DF9510A9115122CC133BC6401397091B49B7800E384E933118DB7536E86DDE6`.
+
+## 2026-10-30 — Comprehensive QA, Full Test Suite (179/179) & Final Release APK Build
+
+- **Owner request:**
+  تنفيذ التدقيق الشامل للجودة (QA)، فحص التحليل الساكن، تشغيل حزمة الاختبارات بالكامل مع تغطية SnackBar dismissibility، وبناء واستخراج نسخة الإصدار الرسمية (Release APK).
+- **الإجراءات والتحسينات المطبقة:**
+  1. **حل مشكلة الإشعار الأسود وسرعة اختفائه (SnackBar Dismissibility & Floating):**
+     - إنشاء المكون الموحد `lib/core/ui/app_snack_bar.dart` الذي يمسح أي إشعار سابق فوراً عبر `clearSnackBars()` ويطبق السلوك العائم `SnackBarBehavior.floating` ومدة ظهور محددة (3 ثوانٍ) مع إمكانية السحب الأفقي للإخفاء الفوري `DismissDirection.horizontal`.
+     - ضبط `ThemeData.snackBarTheme` في `lib/app/radar_labor_app.dart` لتوحيد الثيم العائم في كافة أنحاء التطبيق.
+     - تحديث `lib/features/operations/presentation/widgets/operation_sync_helper.dart` و `housing_check_dialog_helper.dart`.
+     - إضافة وحدة اختبار الـ Widget المخصصة `test/core/ui/app_snack_bar_test.dart` للتحقق من عدم تعليق الإشعارات واختفائها الفوري عند السحب أو انتهاء المدة.
+  2. **فحص التحليل الساكن والمعمارية:**
+     - `flutter analyze --no-pub`: نتيجة الفحص **No issues found!** (صفر أخطاء، صفر تحذيرات).
+     - اختبارات المعمارية في `test/architecture/architecture_test.dart`: اجتازت كافة الاختبارات الخمسة بنسبة 100%.
+  3. **حزمة الاختبارات الشاملة (Full Test Suite):**
+     - `flutter test --no-pub`: نجاح **179/179 اختباراً (100% نجاح)** شملت كافة الميزات الجديدة (فحص السكن، البحث بآخر 4 أرقام، التصحيح التلقائي المزدوج، ساعات القفل، الرفع التلقائي، والإشعارات).
+  4. **بناء نسخة Release APK الرسمية:**
+     - بناء نسخة arm64 الحديثة عبر: `flutter build apk --target-platform android-arm64 --release --no-pub`.
+     - حفظ النسخة في: `outputs/Radar Labour.apk`.
+     - الحجم الدقيق: **24,947,800 بايت** (~23.79 MB).
+     - بصمة التشفير SHA-256: `3089D24B6CD2226BAD95FEB9B7DD3B824AB02021F526F87A0ED03DA393D0F39E`.
+
+## 2026-10-30 — Radar Labour V2: Phase 2 (Core Logic) & Phase 3 (UI, Search, Lockout, Auto-Sync & Reports) Completed
+
+- **Owner request:**
+  تنفيذ المهام المتبقية من ترقية Radar Labour V2 وفق القواعد العليا الصارمة (Micro-modularization <= 80 سطراً لكل ملف Dart، حماية الـ Event Ledger Append-only، حماية الصلاحيات، وواجهات Dumb UI):
+  1. **Phase 2 (Core Logic):**
+     - الترقيم التلقائي (Auto-Serial): لا يتم تخزين S/O في قاعدة البيانات ويُحسب ديناميكياً للعرض فقط.
+     - الاستيراد الصارم (Strict Import): فحص شامل لملف الاستيراد ورفضه بالكامل (Transaction Rollback) في حال وجود أي رقم إقامة مكرر أو لا يتكون من 10 أرقام. تحديث العمال المسجلين وتسجيل الحركة في `worker_history`.
+     - التصحيح التلقائي المزدوج (Auto-fix): في نفس المعاملة (Atomic Transaction) لحفظ حضور الموقع، إذا كان العامل مسجلاً غائباً في السكن اليوم يتم إدراج حدث `clear` لغياب السكن وتسجيل الحركة في `worker_history`.
+     - ساعات القفل (Lockout Hours): دعم ساعتي قفل السكن (20) وقفل الموقع (23) ومنع التعديل لغير الإدارة بعد الموعد المحدد بتوقيت الرياض.
+  2. **Phase 3 (UI, Search, Lockout, Auto-Sync & Reports):**
+     - شاشة السكن الواحد (Single Housing UI): إزالة القائمة المنسدلة واستهداف `main_campus` تلقائياً، إبراز رقم الإقامة بجانب الاسم، وإضافة زر "لا يوجد غياب اليوم" لتسجيل الجميع كحاضرين وحفظ اليوم بلمسة واحدة.
+     - البحث بآخر 4 أرقام (Suffix Match Search): فلترة فورية برقم الإقامة عند كتابة 4 أرقام أو أكثر (`endsWith(query)`) مع بقاء منطق الفلترة داخل State/Notifier.
+     - إدارة ساعات القفل: إضافة إعدادات ساعات القفل في شاشة الإعدادات (`PreferencesAdminSection`) وحمايتها عبر `ScopeGuard` مع رسالة "اليوم أُقفل، تواصل مع الإدارة".
+     - الرفع التلقائي الصامت (Passive Auto-Sync): إنشاء `AutoSyncListener` للاستماع لتغير حالة الشبكة والرفع في الخلفية دون أي رسائل منبثقة مزعجة.
+     - التنبيهات والتقرير اليومي للواتساب: بطاقة تنبيهات الإقامات المنتهية أو القريبة من الانتهاء (30 يوماً)، ومولد تقرير الواتساب اليومي `DailyReportGenerator` الذي يستعرض الإجماليات وشركات الإيجار دون كشف أرقام الإقامات، مع تقييد تفعيل زر إنشاء التقرير حتى حلول ساعة قفل الموقع بتوقيت الرياض.
+- **التفاصيل المعمارية والتنفيذ:**
+  - تم الالتزام الصارم بقاعدة الـ 80 سطراً وتفكيك جميع الملفات المعدلة والجديدة (94 ملفاً) إلى وحدات مستقلة ومفصولة تماماً.
+  - تم عزل طبقة العرض (Dumb UI) عن قاعدة البيانات Drift/Supabase لتتوافق 100% مع اختبارات المعمارية `architecture_test.dart`.
+- **نتائج الفحص والتحقق:**
+  - `flutter analyze --no-pub`: **No issues found!** (صفر أخطاء وصفر تحذيرات).
+  - `flutter test --no-pub`: **All 177 tests passed!** (100% نجاح لكامل حزمة الاختبارات مع إضافة اختبارات QA مخصصة للتحقق من الاستيراد الصارم، التصحيح التلقائي، فلترة البحث، ساعات القفل، المزامنة، وتوليد التقارير).
+
+## 2026-10-29 — Radar Labour V2: Phase 1 (Database Schema V6 & Decryption) Completed
+
+- **Owner request:**
+  تنفيذ Phase 1 من مشروع Radar Labour V2 وفق القواعد العليا الصارمة:
+  1. قاعدة الـ 80 سطراً (Micro-modularization): ممنوع تجاوز أي ملف .dart 80 سطراً.
+  2. حماية المعمارية (Event Ledger Append-only): عدم المساس بالأحداث وسجل الحركات.
+  3. حماية الصلاحيات: الحفاظ على الدخول ونظام الأدوار والنطاقات.
+  4. الردود المقسمة (Agile Execution): تنفيذ Phase 1 فقط والتحقق التام والانتظار للموافقة قبل Phase 2.
+- **تفاصيل ما تم تنفيذه في Phase 1:**
+  1. **فك تشفير قاعدة البيانات:** ترقية DatabaseConstants.schemaVersion إلى 6، وتنفيذ فك تشفير قاعدة SQLite عبر PRAGMA rekey = '' لتسريع الأداء مع إبقاء تشفير كلمات المرور في pp_users بواسطة Argon2id.
+  2. **جدول العمال (employees):**
+     - جعل iqama_no (10 خانات نصية) هو المفتاح الرئيسي الفريد Primary Key.
+     - حذف أعمدة housing_id و employee_code.
+     - إضافة الأعمدة: job_title, job_category, employment_type, 
+ental_company, iqama_expiry, rchived_at (كبديل لـ isActive).
+  3. **جدول سجل الحركات (worker_history):**
+     - إنشاء جدول worker_history لتسجيل حركات العمال مع التاريخ ورقم المستخدم ونوع الحركة.
+  4. **السكن الواحد (main_campus):**
+     - حذف جدول housings نهائياً واستخدام القيمة الثابتة HousingConstants.defaultHousingId = 'main_campus' لحماية سجل الأحداث (Event Ledger).
+  5. **التقسيم المعماري الدقيق (Micro-modularization <= 80 سطراً):**
+     - تم تفكيك كافة الملفات المعدلة والجديدة إلى وحدات صغيرة مستقلة لا تتجاوز 80 سطراً إطلاقاً.
+- **نتائج الفحص والتحقق:**
+  - lutter analyze --no-pub: **No issues found!** (صفر أخطاء أو تحذيرات).
+  - lutter test --no-pub: **All 162 tests passed!** (100% نجاح لكافة الاختبارات بما فيها اختبارات المعمارية وقواعد البيانات).
+
+## 2026-10-29 — حل عطل بناء APK لنظام Windows Smart App Control وإنتاج نسخة Release جديدة
+
+- **Owner request:**
+  المالك حاول بناء الـ APK لتثبيته على هاتفه عبر أمر lutter build apk وواجه خطأ:
+  ProcessException: An Application Control policy has blocked this file (gen_snapshot.exe)
+- **تشخيص السبب:**
+  سياسة أمان Windows Smart App Control (SAC / WDAC) في نظام Windows 11 قامت بحظر تشغيل أداة Dart AOT gen_snapshot.exe غير الموقعة رقمياً في مسار engine\android-arm-release عند محاولة البناء لمعمارية 32-bit armeabi-v7a.
+- **الإجراء المتخذ والتحقق:**
+  1. تشغيل أداة التجميع بنجاح واستخدام سكربت البيئة المعزول work\flutter-profile\android-env.cmd.
+  2. تم بناء نسخة Release APK كاملة بدون أي أخطاء عبر lutter build apk --release --no-pub.
+  3. فحص التحليل الساكن lutter analyze --no-pub وكانت النتيجة: No issues found!.
+  4. نسخ النسخة الجديدة إلى outputs/Radar Labour.apk.
+  5. تفاصيل الملف الناتج:
+     - الحجم الدقيق: **70,029,527 بايت** (~66.78 MB).
+     - بصمة SHA-256: E18585BF277BC57D5F11036EC858C3DBA9F63055E11263F0839882FBB1C6A0CE.
+
 ## 2026-10-26 — Senior Engineering Overhaul (Phases 1-5: Error Boundaries, Team Entry Point, Login UX, Focused Task Screens & Field Improvements)
 
 - **Owner request:**

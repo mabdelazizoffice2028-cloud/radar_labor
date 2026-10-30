@@ -7,7 +7,7 @@ import 'package:radar_labor/app/screens/entities_screen.dart';
 import 'package:radar_labor/app/screens/preferences_screen.dart';
 import 'package:radar_labor/app/screens/workers_screen.dart';
 import 'package:radar_labor/app/widgets/home_date_badge.dart';
-import 'package:radar_labor/app/widgets/sync_status_badge.dart';
+import 'package:radar_labor/app/widgets/notification_badge.dart';
 import 'package:radar_labor/app/widgets/user_password_change_dialog.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
 import 'package:radar_labor/core/auth/local_auth_repository.dart';
@@ -18,6 +18,7 @@ import 'package:radar_labor/core/database/local_settings_repository.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
 import 'package:radar_labor/core/l10n/history_strings.dart';
+import 'package:radar_labor/core/sync/auto_sync_listener.dart';
 import 'package:radar_labor/core/time/clock.dart';
 import 'package:radar_labor/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
@@ -79,6 +80,7 @@ final class _HomeScaffoldState extends ConsumerState<HomeScaffold> {
   @override
   Widget build(BuildContext context) {
     final locale = ref.watch(appLocaleProvider);
+    ref.watch(autoSyncListenerProvider);
     final ar = locale == 'ar';
     final capabilities = widget.account.role.capabilities;
     final actor = ActorContext(
@@ -120,7 +122,7 @@ final class _HomeScaffoldState extends ConsumerState<HomeScaffold> {
       appBar: AppBar(
         title: Text(AppStrings.appTitle(ar)),
         actions: [
-          SyncStatusBadge(arabic: ar),
+          NotificationBadge(arabic: ar),
           const HomeDateBadge(),
         ],
       ),

@@ -37,16 +37,7 @@ final class SeedBuilder {
     String? nameEn,
     bool isActive = true,
   }) async {
-    await database
-        .into(database.housings)
-        .insert(
-          HousingsCompanion.insert(
-            housingId: id,
-            nameAr: nameAr,
-            nameEn: Value(nameEn),
-            isActive: Value(isActive),
-          ),
-        );
+    // Housings table removed in V2 architecture (single campus).
   }
 
   Future<void> seedWorker({
@@ -62,14 +53,11 @@ final class SeedBuilder {
         .into(database.employees)
         .insert(
           EmployeesCompanion.insert(
-            employeeUid: uid,
-            employeeCode: code,
+            iqamaNo: uid,
             fullNameAr: nameAr,
             fullNameEn: Value(nameEn),
-            category: 'general',
             currentTeamId: Value(teamId),
-            housingId: Value(housingId),
-            isActive: Value(isActive),
+            archivedAt: Value(isActive ? null : DateTime.now().toUtc()),
           ),
         );
   }

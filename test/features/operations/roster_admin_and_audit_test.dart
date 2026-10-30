@@ -67,8 +67,8 @@ void main() {
     await db.close();
   });
 
-  test('schemaVersion=5 initializes roster_epoch=1 and supports viewer without employeeUid (BC-7)', () async {
-    expect(db.schemaVersion, 5);
+  test('schemaVersion=6 initializes roster_epoch=1 and supports viewer without employeeUid (BC-7)', () async {
+    expect(db.schemaVersion, 6);
     expect(await adminRepo.readRosterEpoch(), 1);
 
     final viewerId = await adminRepo.createAccountAudited(
@@ -115,7 +115,7 @@ void main() {
 
     final empRow = await (db.select(
       db.employees,
-    )..where((e) => e.employeeUid.equals(empUid))).getSingle();
+    )..where((e) => e.iqamaNo.equals(empUid))).getSingle();
     expect(empRow.isActive, isFalse);
 
     // Historical attendance event is preserved
@@ -164,12 +164,12 @@ void main() {
   test('wipeRoster enforces backup + confirmation, increments epoch, and import reactivates by code (D-24, D-25, D-29)', () async {
     final uid1 = await adminRepo.createWorker(
       actor: adminActor,
-      code: 'W-100',
+      code: '1000000100',
       fullNameAr: 'عامل أول',
     );
     final uid2 = await adminRepo.createWorker(
       actor: adminActor,
-      code: 'W-200',
+      code: '1000000200',
       fullNameAr: 'عامل ثان',
     );
 
@@ -209,7 +209,7 @@ void main() {
     final backupJson = await adminRepo.exportRosterBackupJson(
       actor: adminActor,
     );
-    expect(backupJson.contains('W-100'), isTrue);
+    expect(backupJson.contains('1000000100'), isTrue);
 
     final plan = await adminRepo.wipeRoster(
       actor: adminActor,
@@ -222,7 +222,7 @@ void main() {
 
     final activeAfterWipe = await (db.select(
       db.employees,
-    )..where((e) => e.isActive)).get();
+    )..where((e) => e.archivedAt.isNull())).get();
     expect(activeAfterWipe, isEmpty);
 
     // Re-importing W-100 reactivates the exact same employeeUid (D-29)
@@ -230,7 +230,7 @@ void main() {
       actor: adminActor,
       rows: const [
         RosterImportEntry(
-          code: 'W-100',
+          code: '1000000100',
           name: 'عامل أول محدث',
           designation: 'Technician',
           supplier: 'SubA',
@@ -242,13 +242,13 @@ void main() {
 
     final reactivated = await (db.select(
       db.employees,
-    )..where((e) => e.employeeCode.equals('W-100'))).getSingle();
+    )..where((e) => e.iqamaNo.equals(uid1))).getSingle();
     expect(reactivated.employeeUid, uid1);
     expect(reactivated.isActive, isTrue);
 
     final stillArchived = await (db.select(
       db.employees,
-    )..where((e) => e.employeeUid.equals(uid2))).getSingle();
+    )..where((e) => e.iqamaNo.equals(uid2))).getSingle();
     expect(stillArchived.isActive, isFalse);
   });
 }

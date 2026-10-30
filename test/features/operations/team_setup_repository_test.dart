@@ -90,7 +90,7 @@ void main() {
 
       final workers = await (database.select(
         database.employees,
-      )..where((e) => e.employeeUid.isIn(const ['w-1', 'w-2']))).get();
+      )..where((e) => e.iqamaNo.isIn(const ['w-1', 'w-2']))).get();
       for (final w in workers) {
         expect(w.currentTeamId, created.id);
         expect(w.rowVersion, 2);
@@ -133,7 +133,7 @@ void main() {
 
     final w1 = await (database.select(
       database.employees,
-    )..where((e) => e.employeeUid.equals('w-1'))).getSingle();
+    )..where((e) => e.iqamaNo.equals('w-1'))).getSingle();
     expect(w1.currentTeamId, isNull);
     expect(w1.rowVersion, 1);
   });
@@ -201,10 +201,10 @@ void main() {
 
       final w1 = await (database.select(
         database.employees,
-      )..where((e) => e.employeeUid.equals('w-1'))).getSingle();
+      )..where((e) => e.iqamaNo.equals('w-1'))).getSingle();
       final w2 = await (database.select(
         database.employees,
-      )..where((e) => e.employeeUid.equals('w-2'))).getSingle();
+      )..where((e) => e.iqamaNo.equals('w-2'))).getSingle();
 
       expect(w1.currentTeamId, isNull);
       expect(w1.rowVersion, 3); // 1 -> 2 on create -> 3 on remove

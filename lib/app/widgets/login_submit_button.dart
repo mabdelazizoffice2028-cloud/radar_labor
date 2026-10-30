@@ -20,6 +20,10 @@ final class LoginSubmitButton extends StatelessWidget {
       key: const ValueKey('login_submit_button'),
       style: FilledButton.styleFrom(
         minimumSize: const Size(96, AppTokens.minTouchTarget),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       onPressed: busy ? null : onSubmit,
       child: busy
@@ -33,7 +37,7 @@ final class LoginSubmitButton extends StatelessWidget {
             )
           : Text(
               AppStrings.login(arabic),
-              style: const TextStyle(fontSize: 16),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
     );
   }

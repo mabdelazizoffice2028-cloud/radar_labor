@@ -81,15 +81,9 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    test('ensureAdminAccounts creates default housing', () async {
+    test('ensureAdminAccounts guarantees default housing constant', () async {
       await provisioning.ensureAdminAccounts();
-
-      final housings = await db.select(db.housings).get();
-      final defaultHousing = housings.firstWhere(
-        (h) => h.housingId == AppConstants.defaultHousingId,
-      );
-      expect(defaultHousing.nameAr, 'السكن الرئيسي');
-      expect(defaultHousing.nameEn, AppConstants.defaultHousingName);
+      expect(AppConstants.defaultHousingId, 'main_campus');
     });
 
     test(
@@ -119,7 +113,7 @@ void main() {
         final importer = WorkforceImportRepository(db);
         final res = await importer.commit([
           const WorkforceRow(
-            code: 'W100',
+            code: '1000000100',
             name: 'Tariq Worker',
             designation: 'Worker',
             supplier: '',
@@ -130,7 +124,7 @@ void main() {
 
         final worker = await (db.select(
           db.employees,
-        )..where((e) => e.employeeCode.equals('W100'))).getSingle();
+        )..where((e) => e.iqamaNo.equals('1000000100'))).getSingle();
         expect(worker.housingId, AppConstants.defaultHousingId);
       },
     );

@@ -16,12 +16,16 @@ final class WorkerOption {
     required this.code,
     required this.nameAr,
     this.nameEn,
+    this.employmentType = 'company',
+    this.jobCategory = 'direct_labor',
   });
 
   final String id;
   final String code;
   final String nameAr;
   final String? nameEn;
+  final String employmentType;
+  final String jobCategory;
 
   String displayName({required bool arabic}) =>
       arabic ? nameAr : nameEn ?? nameAr;

@@ -58,9 +58,11 @@ final class _LocalAccountsScreenState extends State<LocalAccountsScreen> {
     try {
       await action();
       await _reload();
-    } on LastManagerException catch (_) {
+    } on LastManagerException catch (e) {
+      debugPrint('Last manager exception (${e.runtimeType}).');
       if (mounted) setState(() => _error = AdminStrings.lastManagerError(_ar));
-    } on AuthConflictException catch (_) {
+    } on AuthConflictException catch (e) {
+      debugPrint('Auth conflict exception (${e.runtimeType}).');
       if (mounted) {
         setState(() => _error = AdminStrings.accountConflictError(_ar));
       }

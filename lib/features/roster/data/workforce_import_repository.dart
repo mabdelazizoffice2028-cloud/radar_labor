@@ -1,123 +1,78 @@
 import 'package:drift/drift.dart';
 import 'package:radar_labor/core/auth/account_provisioning_repository.dart';
-import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
+import 'package:radar_labor/core/time/clock.dart';
 import 'package:radar_labor/features/roster/domain/supervisor_role_resolver.dart';
+import 'package:radar_labor/features/roster/domain/workforce_import_result.dart';
+import 'package:radar_labor/features/roster/domain/workforce_import_validator.dart';
 import 'package:radar_labor/features/roster/domain/workforce_row.dart';
 import 'package:uuid/uuid.dart';
 
-final class WorkforceImportResult {
-  const WorkforceImportResult({
-    required this.added,
-    required this.updated,
-    this.accountsCreated = 0,
-  });
-  final int added;
-  final int updated;
+export 'package:radar_labor/features/roster/domain/workforce_import_result.dart';
 
-  /// Supervisor login accounts created automatically by this import.
-  final int accountsCreated;
-}
-
-/// Imports the reviewed roster atomically and preserves existing assignments.
-/// Supervisors found in the file get a login account linked to their scope.
 final class WorkforceImportRepository {
-  const WorkforceImportRepository(this._database);
+  const WorkforceImportRepository(this._database, {this.clock = const SystemClock()});
   final AppDatabase _database;
+  final Clock clock;
 
   Future<WorkforceImportResult> commit(List<WorkforceRow> rows) async {
-    var added = 0;
-    var updated = 0;
-    var accountsCreated = 0;
-    await _database.transaction(() async {
+    WorkforceImportValidator.validate(rows);
+    var added = 0, updated = 0;
+    return _database.transaction(() async {
       final existingRows = await _database.select(_database.employees).get();
-      final byCode = {
-        for (final employee in existingRows)
-          employee.employeeCode.toLowerCase(): employee,
-      };
+      final byCode = {for (final e in existingRows) e.iqamaNo: e};
+      const uuid = Uuid();
+      final now = clock.nowUtc();
+
       for (final row in rows) {
-        final existing = byCode[row.code.toLowerCase()];
-        final category = row.designation.isEmpty ? 'Worker' : row.designation;
-        final housingId = row.campus.trim().isEmpty
-            ? AppConstants.defaultHousingId
-            : null;
+        final iqama = row.code.trim();
+        final existing = byCode[iqama];
+        final cat = row.designation.isEmpty ? 'direct_labor' : row.designation;
+        final isRental = row.supplier.isNotEmpty;
+
         if (existing == null) {
-          final employeeUid = const Uuid().v4();
-          await _database
-              .into(_database.employees)
-              .insert(
-                EmployeesCompanion.insert(
-                  employeeUid: employeeUid,
-                  employeeCode: row.code,
-                  fullNameAr: row.name,
-                  fullNameEn: Value(row.name),
-                  category: category,
-                  supplier: Value(row.supplier.isEmpty ? null : row.supplier),
-                  housingId: Value(housingId),
-                ),
-              );
+          await _database.into(_database.employees).insert(EmployeesCompanion.insert(
+            iqamaNo: iqama, fullNameAr: row.name, fullNameEn: Value(row.name),
+            jobTitle: Value(cat), jobCategory: Value(cat),
+            employmentType: Value(isRental ? 'rental' : 'company'),
+            rentalCompany: Value(isRental ? row.supplier : null),
+          ));
+          await _database.into(_database.workerHistory).insert(WorkerHistoryCompanion.insert(
+            historyId: uuid.v4(), iqamaNo: iqama, action: 'imported_create',
+            details: Value('Workforce import: ${row.name}'), createdAt: now,
+          ));
           added++;
-          byCode[row.code.toLowerCase()] = Employee(
-            employeeUid: employeeUid,
-            employeeCode: row.code,
-            fullNameAr: row.name,
-            fullNameEn: row.name,
-            category: category,
-            supplier: row.supplier.isEmpty ? null : row.supplier,
-            currentTeamId: null,
-            housingId: housingId,
-            isActive: true,
-            rowVersion: 1,
+        } else {
+          await (_database.update(_database.employees)..where((e) => e.iqamaNo.equals(iqama))).write(
+            EmployeesCompanion(
+              fullNameAr: Value(row.name), fullNameEn: Value(row.name), jobTitle: Value(cat),
+              rentalCompany: Value(isRental ? row.supplier : null),
+              employmentType: Value(isRental ? 'rental' : 'company'),
+              archivedAt: const Value(null), rowVersion: Value(existing.rowVersion + 1),
+            ),
           );
-          continue;
+          await _database.into(_database.workerHistory).insert(WorkerHistoryCompanion.insert(
+            historyId: uuid.v4(), iqamaNo: iqama, action: 'imported_update',
+            details: Value('Workforce import update: ${row.name}'), createdAt: now,
+          ));
+          updated++;
         }
-        await (_database.update(_database.employees)..where(
-              (employee) => employee.employeeUid.equals(existing.employeeUid),
-            ))
-            .write(
-              EmployeesCompanion(
-                fullNameAr: Value(row.name),
-                fullNameEn: Value(row.name),
-                category: Value(category),
-                supplier: Value(row.supplier.isEmpty ? null : row.supplier),
-                housingId:
-                    row.campus.trim().isEmpty && existing.housingId == null
-                    ? const Value(AppConstants.defaultHousingId)
-                    : const Value.absent(),
-                isActive: const Value(true),
-                rowVersion: Value(existing.rowVersion + 1),
-              ),
-            );
-        updated++;
       }
-      accountsCreated = await AccountProvisioningRepository(_database)
-          .provisionSupervisors(_supervisorSeeds(rows, byCode));
+
+      final refreshed = await _database.select(_database.employees).get();
+      final refreshedByCode = {for (final e in refreshed) e.iqamaNo: e};
+      final accountsCreated = await AccountProvisioningRepository(_database)
+          .provisionSupervisors(_seeds(rows, refreshedByCode));
+      return WorkforceImportResult(added: added, updated: updated, accountsCreated: accountsCreated);
     });
-    return WorkforceImportResult(
-      added: added,
-      updated: updated,
-      accountsCreated: accountsCreated,
-    );
   }
 
-  List<SupervisorSeed> _supervisorSeeds(
-    List<WorkforceRow> rows,
-    Map<String, Employee> byCode,
-  ) {
-    const resolver = SupervisorRoleResolver();
+  List<SupervisorSeed> _seeds(List<WorkforceRow> rows, Map<String, Employee> byCode) {
+    const res = SupervisorRoleResolver();
     return [
-      for (final row in rows)
-        if ((resolver.resolve(row), byCode[row.code.toLowerCase()]) case (
-          final role?,
-          final employee?,
-        ))
-          SupervisorSeed(
-            employeeUid: employee.employeeUid,
-            displayName: row.name,
-            role: role,
-            teamName: row.team,
-            campusName: row.campus,
-          ),
+      for (final r in rows)
+        if ((res.resolve(r), byCode[r.code.trim()]) case (final role?, final emp?))
+          SupervisorSeed(employeeUid: emp.iqamaNo, displayName: r.name, role: role, teamName: r.team, campusName: r.campus),
     ];
   }
 }

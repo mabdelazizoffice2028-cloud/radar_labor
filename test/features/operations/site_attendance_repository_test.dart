@@ -169,8 +169,8 @@ void main() {
       presentWorkerUids: const ['w1'],
       actorUserId: 'sup-1',
     );
-    await (db.update(db.employees)..where((r) => r.employeeUid.equals('w1')))
-        .write(const EmployeesCompanion(isActive: Value(false)));
+    await (db.update(db.employees)..where((r) => r.iqamaNo.equals('w1')))
+        .write(EmployeesCompanion(archivedAt: Value(DateTime.now().toUtc())));
 
     final loaded = await repo.loadDay(
       actor: actor,

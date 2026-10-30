@@ -214,23 +214,12 @@ class $EmployeesTable extends Employees
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $EmployeesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _employeeUidMeta = const VerificationMeta(
-    'employeeUid',
+  static const VerificationMeta _iqamaNoMeta = const VerificationMeta(
+    'iqamaNo',
   );
   @override
-  late final GeneratedColumn<String> employeeUid = GeneratedColumn<String>(
-    'employee_uid',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _employeeCodeMeta = const VerificationMeta(
-    'employeeCode',
-  );
-  @override
-  late final GeneratedColumn<String> employeeCode = GeneratedColumn<String>(
-    'employee_code',
+  late final GeneratedColumn<String> iqamaNo = GeneratedColumn<String>(
+    'iqama_no',
     aliasedName,
     false,
     type: DriftSqlType.string,
@@ -258,26 +247,61 @@ class $EmployeesTable extends Employees
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _categoryMeta = const VerificationMeta(
-    'category',
+  static const VerificationMeta _jobTitleMeta = const VerificationMeta(
+    'jobTitle',
   );
   @override
-  late final GeneratedColumn<String> category = GeneratedColumn<String>(
-    'category',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _supplierMeta = const VerificationMeta(
-    'supplier',
-  );
-  @override
-  late final GeneratedColumn<String> supplier = GeneratedColumn<String>(
-    'supplier',
+  late final GeneratedColumn<String> jobTitle = GeneratedColumn<String>(
+    'job_title',
     aliasedName,
     true,
     type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _jobCategoryMeta = const VerificationMeta(
+    'jobCategory',
+  );
+  @override
+  late final GeneratedColumn<String> jobCategory = GeneratedColumn<String>(
+    'job_category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('direct_labor'),
+  );
+  static const VerificationMeta _employmentTypeMeta = const VerificationMeta(
+    'employmentType',
+  );
+  @override
+  late final GeneratedColumn<String> employmentType = GeneratedColumn<String>(
+    'employment_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('company'),
+  );
+  static const VerificationMeta _rentalCompanyMeta = const VerificationMeta(
+    'rentalCompany',
+  );
+  @override
+  late final GeneratedColumn<String> rentalCompany = GeneratedColumn<String>(
+    'rental_company',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _iqamaExpiryMeta = const VerificationMeta(
+    'iqamaExpiry',
+  );
+  @override
+  late final GeneratedColumn<DateTime> iqamaExpiry = GeneratedColumn<DateTime>(
+    'iqama_expiry',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
   static const VerificationMeta _currentTeamIdMeta = const VerificationMeta(
@@ -291,31 +315,16 @@ class $EmployeesTable extends Employees
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _housingIdMeta = const VerificationMeta(
-    'housingId',
+  static const VerificationMeta _archivedAtMeta = const VerificationMeta(
+    'archivedAt',
   );
   @override
-  late final GeneratedColumn<String> housingId = GeneratedColumn<String>(
-    'housing_id',
+  late final GeneratedColumn<DateTime> archivedAt = GeneratedColumn<DateTime>(
+    'archived_at',
     aliasedName,
     true,
-    type: DriftSqlType.string,
+    type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
-  );
-  static const VerificationMeta _isActiveMeta = const VerificationMeta(
-    'isActive',
-  );
-  @override
-  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
-    'is_active',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_active" IN (0, 1))',
-    ),
-    defaultValue: const Constant(true),
   );
   static const VerificationMeta _rowVersionMeta = const VerificationMeta(
     'rowVersion',
@@ -331,15 +340,16 @@ class $EmployeesTable extends Employees
   );
   @override
   List<GeneratedColumn> get $columns => [
-    employeeUid,
-    employeeCode,
+    iqamaNo,
     fullNameAr,
     fullNameEn,
-    category,
-    supplier,
+    jobTitle,
+    jobCategory,
+    employmentType,
+    rentalCompany,
+    iqamaExpiry,
     currentTeamId,
-    housingId,
-    isActive,
+    archivedAt,
     rowVersion,
   ];
   @override
@@ -354,27 +364,13 @@ class $EmployeesTable extends Employees
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('employee_uid')) {
+    if (data.containsKey('iqama_no')) {
       context.handle(
-        _employeeUidMeta,
-        employeeUid.isAcceptableOrUnknown(
-          data['employee_uid']!,
-          _employeeUidMeta,
-        ),
+        _iqamaNoMeta,
+        iqamaNo.isAcceptableOrUnknown(data['iqama_no']!, _iqamaNoMeta),
       );
     } else if (isInserting) {
-      context.missing(_employeeUidMeta);
-    }
-    if (data.containsKey('employee_code')) {
-      context.handle(
-        _employeeCodeMeta,
-        employeeCode.isAcceptableOrUnknown(
-          data['employee_code']!,
-          _employeeCodeMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_employeeCodeMeta);
+      context.missing(_iqamaNoMeta);
     }
     if (data.containsKey('full_name_ar')) {
       context.handle(
@@ -396,18 +392,46 @@ class $EmployeesTable extends Employees
         ),
       );
     }
-    if (data.containsKey('category')) {
+    if (data.containsKey('job_title')) {
       context.handle(
-        _categoryMeta,
-        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+        _jobTitleMeta,
+        jobTitle.isAcceptableOrUnknown(data['job_title']!, _jobTitleMeta),
       );
-    } else if (isInserting) {
-      context.missing(_categoryMeta);
     }
-    if (data.containsKey('supplier')) {
+    if (data.containsKey('job_category')) {
       context.handle(
-        _supplierMeta,
-        supplier.isAcceptableOrUnknown(data['supplier']!, _supplierMeta),
+        _jobCategoryMeta,
+        jobCategory.isAcceptableOrUnknown(
+          data['job_category']!,
+          _jobCategoryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('employment_type')) {
+      context.handle(
+        _employmentTypeMeta,
+        employmentType.isAcceptableOrUnknown(
+          data['employment_type']!,
+          _employmentTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('rental_company')) {
+      context.handle(
+        _rentalCompanyMeta,
+        rentalCompany.isAcceptableOrUnknown(
+          data['rental_company']!,
+          _rentalCompanyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('iqama_expiry')) {
+      context.handle(
+        _iqamaExpiryMeta,
+        iqamaExpiry.isAcceptableOrUnknown(
+          data['iqama_expiry']!,
+          _iqamaExpiryMeta,
+        ),
       );
     }
     if (data.containsKey('current_team_id')) {
@@ -419,16 +443,10 @@ class $EmployeesTable extends Employees
         ),
       );
     }
-    if (data.containsKey('housing_id')) {
+    if (data.containsKey('archived_at')) {
       context.handle(
-        _housingIdMeta,
-        housingId.isAcceptableOrUnknown(data['housing_id']!, _housingIdMeta),
-      );
-    }
-    if (data.containsKey('is_active')) {
-      context.handle(
-        _isActiveMeta,
-        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+        _archivedAtMeta,
+        archivedAt.isAcceptableOrUnknown(data['archived_at']!, _archivedAtMeta),
       );
     }
     if (data.containsKey('row_version')) {
@@ -441,18 +459,14 @@ class $EmployeesTable extends Employees
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {employeeUid};
+  Set<GeneratedColumn> get $primaryKey => {iqamaNo};
   @override
   Employee map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Employee(
-      employeeUid: attachedDatabase.typeMapping.read(
+      iqamaNo: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}employee_uid'],
-      )!,
-      employeeCode: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}employee_code'],
+        data['${effectivePrefix}iqama_no'],
       )!,
       fullNameAr: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -462,26 +476,34 @@ class $EmployeesTable extends Employees
         DriftSqlType.string,
         data['${effectivePrefix}full_name_en'],
       ),
-      category: attachedDatabase.typeMapping.read(
+      jobTitle: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}category'],
+        data['${effectivePrefix}job_title'],
+      ),
+      jobCategory: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}job_category'],
       )!,
-      supplier: attachedDatabase.typeMapping.read(
+      employmentType: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}supplier'],
+        data['${effectivePrefix}employment_type'],
+      )!,
+      rentalCompany: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rental_company'],
+      ),
+      iqamaExpiry: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}iqama_expiry'],
       ),
       currentTeamId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}current_team_id'],
       ),
-      housingId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}housing_id'],
+      archivedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}archived_at'],
       ),
-      isActive: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}is_active'],
-      )!,
       rowVersion: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}row_version'],
@@ -496,71 +518,83 @@ class $EmployeesTable extends Employees
 }
 
 class Employee extends DataClass implements Insertable<Employee> {
-  final String employeeUid;
-  final String employeeCode;
+  final String iqamaNo;
   final String fullNameAr;
   final String? fullNameEn;
-  final String category;
-  final String? supplier;
+  final String? jobTitle;
+  final String jobCategory;
+  final String employmentType;
+  final String? rentalCompany;
+  final DateTime? iqamaExpiry;
   final String? currentTeamId;
-  final String? housingId;
-  final bool isActive;
+  final DateTime? archivedAt;
   final int rowVersion;
   const Employee({
-    required this.employeeUid,
-    required this.employeeCode,
+    required this.iqamaNo,
     required this.fullNameAr,
     this.fullNameEn,
-    required this.category,
-    this.supplier,
+    this.jobTitle,
+    required this.jobCategory,
+    required this.employmentType,
+    this.rentalCompany,
+    this.iqamaExpiry,
     this.currentTeamId,
-    this.housingId,
-    required this.isActive,
+    this.archivedAt,
     required this.rowVersion,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['employee_uid'] = Variable<String>(employeeUid);
-    map['employee_code'] = Variable<String>(employeeCode);
+    map['iqama_no'] = Variable<String>(iqamaNo);
     map['full_name_ar'] = Variable<String>(fullNameAr);
     if (!nullToAbsent || fullNameEn != null) {
       map['full_name_en'] = Variable<String>(fullNameEn);
     }
-    map['category'] = Variable<String>(category);
-    if (!nullToAbsent || supplier != null) {
-      map['supplier'] = Variable<String>(supplier);
+    if (!nullToAbsent || jobTitle != null) {
+      map['job_title'] = Variable<String>(jobTitle);
+    }
+    map['job_category'] = Variable<String>(jobCategory);
+    map['employment_type'] = Variable<String>(employmentType);
+    if (!nullToAbsent || rentalCompany != null) {
+      map['rental_company'] = Variable<String>(rentalCompany);
+    }
+    if (!nullToAbsent || iqamaExpiry != null) {
+      map['iqama_expiry'] = Variable<DateTime>(iqamaExpiry);
     }
     if (!nullToAbsent || currentTeamId != null) {
       map['current_team_id'] = Variable<String>(currentTeamId);
     }
-    if (!nullToAbsent || housingId != null) {
-      map['housing_id'] = Variable<String>(housingId);
+    if (!nullToAbsent || archivedAt != null) {
+      map['archived_at'] = Variable<DateTime>(archivedAt);
     }
-    map['is_active'] = Variable<bool>(isActive);
     map['row_version'] = Variable<int>(rowVersion);
     return map;
   }
 
   EmployeesCompanion toCompanion(bool nullToAbsent) {
     return EmployeesCompanion(
-      employeeUid: Value(employeeUid),
-      employeeCode: Value(employeeCode),
+      iqamaNo: Value(iqamaNo),
       fullNameAr: Value(fullNameAr),
       fullNameEn: fullNameEn == null && nullToAbsent
           ? const Value.absent()
           : Value(fullNameEn),
-      category: Value(category),
-      supplier: supplier == null && nullToAbsent
+      jobTitle: jobTitle == null && nullToAbsent
           ? const Value.absent()
-          : Value(supplier),
+          : Value(jobTitle),
+      jobCategory: Value(jobCategory),
+      employmentType: Value(employmentType),
+      rentalCompany: rentalCompany == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rentalCompany),
+      iqamaExpiry: iqamaExpiry == null && nullToAbsent
+          ? const Value.absent()
+          : Value(iqamaExpiry),
       currentTeamId: currentTeamId == null && nullToAbsent
           ? const Value.absent()
           : Value(currentTeamId),
-      housingId: housingId == null && nullToAbsent
+      archivedAt: archivedAt == null && nullToAbsent
           ? const Value.absent()
-          : Value(housingId),
-      isActive: Value(isActive),
+          : Value(archivedAt),
       rowVersion: Value(rowVersion),
     );
   }
@@ -571,15 +605,16 @@ class Employee extends DataClass implements Insertable<Employee> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Employee(
-      employeeUid: serializer.fromJson<String>(json['employeeUid']),
-      employeeCode: serializer.fromJson<String>(json['employeeCode']),
+      iqamaNo: serializer.fromJson<String>(json['iqamaNo']),
       fullNameAr: serializer.fromJson<String>(json['fullNameAr']),
       fullNameEn: serializer.fromJson<String?>(json['fullNameEn']),
-      category: serializer.fromJson<String>(json['category']),
-      supplier: serializer.fromJson<String?>(json['supplier']),
+      jobTitle: serializer.fromJson<String?>(json['jobTitle']),
+      jobCategory: serializer.fromJson<String>(json['jobCategory']),
+      employmentType: serializer.fromJson<String>(json['employmentType']),
+      rentalCompany: serializer.fromJson<String?>(json['rentalCompany']),
+      iqamaExpiry: serializer.fromJson<DateTime?>(json['iqamaExpiry']),
       currentTeamId: serializer.fromJson<String?>(json['currentTeamId']),
-      housingId: serializer.fromJson<String?>(json['housingId']),
-      isActive: serializer.fromJson<bool>(json['isActive']),
+      archivedAt: serializer.fromJson<DateTime?>(json['archivedAt']),
       rowVersion: serializer.fromJson<int>(json['rowVersion']),
     );
   }
@@ -587,65 +622,77 @@ class Employee extends DataClass implements Insertable<Employee> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'employeeUid': serializer.toJson<String>(employeeUid),
-      'employeeCode': serializer.toJson<String>(employeeCode),
+      'iqamaNo': serializer.toJson<String>(iqamaNo),
       'fullNameAr': serializer.toJson<String>(fullNameAr),
       'fullNameEn': serializer.toJson<String?>(fullNameEn),
-      'category': serializer.toJson<String>(category),
-      'supplier': serializer.toJson<String?>(supplier),
+      'jobTitle': serializer.toJson<String?>(jobTitle),
+      'jobCategory': serializer.toJson<String>(jobCategory),
+      'employmentType': serializer.toJson<String>(employmentType),
+      'rentalCompany': serializer.toJson<String?>(rentalCompany),
+      'iqamaExpiry': serializer.toJson<DateTime?>(iqamaExpiry),
       'currentTeamId': serializer.toJson<String?>(currentTeamId),
-      'housingId': serializer.toJson<String?>(housingId),
-      'isActive': serializer.toJson<bool>(isActive),
+      'archivedAt': serializer.toJson<DateTime?>(archivedAt),
       'rowVersion': serializer.toJson<int>(rowVersion),
     };
   }
 
   Employee copyWith({
-    String? employeeUid,
-    String? employeeCode,
+    String? iqamaNo,
     String? fullNameAr,
     Value<String?> fullNameEn = const Value.absent(),
-    String? category,
-    Value<String?> supplier = const Value.absent(),
+    Value<String?> jobTitle = const Value.absent(),
+    String? jobCategory,
+    String? employmentType,
+    Value<String?> rentalCompany = const Value.absent(),
+    Value<DateTime?> iqamaExpiry = const Value.absent(),
     Value<String?> currentTeamId = const Value.absent(),
-    Value<String?> housingId = const Value.absent(),
-    bool? isActive,
+    Value<DateTime?> archivedAt = const Value.absent(),
     int? rowVersion,
   }) => Employee(
-    employeeUid: employeeUid ?? this.employeeUid,
-    employeeCode: employeeCode ?? this.employeeCode,
+    iqamaNo: iqamaNo ?? this.iqamaNo,
     fullNameAr: fullNameAr ?? this.fullNameAr,
     fullNameEn: fullNameEn.present ? fullNameEn.value : this.fullNameEn,
-    category: category ?? this.category,
-    supplier: supplier.present ? supplier.value : this.supplier,
+    jobTitle: jobTitle.present ? jobTitle.value : this.jobTitle,
+    jobCategory: jobCategory ?? this.jobCategory,
+    employmentType: employmentType ?? this.employmentType,
+    rentalCompany: rentalCompany.present
+        ? rentalCompany.value
+        : this.rentalCompany,
+    iqamaExpiry: iqamaExpiry.present ? iqamaExpiry.value : this.iqamaExpiry,
     currentTeamId: currentTeamId.present
         ? currentTeamId.value
         : this.currentTeamId,
-    housingId: housingId.present ? housingId.value : this.housingId,
-    isActive: isActive ?? this.isActive,
+    archivedAt: archivedAt.present ? archivedAt.value : this.archivedAt,
     rowVersion: rowVersion ?? this.rowVersion,
   );
   Employee copyWithCompanion(EmployeesCompanion data) {
     return Employee(
-      employeeUid: data.employeeUid.present
-          ? data.employeeUid.value
-          : this.employeeUid,
-      employeeCode: data.employeeCode.present
-          ? data.employeeCode.value
-          : this.employeeCode,
+      iqamaNo: data.iqamaNo.present ? data.iqamaNo.value : this.iqamaNo,
       fullNameAr: data.fullNameAr.present
           ? data.fullNameAr.value
           : this.fullNameAr,
       fullNameEn: data.fullNameEn.present
           ? data.fullNameEn.value
           : this.fullNameEn,
-      category: data.category.present ? data.category.value : this.category,
-      supplier: data.supplier.present ? data.supplier.value : this.supplier,
+      jobTitle: data.jobTitle.present ? data.jobTitle.value : this.jobTitle,
+      jobCategory: data.jobCategory.present
+          ? data.jobCategory.value
+          : this.jobCategory,
+      employmentType: data.employmentType.present
+          ? data.employmentType.value
+          : this.employmentType,
+      rentalCompany: data.rentalCompany.present
+          ? data.rentalCompany.value
+          : this.rentalCompany,
+      iqamaExpiry: data.iqamaExpiry.present
+          ? data.iqamaExpiry.value
+          : this.iqamaExpiry,
       currentTeamId: data.currentTeamId.present
           ? data.currentTeamId.value
           : this.currentTeamId,
-      housingId: data.housingId.present ? data.housingId.value : this.housingId,
-      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      archivedAt: data.archivedAt.present
+          ? data.archivedAt.value
+          : this.archivedAt,
       rowVersion: data.rowVersion.present
           ? data.rowVersion.value
           : this.rowVersion,
@@ -655,15 +702,16 @@ class Employee extends DataClass implements Insertable<Employee> {
   @override
   String toString() {
     return (StringBuffer('Employee(')
-          ..write('employeeUid: $employeeUid, ')
-          ..write('employeeCode: $employeeCode, ')
+          ..write('iqamaNo: $iqamaNo, ')
           ..write('fullNameAr: $fullNameAr, ')
           ..write('fullNameEn: $fullNameEn, ')
-          ..write('category: $category, ')
-          ..write('supplier: $supplier, ')
+          ..write('jobTitle: $jobTitle, ')
+          ..write('jobCategory: $jobCategory, ')
+          ..write('employmentType: $employmentType, ')
+          ..write('rentalCompany: $rentalCompany, ')
+          ..write('iqamaExpiry: $iqamaExpiry, ')
           ..write('currentTeamId: $currentTeamId, ')
-          ..write('housingId: $housingId, ')
-          ..write('isActive: $isActive, ')
+          ..write('archivedAt: $archivedAt, ')
           ..write('rowVersion: $rowVersion')
           ..write(')'))
         .toString();
@@ -671,125 +719,132 @@ class Employee extends DataClass implements Insertable<Employee> {
 
   @override
   int get hashCode => Object.hash(
-    employeeUid,
-    employeeCode,
+    iqamaNo,
     fullNameAr,
     fullNameEn,
-    category,
-    supplier,
+    jobTitle,
+    jobCategory,
+    employmentType,
+    rentalCompany,
+    iqamaExpiry,
     currentTeamId,
-    housingId,
-    isActive,
+    archivedAt,
     rowVersion,
   );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Employee &&
-          other.employeeUid == this.employeeUid &&
-          other.employeeCode == this.employeeCode &&
+          other.iqamaNo == this.iqamaNo &&
           other.fullNameAr == this.fullNameAr &&
           other.fullNameEn == this.fullNameEn &&
-          other.category == this.category &&
-          other.supplier == this.supplier &&
+          other.jobTitle == this.jobTitle &&
+          other.jobCategory == this.jobCategory &&
+          other.employmentType == this.employmentType &&
+          other.rentalCompany == this.rentalCompany &&
+          other.iqamaExpiry == this.iqamaExpiry &&
           other.currentTeamId == this.currentTeamId &&
-          other.housingId == this.housingId &&
-          other.isActive == this.isActive &&
+          other.archivedAt == this.archivedAt &&
           other.rowVersion == this.rowVersion);
 }
 
 class EmployeesCompanion extends UpdateCompanion<Employee> {
-  final Value<String> employeeUid;
-  final Value<String> employeeCode;
+  final Value<String> iqamaNo;
   final Value<String> fullNameAr;
   final Value<String?> fullNameEn;
-  final Value<String> category;
-  final Value<String?> supplier;
+  final Value<String?> jobTitle;
+  final Value<String> jobCategory;
+  final Value<String> employmentType;
+  final Value<String?> rentalCompany;
+  final Value<DateTime?> iqamaExpiry;
   final Value<String?> currentTeamId;
-  final Value<String?> housingId;
-  final Value<bool> isActive;
+  final Value<DateTime?> archivedAt;
   final Value<int> rowVersion;
   final Value<int> rowid;
   const EmployeesCompanion({
-    this.employeeUid = const Value.absent(),
-    this.employeeCode = const Value.absent(),
+    this.iqamaNo = const Value.absent(),
     this.fullNameAr = const Value.absent(),
     this.fullNameEn = const Value.absent(),
-    this.category = const Value.absent(),
-    this.supplier = const Value.absent(),
+    this.jobTitle = const Value.absent(),
+    this.jobCategory = const Value.absent(),
+    this.employmentType = const Value.absent(),
+    this.rentalCompany = const Value.absent(),
+    this.iqamaExpiry = const Value.absent(),
     this.currentTeamId = const Value.absent(),
-    this.housingId = const Value.absent(),
-    this.isActive = const Value.absent(),
+    this.archivedAt = const Value.absent(),
     this.rowVersion = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   EmployeesCompanion.insert({
-    required String employeeUid,
-    required String employeeCode,
+    required String iqamaNo,
     required String fullNameAr,
     this.fullNameEn = const Value.absent(),
-    required String category,
-    this.supplier = const Value.absent(),
+    this.jobTitle = const Value.absent(),
+    this.jobCategory = const Value.absent(),
+    this.employmentType = const Value.absent(),
+    this.rentalCompany = const Value.absent(),
+    this.iqamaExpiry = const Value.absent(),
     this.currentTeamId = const Value.absent(),
-    this.housingId = const Value.absent(),
-    this.isActive = const Value.absent(),
+    this.archivedAt = const Value.absent(),
     this.rowVersion = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : employeeUid = Value(employeeUid),
-       employeeCode = Value(employeeCode),
-       fullNameAr = Value(fullNameAr),
-       category = Value(category);
+  }) : iqamaNo = Value(iqamaNo),
+       fullNameAr = Value(fullNameAr);
   static Insertable<Employee> custom({
-    Expression<String>? employeeUid,
-    Expression<String>? employeeCode,
+    Expression<String>? iqamaNo,
     Expression<String>? fullNameAr,
     Expression<String>? fullNameEn,
-    Expression<String>? category,
-    Expression<String>? supplier,
+    Expression<String>? jobTitle,
+    Expression<String>? jobCategory,
+    Expression<String>? employmentType,
+    Expression<String>? rentalCompany,
+    Expression<DateTime>? iqamaExpiry,
     Expression<String>? currentTeamId,
-    Expression<String>? housingId,
-    Expression<bool>? isActive,
+    Expression<DateTime>? archivedAt,
     Expression<int>? rowVersion,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (employeeUid != null) 'employee_uid': employeeUid,
-      if (employeeCode != null) 'employee_code': employeeCode,
+      if (iqamaNo != null) 'iqama_no': iqamaNo,
       if (fullNameAr != null) 'full_name_ar': fullNameAr,
       if (fullNameEn != null) 'full_name_en': fullNameEn,
-      if (category != null) 'category': category,
-      if (supplier != null) 'supplier': supplier,
+      if (jobTitle != null) 'job_title': jobTitle,
+      if (jobCategory != null) 'job_category': jobCategory,
+      if (employmentType != null) 'employment_type': employmentType,
+      if (rentalCompany != null) 'rental_company': rentalCompany,
+      if (iqamaExpiry != null) 'iqama_expiry': iqamaExpiry,
       if (currentTeamId != null) 'current_team_id': currentTeamId,
-      if (housingId != null) 'housing_id': housingId,
-      if (isActive != null) 'is_active': isActive,
+      if (archivedAt != null) 'archived_at': archivedAt,
       if (rowVersion != null) 'row_version': rowVersion,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   EmployeesCompanion copyWith({
-    Value<String>? employeeUid,
-    Value<String>? employeeCode,
+    Value<String>? iqamaNo,
     Value<String>? fullNameAr,
     Value<String?>? fullNameEn,
-    Value<String>? category,
-    Value<String?>? supplier,
+    Value<String?>? jobTitle,
+    Value<String>? jobCategory,
+    Value<String>? employmentType,
+    Value<String?>? rentalCompany,
+    Value<DateTime?>? iqamaExpiry,
     Value<String?>? currentTeamId,
-    Value<String?>? housingId,
-    Value<bool>? isActive,
+    Value<DateTime?>? archivedAt,
     Value<int>? rowVersion,
     Value<int>? rowid,
   }) {
     return EmployeesCompanion(
-      employeeUid: employeeUid ?? this.employeeUid,
-      employeeCode: employeeCode ?? this.employeeCode,
+      iqamaNo: iqamaNo ?? this.iqamaNo,
       fullNameAr: fullNameAr ?? this.fullNameAr,
       fullNameEn: fullNameEn ?? this.fullNameEn,
-      category: category ?? this.category,
-      supplier: supplier ?? this.supplier,
+      jobTitle: jobTitle ?? this.jobTitle,
+      jobCategory: jobCategory ?? this.jobCategory,
+      employmentType: employmentType ?? this.employmentType,
+      rentalCompany: rentalCompany ?? this.rentalCompany,
+      iqamaExpiry: iqamaExpiry ?? this.iqamaExpiry,
       currentTeamId: currentTeamId ?? this.currentTeamId,
-      housingId: housingId ?? this.housingId,
-      isActive: isActive ?? this.isActive,
+      archivedAt: archivedAt ?? this.archivedAt,
       rowVersion: rowVersion ?? this.rowVersion,
       rowid: rowid ?? this.rowid,
     );
@@ -798,11 +853,8 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (employeeUid.present) {
-      map['employee_uid'] = Variable<String>(employeeUid.value);
-    }
-    if (employeeCode.present) {
-      map['employee_code'] = Variable<String>(employeeCode.value);
+    if (iqamaNo.present) {
+      map['iqama_no'] = Variable<String>(iqamaNo.value);
     }
     if (fullNameAr.present) {
       map['full_name_ar'] = Variable<String>(fullNameAr.value);
@@ -810,20 +862,26 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
     if (fullNameEn.present) {
       map['full_name_en'] = Variable<String>(fullNameEn.value);
     }
-    if (category.present) {
-      map['category'] = Variable<String>(category.value);
+    if (jobTitle.present) {
+      map['job_title'] = Variable<String>(jobTitle.value);
     }
-    if (supplier.present) {
-      map['supplier'] = Variable<String>(supplier.value);
+    if (jobCategory.present) {
+      map['job_category'] = Variable<String>(jobCategory.value);
+    }
+    if (employmentType.present) {
+      map['employment_type'] = Variable<String>(employmentType.value);
+    }
+    if (rentalCompany.present) {
+      map['rental_company'] = Variable<String>(rentalCompany.value);
+    }
+    if (iqamaExpiry.present) {
+      map['iqama_expiry'] = Variable<DateTime>(iqamaExpiry.value);
     }
     if (currentTeamId.present) {
       map['current_team_id'] = Variable<String>(currentTeamId.value);
     }
-    if (housingId.present) {
-      map['housing_id'] = Variable<String>(housingId.value);
-    }
-    if (isActive.present) {
-      map['is_active'] = Variable<bool>(isActive.value);
+    if (archivedAt.present) {
+      map['archived_at'] = Variable<DateTime>(archivedAt.value);
     }
     if (rowVersion.present) {
       map['row_version'] = Variable<int>(rowVersion.value);
@@ -837,15 +895,16 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
   @override
   String toString() {
     return (StringBuffer('EmployeesCompanion(')
-          ..write('employeeUid: $employeeUid, ')
-          ..write('employeeCode: $employeeCode, ')
+          ..write('iqamaNo: $iqamaNo, ')
           ..write('fullNameAr: $fullNameAr, ')
           ..write('fullNameEn: $fullNameEn, ')
-          ..write('category: $category, ')
-          ..write('supplier: $supplier, ')
+          ..write('jobTitle: $jobTitle, ')
+          ..write('jobCategory: $jobCategory, ')
+          ..write('employmentType: $employmentType, ')
+          ..write('rentalCompany: $rentalCompany, ')
+          ..write('iqamaExpiry: $iqamaExpiry, ')
           ..write('currentTeamId: $currentTeamId, ')
-          ..write('housingId: $housingId, ')
-          ..write('isActive: $isActive, ')
+          ..write('archivedAt: $archivedAt, ')
           ..write('rowVersion: $rowVersion, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -1224,318 +1283,6 @@ class TeamsCompanion extends UpdateCompanion<Team> {
   }
 }
 
-class $HousingsTable extends Housings with TableInfo<$HousingsTable, Housing> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $HousingsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _housingIdMeta = const VerificationMeta(
-    'housingId',
-  );
-  @override
-  late final GeneratedColumn<String> housingId = GeneratedColumn<String>(
-    'housing_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _nameArMeta = const VerificationMeta('nameAr');
-  @override
-  late final GeneratedColumn<String> nameAr = GeneratedColumn<String>(
-    'name_ar',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _nameEnMeta = const VerificationMeta('nameEn');
-  @override
-  late final GeneratedColumn<String> nameEn = GeneratedColumn<String>(
-    'name_en',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _isActiveMeta = const VerificationMeta(
-    'isActive',
-  );
-  @override
-  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
-    'is_active',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_active" IN (0, 1))',
-    ),
-    defaultValue: const Constant(true),
-  );
-  @override
-  List<GeneratedColumn> get $columns => [housingId, nameAr, nameEn, isActive];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'housings';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<Housing> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('housing_id')) {
-      context.handle(
-        _housingIdMeta,
-        housingId.isAcceptableOrUnknown(data['housing_id']!, _housingIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_housingIdMeta);
-    }
-    if (data.containsKey('name_ar')) {
-      context.handle(
-        _nameArMeta,
-        nameAr.isAcceptableOrUnknown(data['name_ar']!, _nameArMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_nameArMeta);
-    }
-    if (data.containsKey('name_en')) {
-      context.handle(
-        _nameEnMeta,
-        nameEn.isAcceptableOrUnknown(data['name_en']!, _nameEnMeta),
-      );
-    }
-    if (data.containsKey('is_active')) {
-      context.handle(
-        _isActiveMeta,
-        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {housingId};
-  @override
-  Housing map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Housing(
-      housingId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}housing_id'],
-      )!,
-      nameAr: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name_ar'],
-      )!,
-      nameEn: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name_en'],
-      ),
-      isActive: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}is_active'],
-      )!,
-    );
-  }
-
-  @override
-  $HousingsTable createAlias(String alias) {
-    return $HousingsTable(attachedDatabase, alias);
-  }
-}
-
-class Housing extends DataClass implements Insertable<Housing> {
-  final String housingId;
-  final String nameAr;
-  final String? nameEn;
-  final bool isActive;
-  const Housing({
-    required this.housingId,
-    required this.nameAr,
-    this.nameEn,
-    required this.isActive,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['housing_id'] = Variable<String>(housingId);
-    map['name_ar'] = Variable<String>(nameAr);
-    if (!nullToAbsent || nameEn != null) {
-      map['name_en'] = Variable<String>(nameEn);
-    }
-    map['is_active'] = Variable<bool>(isActive);
-    return map;
-  }
-
-  HousingsCompanion toCompanion(bool nullToAbsent) {
-    return HousingsCompanion(
-      housingId: Value(housingId),
-      nameAr: Value(nameAr),
-      nameEn: nameEn == null && nullToAbsent
-          ? const Value.absent()
-          : Value(nameEn),
-      isActive: Value(isActive),
-    );
-  }
-
-  factory Housing.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Housing(
-      housingId: serializer.fromJson<String>(json['housingId']),
-      nameAr: serializer.fromJson<String>(json['nameAr']),
-      nameEn: serializer.fromJson<String?>(json['nameEn']),
-      isActive: serializer.fromJson<bool>(json['isActive']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'housingId': serializer.toJson<String>(housingId),
-      'nameAr': serializer.toJson<String>(nameAr),
-      'nameEn': serializer.toJson<String?>(nameEn),
-      'isActive': serializer.toJson<bool>(isActive),
-    };
-  }
-
-  Housing copyWith({
-    String? housingId,
-    String? nameAr,
-    Value<String?> nameEn = const Value.absent(),
-    bool? isActive,
-  }) => Housing(
-    housingId: housingId ?? this.housingId,
-    nameAr: nameAr ?? this.nameAr,
-    nameEn: nameEn.present ? nameEn.value : this.nameEn,
-    isActive: isActive ?? this.isActive,
-  );
-  Housing copyWithCompanion(HousingsCompanion data) {
-    return Housing(
-      housingId: data.housingId.present ? data.housingId.value : this.housingId,
-      nameAr: data.nameAr.present ? data.nameAr.value : this.nameAr,
-      nameEn: data.nameEn.present ? data.nameEn.value : this.nameEn,
-      isActive: data.isActive.present ? data.isActive.value : this.isActive,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('Housing(')
-          ..write('housingId: $housingId, ')
-          ..write('nameAr: $nameAr, ')
-          ..write('nameEn: $nameEn, ')
-          ..write('isActive: $isActive')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(housingId, nameAr, nameEn, isActive);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is Housing &&
-          other.housingId == this.housingId &&
-          other.nameAr == this.nameAr &&
-          other.nameEn == this.nameEn &&
-          other.isActive == this.isActive);
-}
-
-class HousingsCompanion extends UpdateCompanion<Housing> {
-  final Value<String> housingId;
-  final Value<String> nameAr;
-  final Value<String?> nameEn;
-  final Value<bool> isActive;
-  final Value<int> rowid;
-  const HousingsCompanion({
-    this.housingId = const Value.absent(),
-    this.nameAr = const Value.absent(),
-    this.nameEn = const Value.absent(),
-    this.isActive = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  HousingsCompanion.insert({
-    required String housingId,
-    required String nameAr,
-    this.nameEn = const Value.absent(),
-    this.isActive = const Value.absent(),
-    this.rowid = const Value.absent(),
-  }) : housingId = Value(housingId),
-       nameAr = Value(nameAr);
-  static Insertable<Housing> custom({
-    Expression<String>? housingId,
-    Expression<String>? nameAr,
-    Expression<String>? nameEn,
-    Expression<bool>? isActive,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (housingId != null) 'housing_id': housingId,
-      if (nameAr != null) 'name_ar': nameAr,
-      if (nameEn != null) 'name_en': nameEn,
-      if (isActive != null) 'is_active': isActive,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  HousingsCompanion copyWith({
-    Value<String>? housingId,
-    Value<String>? nameAr,
-    Value<String?>? nameEn,
-    Value<bool>? isActive,
-    Value<int>? rowid,
-  }) {
-    return HousingsCompanion(
-      housingId: housingId ?? this.housingId,
-      nameAr: nameAr ?? this.nameAr,
-      nameEn: nameEn ?? this.nameEn,
-      isActive: isActive ?? this.isActive,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (housingId.present) {
-      map['housing_id'] = Variable<String>(housingId.value);
-    }
-    if (nameAr.present) {
-      map['name_ar'] = Variable<String>(nameAr.value);
-    }
-    if (nameEn.present) {
-      map['name_en'] = Variable<String>(nameEn.value);
-    }
-    if (isActive.present) {
-      map['is_active'] = Variable<bool>(isActive.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('HousingsCompanion(')
-          ..write('housingId: $housingId, ')
-          ..write('nameAr: $nameAr, ')
-          ..write('nameEn: $nameEn, ')
-          ..write('isActive: $isActive, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $EmploymentPeriodsTable extends EmploymentPeriods
     with TableInfo<$EmploymentPeriodsTable, EmploymentPeriod> {
   @override
@@ -1553,19 +1300,16 @@ class $EmploymentPeriodsTable extends EmploymentPeriods
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _employeeUidMeta = const VerificationMeta(
-    'employeeUid',
+  static const VerificationMeta _iqamaNoMeta = const VerificationMeta(
+    'iqamaNo',
   );
   @override
-  late final GeneratedColumn<String> employeeUid = GeneratedColumn<String>(
-    'employee_uid',
+  late final GeneratedColumn<String> iqamaNo = GeneratedColumn<String>(
+    'iqama_no',
     aliasedName,
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES employees (employee_uid) ON DELETE CASCADE',
-    ),
   );
   static const VerificationMeta _startDateMeta = const VerificationMeta(
     'startDate',
@@ -1590,12 +1334,7 @@ class $EmploymentPeriodsTable extends EmploymentPeriods
     requiredDuringInsert: false,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    periodId,
-    employeeUid,
-    startDate,
-    endDate,
-  ];
+  List<GeneratedColumn> get $columns => [periodId, iqamaNo, startDate, endDate];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1616,16 +1355,13 @@ class $EmploymentPeriodsTable extends EmploymentPeriods
     } else if (isInserting) {
       context.missing(_periodIdMeta);
     }
-    if (data.containsKey('employee_uid')) {
+    if (data.containsKey('iqama_no')) {
       context.handle(
-        _employeeUidMeta,
-        employeeUid.isAcceptableOrUnknown(
-          data['employee_uid']!,
-          _employeeUidMeta,
-        ),
+        _iqamaNoMeta,
+        iqamaNo.isAcceptableOrUnknown(data['iqama_no']!, _iqamaNoMeta),
       );
     } else if (isInserting) {
-      context.missing(_employeeUidMeta);
+      context.missing(_iqamaNoMeta);
     }
     if (data.containsKey('start_date')) {
       context.handle(
@@ -1654,9 +1390,9 @@ class $EmploymentPeriodsTable extends EmploymentPeriods
         DriftSqlType.string,
         data['${effectivePrefix}period_id'],
       )!,
-      employeeUid: attachedDatabase.typeMapping.read(
+      iqamaNo: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}employee_uid'],
+        data['${effectivePrefix}iqama_no'],
       )!,
       startDate: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -1678,12 +1414,12 @@ class $EmploymentPeriodsTable extends EmploymentPeriods
 class EmploymentPeriod extends DataClass
     implements Insertable<EmploymentPeriod> {
   final String periodId;
-  final String employeeUid;
+  final String iqamaNo;
   final String startDate;
   final String? endDate;
   const EmploymentPeriod({
     required this.periodId,
-    required this.employeeUid,
+    required this.iqamaNo,
     required this.startDate,
     this.endDate,
   });
@@ -1691,7 +1427,7 @@ class EmploymentPeriod extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['period_id'] = Variable<String>(periodId);
-    map['employee_uid'] = Variable<String>(employeeUid);
+    map['iqama_no'] = Variable<String>(iqamaNo);
     map['start_date'] = Variable<String>(startDate);
     if (!nullToAbsent || endDate != null) {
       map['end_date'] = Variable<String>(endDate);
@@ -1702,7 +1438,7 @@ class EmploymentPeriod extends DataClass
   EmploymentPeriodsCompanion toCompanion(bool nullToAbsent) {
     return EmploymentPeriodsCompanion(
       periodId: Value(periodId),
-      employeeUid: Value(employeeUid),
+      iqamaNo: Value(iqamaNo),
       startDate: Value(startDate),
       endDate: endDate == null && nullToAbsent
           ? const Value.absent()
@@ -1717,7 +1453,7 @@ class EmploymentPeriod extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return EmploymentPeriod(
       periodId: serializer.fromJson<String>(json['periodId']),
-      employeeUid: serializer.fromJson<String>(json['employeeUid']),
+      iqamaNo: serializer.fromJson<String>(json['iqamaNo']),
       startDate: serializer.fromJson<String>(json['startDate']),
       endDate: serializer.fromJson<String?>(json['endDate']),
     );
@@ -1727,7 +1463,7 @@ class EmploymentPeriod extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'periodId': serializer.toJson<String>(periodId),
-      'employeeUid': serializer.toJson<String>(employeeUid),
+      'iqamaNo': serializer.toJson<String>(iqamaNo),
       'startDate': serializer.toJson<String>(startDate),
       'endDate': serializer.toJson<String?>(endDate),
     };
@@ -1735,21 +1471,19 @@ class EmploymentPeriod extends DataClass
 
   EmploymentPeriod copyWith({
     String? periodId,
-    String? employeeUid,
+    String? iqamaNo,
     String? startDate,
     Value<String?> endDate = const Value.absent(),
   }) => EmploymentPeriod(
     periodId: periodId ?? this.periodId,
-    employeeUid: employeeUid ?? this.employeeUid,
+    iqamaNo: iqamaNo ?? this.iqamaNo,
     startDate: startDate ?? this.startDate,
     endDate: endDate.present ? endDate.value : this.endDate,
   );
   EmploymentPeriod copyWithCompanion(EmploymentPeriodsCompanion data) {
     return EmploymentPeriod(
       periodId: data.periodId.present ? data.periodId.value : this.periodId,
-      employeeUid: data.employeeUid.present
-          ? data.employeeUid.value
-          : this.employeeUid,
+      iqamaNo: data.iqamaNo.present ? data.iqamaNo.value : this.iqamaNo,
       startDate: data.startDate.present ? data.startDate.value : this.startDate,
       endDate: data.endDate.present ? data.endDate.value : this.endDate,
     );
@@ -1759,7 +1493,7 @@ class EmploymentPeriod extends DataClass
   String toString() {
     return (StringBuffer('EmploymentPeriod(')
           ..write('periodId: $periodId, ')
-          ..write('employeeUid: $employeeUid, ')
+          ..write('iqamaNo: $iqamaNo, ')
           ..write('startDate: $startDate, ')
           ..write('endDate: $endDate')
           ..write(')'))
@@ -1767,49 +1501,49 @@ class EmploymentPeriod extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(periodId, employeeUid, startDate, endDate);
+  int get hashCode => Object.hash(periodId, iqamaNo, startDate, endDate);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is EmploymentPeriod &&
           other.periodId == this.periodId &&
-          other.employeeUid == this.employeeUid &&
+          other.iqamaNo == this.iqamaNo &&
           other.startDate == this.startDate &&
           other.endDate == this.endDate);
 }
 
 class EmploymentPeriodsCompanion extends UpdateCompanion<EmploymentPeriod> {
   final Value<String> periodId;
-  final Value<String> employeeUid;
+  final Value<String> iqamaNo;
   final Value<String> startDate;
   final Value<String?> endDate;
   final Value<int> rowid;
   const EmploymentPeriodsCompanion({
     this.periodId = const Value.absent(),
-    this.employeeUid = const Value.absent(),
+    this.iqamaNo = const Value.absent(),
     this.startDate = const Value.absent(),
     this.endDate = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   EmploymentPeriodsCompanion.insert({
     required String periodId,
-    required String employeeUid,
+    required String iqamaNo,
     required String startDate,
     this.endDate = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : periodId = Value(periodId),
-       employeeUid = Value(employeeUid),
+       iqamaNo = Value(iqamaNo),
        startDate = Value(startDate);
   static Insertable<EmploymentPeriod> custom({
     Expression<String>? periodId,
-    Expression<String>? employeeUid,
+    Expression<String>? iqamaNo,
     Expression<String>? startDate,
     Expression<String>? endDate,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (periodId != null) 'period_id': periodId,
-      if (employeeUid != null) 'employee_uid': employeeUid,
+      if (iqamaNo != null) 'iqama_no': iqamaNo,
       if (startDate != null) 'start_date': startDate,
       if (endDate != null) 'end_date': endDate,
       if (rowid != null) 'rowid': rowid,
@@ -1818,14 +1552,14 @@ class EmploymentPeriodsCompanion extends UpdateCompanion<EmploymentPeriod> {
 
   EmploymentPeriodsCompanion copyWith({
     Value<String>? periodId,
-    Value<String>? employeeUid,
+    Value<String>? iqamaNo,
     Value<String>? startDate,
     Value<String?>? endDate,
     Value<int>? rowid,
   }) {
     return EmploymentPeriodsCompanion(
       periodId: periodId ?? this.periodId,
-      employeeUid: employeeUid ?? this.employeeUid,
+      iqamaNo: iqamaNo ?? this.iqamaNo,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       rowid: rowid ?? this.rowid,
@@ -1838,8 +1572,8 @@ class EmploymentPeriodsCompanion extends UpdateCompanion<EmploymentPeriod> {
     if (periodId.present) {
       map['period_id'] = Variable<String>(periodId.value);
     }
-    if (employeeUid.present) {
-      map['employee_uid'] = Variable<String>(employeeUid.value);
+    if (iqamaNo.present) {
+      map['iqama_no'] = Variable<String>(iqamaNo.value);
     }
     if (startDate.present) {
       map['start_date'] = Variable<String>(startDate.value);
@@ -1857,7 +1591,7 @@ class EmploymentPeriodsCompanion extends UpdateCompanion<EmploymentPeriod> {
   String toString() {
     return (StringBuffer('EmploymentPeriodsCompanion(')
           ..write('periodId: $periodId, ')
-          ..write('employeeUid: $employeeUid, ')
+          ..write('iqamaNo: $iqamaNo, ')
           ..write('startDate: $startDate, ')
           ..write('endDate: $endDate, ')
           ..write('rowid: $rowid')
@@ -4476,26 +4210,433 @@ class AuditLogsCompanion extends UpdateCompanion<AuditLog> {
   }
 }
 
+class $WorkerHistoryTable extends WorkerHistory
+    with TableInfo<$WorkerHistoryTable, WorkerHistoryData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WorkerHistoryTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _historyIdMeta = const VerificationMeta(
+    'historyId',
+  );
+  @override
+  late final GeneratedColumn<String> historyId = GeneratedColumn<String>(
+    'history_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _iqamaNoMeta = const VerificationMeta(
+    'iqamaNo',
+  );
+  @override
+  late final GeneratedColumn<String> iqamaNo = GeneratedColumn<String>(
+    'iqama_no',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _actionMeta = const VerificationMeta('action');
+  @override
+  late final GeneratedColumn<String> action = GeneratedColumn<String>(
+    'action',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _detailsMeta = const VerificationMeta(
+    'details',
+  );
+  @override
+  late final GeneratedColumn<String> details = GeneratedColumn<String>(
+    'details',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    historyId,
+    iqamaNo,
+    action,
+    details,
+    userId,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'worker_history';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WorkerHistoryData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('history_id')) {
+      context.handle(
+        _historyIdMeta,
+        historyId.isAcceptableOrUnknown(data['history_id']!, _historyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_historyIdMeta);
+    }
+    if (data.containsKey('iqama_no')) {
+      context.handle(
+        _iqamaNoMeta,
+        iqamaNo.isAcceptableOrUnknown(data['iqama_no']!, _iqamaNoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_iqamaNoMeta);
+    }
+    if (data.containsKey('action')) {
+      context.handle(
+        _actionMeta,
+        action.isAcceptableOrUnknown(data['action']!, _actionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_actionMeta);
+    }
+    if (data.containsKey('details')) {
+      context.handle(
+        _detailsMeta,
+        details.isAcceptableOrUnknown(data['details']!, _detailsMeta),
+      );
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {historyId};
+  @override
+  WorkerHistoryData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WorkerHistoryData(
+      historyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}history_id'],
+      )!,
+      iqamaNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}iqama_no'],
+      )!,
+      action: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}action'],
+      )!,
+      details: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}details'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $WorkerHistoryTable createAlias(String alias) {
+    return $WorkerHistoryTable(attachedDatabase, alias);
+  }
+}
+
+class WorkerHistoryData extends DataClass
+    implements Insertable<WorkerHistoryData> {
+  final String historyId;
+  final String iqamaNo;
+  final String action;
+  final String details;
+  final String? userId;
+  final DateTime createdAt;
+  const WorkerHistoryData({
+    required this.historyId,
+    required this.iqamaNo,
+    required this.action,
+    required this.details,
+    this.userId,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['history_id'] = Variable<String>(historyId);
+    map['iqama_no'] = Variable<String>(iqamaNo);
+    map['action'] = Variable<String>(action);
+    map['details'] = Variable<String>(details);
+    if (!nullToAbsent || userId != null) {
+      map['user_id'] = Variable<String>(userId);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  WorkerHistoryCompanion toCompanion(bool nullToAbsent) {
+    return WorkerHistoryCompanion(
+      historyId: Value(historyId),
+      iqamaNo: Value(iqamaNo),
+      action: Value(action),
+      details: Value(details),
+      userId: userId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userId),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory WorkerHistoryData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WorkerHistoryData(
+      historyId: serializer.fromJson<String>(json['historyId']),
+      iqamaNo: serializer.fromJson<String>(json['iqamaNo']),
+      action: serializer.fromJson<String>(json['action']),
+      details: serializer.fromJson<String>(json['details']),
+      userId: serializer.fromJson<String?>(json['userId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'historyId': serializer.toJson<String>(historyId),
+      'iqamaNo': serializer.toJson<String>(iqamaNo),
+      'action': serializer.toJson<String>(action),
+      'details': serializer.toJson<String>(details),
+      'userId': serializer.toJson<String?>(userId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  WorkerHistoryData copyWith({
+    String? historyId,
+    String? iqamaNo,
+    String? action,
+    String? details,
+    Value<String?> userId = const Value.absent(),
+    DateTime? createdAt,
+  }) => WorkerHistoryData(
+    historyId: historyId ?? this.historyId,
+    iqamaNo: iqamaNo ?? this.iqamaNo,
+    action: action ?? this.action,
+    details: details ?? this.details,
+    userId: userId.present ? userId.value : this.userId,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  WorkerHistoryData copyWithCompanion(WorkerHistoryCompanion data) {
+    return WorkerHistoryData(
+      historyId: data.historyId.present ? data.historyId.value : this.historyId,
+      iqamaNo: data.iqamaNo.present ? data.iqamaNo.value : this.iqamaNo,
+      action: data.action.present ? data.action.value : this.action,
+      details: data.details.present ? data.details.value : this.details,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WorkerHistoryData(')
+          ..write('historyId: $historyId, ')
+          ..write('iqamaNo: $iqamaNo, ')
+          ..write('action: $action, ')
+          ..write('details: $details, ')
+          ..write('userId: $userId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(historyId, iqamaNo, action, details, userId, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WorkerHistoryData &&
+          other.historyId == this.historyId &&
+          other.iqamaNo == this.iqamaNo &&
+          other.action == this.action &&
+          other.details == this.details &&
+          other.userId == this.userId &&
+          other.createdAt == this.createdAt);
+}
+
+class WorkerHistoryCompanion extends UpdateCompanion<WorkerHistoryData> {
+  final Value<String> historyId;
+  final Value<String> iqamaNo;
+  final Value<String> action;
+  final Value<String> details;
+  final Value<String?> userId;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const WorkerHistoryCompanion({
+    this.historyId = const Value.absent(),
+    this.iqamaNo = const Value.absent(),
+    this.action = const Value.absent(),
+    this.details = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WorkerHistoryCompanion.insert({
+    required String historyId,
+    required String iqamaNo,
+    required String action,
+    this.details = const Value.absent(),
+    this.userId = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : historyId = Value(historyId),
+       iqamaNo = Value(iqamaNo),
+       action = Value(action),
+       createdAt = Value(createdAt);
+  static Insertable<WorkerHistoryData> custom({
+    Expression<String>? historyId,
+    Expression<String>? iqamaNo,
+    Expression<String>? action,
+    Expression<String>? details,
+    Expression<String>? userId,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (historyId != null) 'history_id': historyId,
+      if (iqamaNo != null) 'iqama_no': iqamaNo,
+      if (action != null) 'action': action,
+      if (details != null) 'details': details,
+      if (userId != null) 'user_id': userId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WorkerHistoryCompanion copyWith({
+    Value<String>? historyId,
+    Value<String>? iqamaNo,
+    Value<String>? action,
+    Value<String>? details,
+    Value<String?>? userId,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return WorkerHistoryCompanion(
+      historyId: historyId ?? this.historyId,
+      iqamaNo: iqamaNo ?? this.iqamaNo,
+      action: action ?? this.action,
+      details: details ?? this.details,
+      userId: userId ?? this.userId,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (historyId.present) {
+      map['history_id'] = Variable<String>(historyId.value);
+    }
+    if (iqamaNo.present) {
+      map['iqama_no'] = Variable<String>(iqamaNo.value);
+    }
+    if (action.present) {
+      map['action'] = Variable<String>(action.value);
+    }
+    if (details.present) {
+      map['details'] = Variable<String>(details.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WorkerHistoryCompanion(')
+          ..write('historyId: $historyId, ')
+          ..write('iqamaNo: $iqamaNo, ')
+          ..write('action: $action, ')
+          ..write('details: $details, ')
+          ..write('userId: $userId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $SettingsTable settings = $SettingsTable(this);
   late final $EmployeesTable employees = $EmployeesTable(this);
   late final $TeamsTable teams = $TeamsTable(this);
-  late final $HousingsTable housings = $HousingsTable(this);
   late final $EmploymentPeriodsTable employmentPeriods =
       $EmploymentPeriodsTable(this);
   late final $EventsTable events = $EventsTable(this);
   late final $AppUsersTable appUsers = $AppUsersTable(this);
   late final $UserScopesTable userScopes = $UserScopesTable(this);
   late final $AuditLogsTable auditLogs = $AuditLogsTable(this);
-  late final Index employeesEmployeeCode = Index(
-    'employees_employee_code',
-    'CREATE UNIQUE INDEX employees_employee_code ON employees (employee_code COLLATE NOCASE)',
-  );
-  late final Index employmentPeriodEmployeeStart = Index(
-    'employment_period_employee_start',
-    'CREATE INDEX employment_period_employee_start ON employment_periods (employee_uid, start_date)',
+  late final $WorkerHistoryTable workerHistory = $WorkerHistoryTable(this);
+  late final Index employmentPeriodIqamaStart = Index(
+    'employment_period_iqama_start',
+    'CREATE INDEX employment_period_iqama_start ON employment_periods (iqama_no, start_date)',
   );
   late final Index eventsDeviceSequenceUnique = Index(
     'events_device_sequence_unique',
@@ -4513,6 +4654,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'events_sync_sequence',
     'CREATE INDEX events_sync_sequence ON events (sync_status, device_seq)',
   );
+  late final Index workerHistoryIqamaIdx = Index(
+    'worker_history_iqama_idx',
+    'CREATE INDEX worker_history_iqama_idx ON worker_history (iqama_no)',
+  );
+  late final Index workerHistoryCreatedAtIdx = Index(
+    'worker_history_created_at_idx',
+    'CREATE INDEX worker_history_created_at_idx ON worker_history (created_at)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4521,29 +4670,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     settings,
     employees,
     teams,
-    housings,
     employmentPeriods,
     events,
     appUsers,
     userScopes,
     auditLogs,
-    employeesEmployeeCode,
-    employmentPeriodEmployeeStart,
+    workerHistory,
+    employmentPeriodIqamaStart,
     eventsDeviceSequenceUnique,
     eventsBusinessDate,
     eventsEmployeeBusinessDate,
     eventsSyncSequence,
+    workerHistoryIqamaIdx,
+    workerHistoryCreatedAtIdx,
   ];
-  @override
-  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'employees',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('employment_periods', kind: UpdateKind.delete)],
-    ),
-  ]);
 }
 
 typedef $$SettingsTableCreateCompanionBuilder = SettingsCompanion Function({
@@ -4681,62 +4821,33 @@ typedef $$SettingsTableProcessedTableManager =
       PrefetchHooks Function()
     >;
 typedef $$EmployeesTableCreateCompanionBuilder = EmployeesCompanion Function({
-  required String employeeUid,
-  required String employeeCode,
+  required String iqamaNo,
   required String fullNameAr,
   Value<String?> fullNameEn,
-  required String category,
-  Value<String?> supplier,
+  Value<String?> jobTitle,
+  Value<String> jobCategory,
+  Value<String> employmentType,
+  Value<String?> rentalCompany,
+  Value<DateTime?> iqamaExpiry,
   Value<String?> currentTeamId,
-  Value<String?> housingId,
-  Value<bool> isActive,
+  Value<DateTime?> archivedAt,
   Value<int> rowVersion,
   Value<int> rowid,
 });
 typedef $$EmployeesTableUpdateCompanionBuilder = EmployeesCompanion Function({
-  Value<String> employeeUid,
-  Value<String> employeeCode,
+  Value<String> iqamaNo,
   Value<String> fullNameAr,
   Value<String?> fullNameEn,
-  Value<String> category,
-  Value<String?> supplier,
+  Value<String?> jobTitle,
+  Value<String> jobCategory,
+  Value<String> employmentType,
+  Value<String?> rentalCompany,
+  Value<DateTime?> iqamaExpiry,
   Value<String?> currentTeamId,
-  Value<String?> housingId,
-  Value<bool> isActive,
+  Value<DateTime?> archivedAt,
   Value<int> rowVersion,
   Value<int> rowid,
 });
-
-final class $$EmployeesTableReferences
-    extends BaseReferences<_$AppDatabase, $EmployeesTable, Employee> {
-  $$EmployeesTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$EmploymentPeriodsTable, List<EmploymentPeriod>>
-  _employmentPeriodsRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.employmentPeriods,
-        aliasName: 'employees__employee_uid__employment_periods__employee_uid',
-      );
-
-  $$EmploymentPeriodsTableProcessedTableManager get employmentPeriodsRefs {
-    final manager =
-        $$EmploymentPeriodsTableTableManager(
-          $_db,
-          $_db.employmentPeriods,
-        ).filter(
-          (f) => f.employeeUid.employeeUid.sqlEquals(
-            $_itemColumn<String>('employee_uid')!,
-          ),
-        );
-
-    final cache = $_typedResult.readTableOrNull(
-      _employmentPeriodsRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
 
 class $$EmployeesTableFilterComposer
     extends Composer<_$AppDatabase, $EmployeesTable> {
@@ -4747,13 +4858,8 @@ class $$EmployeesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get employeeUid => $composableBuilder(
-    column: $table.employeeUid,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get employeeCode => $composableBuilder(
-    column: $table.employeeCode,
+  ColumnFilters<String> get iqamaNo => $composableBuilder(
+    column: $table.iqamaNo,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4767,13 +4873,28 @@ class $$EmployeesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get category => $composableBuilder(
-    column: $table.category,
+  ColumnFilters<String> get jobTitle => $composableBuilder(
+    column: $table.jobTitle,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get supplier => $composableBuilder(
-    column: $table.supplier,
+  ColumnFilters<String> get jobCategory => $composableBuilder(
+    column: $table.jobCategory,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get employmentType => $composableBuilder(
+    column: $table.employmentType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rentalCompany => $composableBuilder(
+    column: $table.rentalCompany,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get iqamaExpiry => $composableBuilder(
+    column: $table.iqamaExpiry,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4782,13 +4903,8 @@ class $$EmployeesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get housingId => $composableBuilder(
-    column: $table.housingId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get isActive => $composableBuilder(
-    column: $table.isActive,
+  ColumnFilters<DateTime> get archivedAt => $composableBuilder(
+    column: $table.archivedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4796,31 +4912,6 @@ class $$EmployeesTableFilterComposer
     column: $table.rowVersion,
     builder: (column) => ColumnFilters(column),
   );
-
-  Expression<bool> employmentPeriodsRefs(
-    Expression<bool> Function($$EmploymentPeriodsTableFilterComposer f) f,
-  ) {
-    final $$EmploymentPeriodsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.employeeUid,
-      referencedTable: $db.employmentPeriods,
-      getReferencedColumn: (t) => t.employeeUid,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$EmploymentPeriodsTableFilterComposer(
-            $db: $db,
-            $table: $db.employmentPeriods,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $$EmployeesTableOrderingComposer
@@ -4832,13 +4923,8 @@ class $$EmployeesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get employeeUid => $composableBuilder(
-    column: $table.employeeUid,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get employeeCode => $composableBuilder(
-    column: $table.employeeCode,
+  ColumnOrderings<String> get iqamaNo => $composableBuilder(
+    column: $table.iqamaNo,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -4852,13 +4938,28 @@ class $$EmployeesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get category => $composableBuilder(
-    column: $table.category,
+  ColumnOrderings<String> get jobTitle => $composableBuilder(
+    column: $table.jobTitle,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get supplier => $composableBuilder(
-    column: $table.supplier,
+  ColumnOrderings<String> get jobCategory => $composableBuilder(
+    column: $table.jobCategory,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get employmentType => $composableBuilder(
+    column: $table.employmentType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rentalCompany => $composableBuilder(
+    column: $table.rentalCompany,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get iqamaExpiry => $composableBuilder(
+    column: $table.iqamaExpiry,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -4867,13 +4968,8 @@ class $$EmployeesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get housingId => $composableBuilder(
-    column: $table.housingId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get isActive => $composableBuilder(
-    column: $table.isActive,
+  ColumnOrderings<DateTime> get archivedAt => $composableBuilder(
+    column: $table.archivedAt,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -4892,15 +4988,8 @@ class $$EmployeesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get employeeUid => $composableBuilder(
-    column: $table.employeeUid,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get employeeCode => $composableBuilder(
-    column: $table.employeeCode,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get iqamaNo =>
+      $composableBuilder(column: $table.iqamaNo, builder: (column) => column);
 
   GeneratedColumn<String> get fullNameAr => $composableBuilder(
     column: $table.fullNameAr,
@@ -4912,53 +5001,43 @@ class $$EmployeesTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<String> get category =>
-      $composableBuilder(column: $table.category, builder: (column) => column);
+  GeneratedColumn<String> get jobTitle =>
+      $composableBuilder(column: $table.jobTitle, builder: (column) => column);
 
-  GeneratedColumn<String> get supplier =>
-      $composableBuilder(column: $table.supplier, builder: (column) => column);
+  GeneratedColumn<String> get jobCategory => $composableBuilder(
+    column: $table.jobCategory,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get employmentType => $composableBuilder(
+    column: $table.employmentType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get rentalCompany => $composableBuilder(
+    column: $table.rentalCompany,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get iqamaExpiry => $composableBuilder(
+    column: $table.iqamaExpiry,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get currentTeamId => $composableBuilder(
     column: $table.currentTeamId,
     builder: (column) => column,
   );
 
-  GeneratedColumn<String> get housingId =>
-      $composableBuilder(column: $table.housingId, builder: (column) => column);
-
-  GeneratedColumn<bool> get isActive =>
-      $composableBuilder(column: $table.isActive, builder: (column) => column);
+  GeneratedColumn<DateTime> get archivedAt => $composableBuilder(
+    column: $table.archivedAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get rowVersion => $composableBuilder(
     column: $table.rowVersion,
     builder: (column) => column,
   );
-
-  Expression<T> employmentPeriodsRefs<T extends Object>(
-    Expression<T> Function($$EmploymentPeriodsTableAnnotationComposer a) f,
-  ) {
-    final $$EmploymentPeriodsTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.employeeUid,
-          referencedTable: $db.employmentPeriods,
-          getReferencedColumn: (t) => t.employeeUid,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$EmploymentPeriodsTableAnnotationComposer(
-                $db: $db,
-                $table: $db.employmentPeriods,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
-    return f(composer);
-  }
 }
 
 class $$EmployeesTableTableManager
@@ -4972,9 +5051,9 @@ class $$EmployeesTableTableManager
           $$EmployeesTableAnnotationComposer,
           $$EmployeesTableCreateCompanionBuilder,
           $$EmployeesTableUpdateCompanionBuilder,
-          (Employee, $$EmployeesTableReferences),
+          (Employee, BaseReferences<_$AppDatabase, $EmployeesTable, Employee>),
           Employee,
-          PrefetchHooks Function({bool employmentPeriodsRefs})
+          PrefetchHooks Function()
         > {
   $$EmployeesTableTableManager(_$AppDatabase db, $EmployeesTable table)
     : super(
@@ -4989,53 +5068,57 @@ class $$EmployeesTableTableManager
               $$EmployeesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<String> employeeUid = const Value.absent(),
-                Value<String> employeeCode = const Value.absent(),
+                Value<String> iqamaNo = const Value.absent(),
                 Value<String> fullNameAr = const Value.absent(),
                 Value<String?> fullNameEn = const Value.absent(),
-                Value<String> category = const Value.absent(),
-                Value<String?> supplier = const Value.absent(),
+                Value<String?> jobTitle = const Value.absent(),
+                Value<String> jobCategory = const Value.absent(),
+                Value<String> employmentType = const Value.absent(),
+                Value<String?> rentalCompany = const Value.absent(),
+                Value<DateTime?> iqamaExpiry = const Value.absent(),
                 Value<String?> currentTeamId = const Value.absent(),
-                Value<String?> housingId = const Value.absent(),
-                Value<bool> isActive = const Value.absent(),
+                Value<DateTime?> archivedAt = const Value.absent(),
                 Value<int> rowVersion = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => EmployeesCompanion(
-                employeeUid: employeeUid,
-                employeeCode: employeeCode,
+                iqamaNo: iqamaNo,
                 fullNameAr: fullNameAr,
                 fullNameEn: fullNameEn,
-                category: category,
-                supplier: supplier,
+                jobTitle: jobTitle,
+                jobCategory: jobCategory,
+                employmentType: employmentType,
+                rentalCompany: rentalCompany,
+                iqamaExpiry: iqamaExpiry,
                 currentTeamId: currentTeamId,
-                housingId: housingId,
-                isActive: isActive,
+                archivedAt: archivedAt,
                 rowVersion: rowVersion,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                required String employeeUid,
-                required String employeeCode,
+                required String iqamaNo,
                 required String fullNameAr,
                 Value<String?> fullNameEn = const Value.absent(),
-                required String category,
-                Value<String?> supplier = const Value.absent(),
+                Value<String?> jobTitle = const Value.absent(),
+                Value<String> jobCategory = const Value.absent(),
+                Value<String> employmentType = const Value.absent(),
+                Value<String?> rentalCompany = const Value.absent(),
+                Value<DateTime?> iqamaExpiry = const Value.absent(),
                 Value<String?> currentTeamId = const Value.absent(),
-                Value<String?> housingId = const Value.absent(),
-                Value<bool> isActive = const Value.absent(),
+                Value<DateTime?> archivedAt = const Value.absent(),
                 Value<int> rowVersion = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => EmployeesCompanion.insert(
-                employeeUid: employeeUid,
-                employeeCode: employeeCode,
+                iqamaNo: iqamaNo,
                 fullNameAr: fullNameAr,
                 fullNameEn: fullNameEn,
-                category: category,
-                supplier: supplier,
+                jobTitle: jobTitle,
+                jobCategory: jobCategory,
+                employmentType: employmentType,
+                rentalCompany: rentalCompany,
+                iqamaExpiry: iqamaExpiry,
                 currentTeamId: currentTeamId,
-                housingId: housingId,
-                isActive: isActive,
+                archivedAt: archivedAt,
                 rowVersion: rowVersion,
                 rowid: rowid,
               ),
@@ -5043,44 +5126,15 @@ class $$EmployeesTableTableManager
               .map(
                 (e) => (
                   e.readTable<$EmployeesTable, Employee>(table),
-                  $$EmployeesTableReferences(db, table, e),
+                  BaseReferences<_$AppDatabase, $EmployeesTable, Employee>(
+                    db,
+                    table,
+                    e,
+                  ),
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({employmentPeriodsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (employmentPeriodsRefs) db.employmentPeriods,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (employmentPeriodsRefs)
-                    await $_getPrefetchedData<
-                      Employee,
-                      $EmployeesTable,
-                      EmploymentPeriod
-                    >(
-                      currentTable: table,
-                      referencedTable: $$EmployeesTableReferences
-                          ._employmentPeriodsRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$EmployeesTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).employmentPeriodsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where(
-                            (e) => e.employeeUid == item.employeeUid,
-                          ),
-                      typedResults: items,
-                    ),
-                ];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -5095,9 +5149,9 @@ typedef $$EmployeesTableProcessedTableManager =
       $$EmployeesTableAnnotationComposer,
       $$EmployeesTableCreateCompanionBuilder,
       $$EmployeesTableUpdateCompanionBuilder,
-      (Employee, $$EmployeesTableReferences),
+      (Employee, BaseReferences<_$AppDatabase, $EmployeesTable, Employee>),
       Employee,
-      PrefetchHooks Function({bool employmentPeriodsRefs})
+      PrefetchHooks Function()
     >;
 typedef $$TeamsTableCreateCompanionBuilder = TeamsCompanion Function({
   required String teamId,
@@ -5301,192 +5355,10 @@ typedef $$TeamsTableProcessedTableManager =
       Team,
       PrefetchHooks Function()
     >;
-typedef $$HousingsTableCreateCompanionBuilder = HousingsCompanion Function({
-  required String housingId,
-  required String nameAr,
-  Value<String?> nameEn,
-  Value<bool> isActive,
-  Value<int> rowid,
-});
-typedef $$HousingsTableUpdateCompanionBuilder = HousingsCompanion Function({
-  Value<String> housingId,
-  Value<String> nameAr,
-  Value<String?> nameEn,
-  Value<bool> isActive,
-  Value<int> rowid,
-});
-
-class $$HousingsTableFilterComposer
-    extends Composer<_$AppDatabase, $HousingsTable> {
-  $$HousingsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get housingId => $composableBuilder(
-    column: $table.housingId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get nameAr => $composableBuilder(
-    column: $table.nameAr,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get nameEn => $composableBuilder(
-    column: $table.nameEn,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get isActive => $composableBuilder(
-    column: $table.isActive,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$HousingsTableOrderingComposer
-    extends Composer<_$AppDatabase, $HousingsTable> {
-  $$HousingsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get housingId => $composableBuilder(
-    column: $table.housingId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get nameAr => $composableBuilder(
-    column: $table.nameAr,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get nameEn => $composableBuilder(
-    column: $table.nameEn,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get isActive => $composableBuilder(
-    column: $table.isActive,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$HousingsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $HousingsTable> {
-  $$HousingsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get housingId =>
-      $composableBuilder(column: $table.housingId, builder: (column) => column);
-
-  GeneratedColumn<String> get nameAr =>
-      $composableBuilder(column: $table.nameAr, builder: (column) => column);
-
-  GeneratedColumn<String> get nameEn =>
-      $composableBuilder(column: $table.nameEn, builder: (column) => column);
-
-  GeneratedColumn<bool> get isActive =>
-      $composableBuilder(column: $table.isActive, builder: (column) => column);
-}
-
-class $$HousingsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $HousingsTable,
-          Housing,
-          $$HousingsTableFilterComposer,
-          $$HousingsTableOrderingComposer,
-          $$HousingsTableAnnotationComposer,
-          $$HousingsTableCreateCompanionBuilder,
-          $$HousingsTableUpdateCompanionBuilder,
-          (Housing, BaseReferences<_$AppDatabase, $HousingsTable, Housing>),
-          Housing,
-          PrefetchHooks Function()
-        > {
-  $$HousingsTableTableManager(_$AppDatabase db, $HousingsTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$HousingsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$HousingsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$HousingsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> housingId = const Value.absent(),
-                Value<String> nameAr = const Value.absent(),
-                Value<String?> nameEn = const Value.absent(),
-                Value<bool> isActive = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => HousingsCompanion(
-                housingId: housingId,
-                nameAr: nameAr,
-                nameEn: nameEn,
-                isActive: isActive,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String housingId,
-                required String nameAr,
-                Value<String?> nameEn = const Value.absent(),
-                Value<bool> isActive = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => HousingsCompanion.insert(
-                housingId: housingId,
-                nameAr: nameAr,
-                nameEn: nameEn,
-                isActive: isActive,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<$HousingsTable, Housing>(table),
-                  BaseReferences<_$AppDatabase, $HousingsTable, Housing>(
-                    db,
-                    table,
-                    e,
-                  ),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$HousingsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $HousingsTable,
-      Housing,
-      $$HousingsTableFilterComposer,
-      $$HousingsTableOrderingComposer,
-      $$HousingsTableAnnotationComposer,
-      $$HousingsTableCreateCompanionBuilder,
-      $$HousingsTableUpdateCompanionBuilder,
-      (Housing, BaseReferences<_$AppDatabase, $HousingsTable, Housing>),
-      Housing,
-      PrefetchHooks Function()
-    >;
 typedef $$EmploymentPeriodsTableCreateCompanionBuilder =
     EmploymentPeriodsCompanion Function({
       required String periodId,
-      required String employeeUid,
+      required String iqamaNo,
       required String startDate,
       Value<String?> endDate,
       Value<int> rowid,
@@ -5494,42 +5366,11 @@ typedef $$EmploymentPeriodsTableCreateCompanionBuilder =
 typedef $$EmploymentPeriodsTableUpdateCompanionBuilder =
     EmploymentPeriodsCompanion Function({
       Value<String> periodId,
-      Value<String> employeeUid,
+      Value<String> iqamaNo,
       Value<String> startDate,
       Value<String?> endDate,
       Value<int> rowid,
     });
-
-final class $$EmploymentPeriodsTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $EmploymentPeriodsTable,
-          EmploymentPeriod
-        > {
-  $$EmploymentPeriodsTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
-
-  static $EmployeesTable _employeeUidTable(_$AppDatabase db) => db.employees
-      .createAlias('employment_periods__employee_uid__employees__employee_uid');
-
-  $$EmployeesTableProcessedTableManager get employeeUid {
-    final $_column = $_itemColumn<String>('employee_uid')!;
-
-    final manager = $$EmployeesTableTableManager(
-      $_db,
-      $_db.employees,
-    ).filter((f) => f.employeeUid.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_employeeUidTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
 
 class $$EmploymentPeriodsTableFilterComposer
     extends Composer<_$AppDatabase, $EmploymentPeriodsTable> {
@@ -5545,6 +5386,11 @@ class $$EmploymentPeriodsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get iqamaNo => $composableBuilder(
+    column: $table.iqamaNo,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get startDate => $composableBuilder(
     column: $table.startDate,
     builder: (column) => ColumnFilters(column),
@@ -5554,29 +5400,6 @@ class $$EmploymentPeriodsTableFilterComposer
     column: $table.endDate,
     builder: (column) => ColumnFilters(column),
   );
-
-  $$EmployeesTableFilterComposer get employeeUid {
-    final $$EmployeesTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.employeeUid,
-      referencedTable: $db.employees,
-      getReferencedColumn: (t) => t.employeeUid,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$EmployeesTableFilterComposer(
-            $db: $db,
-            $table: $db.employees,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$EmploymentPeriodsTableOrderingComposer
@@ -5593,6 +5416,11 @@ class $$EmploymentPeriodsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get iqamaNo => $composableBuilder(
+    column: $table.iqamaNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get startDate => $composableBuilder(
     column: $table.startDate,
     builder: (column) => ColumnOrderings(column),
@@ -5602,29 +5430,6 @@ class $$EmploymentPeriodsTableOrderingComposer
     column: $table.endDate,
     builder: (column) => ColumnOrderings(column),
   );
-
-  $$EmployeesTableOrderingComposer get employeeUid {
-    final $$EmployeesTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.employeeUid,
-      referencedTable: $db.employees,
-      getReferencedColumn: (t) => t.employeeUid,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$EmployeesTableOrderingComposer(
-            $db: $db,
-            $table: $db.employees,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$EmploymentPeriodsTableAnnotationComposer
@@ -5639,34 +5444,14 @@ class $$EmploymentPeriodsTableAnnotationComposer
   GeneratedColumn<String> get periodId =>
       $composableBuilder(column: $table.periodId, builder: (column) => column);
 
+  GeneratedColumn<String> get iqamaNo =>
+      $composableBuilder(column: $table.iqamaNo, builder: (column) => column);
+
   GeneratedColumn<String> get startDate =>
       $composableBuilder(column: $table.startDate, builder: (column) => column);
 
   GeneratedColumn<String> get endDate =>
       $composableBuilder(column: $table.endDate, builder: (column) => column);
-
-  $$EmployeesTableAnnotationComposer get employeeUid {
-    final $$EmployeesTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.employeeUid,
-      referencedTable: $db.employees,
-      getReferencedColumn: (t) => t.employeeUid,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$EmployeesTableAnnotationComposer(
-            $db: $db,
-            $table: $db.employees,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$EmploymentPeriodsTableTableManager
@@ -5680,9 +5465,16 @@ class $$EmploymentPeriodsTableTableManager
           $$EmploymentPeriodsTableAnnotationComposer,
           $$EmploymentPeriodsTableCreateCompanionBuilder,
           $$EmploymentPeriodsTableUpdateCompanionBuilder,
-          (EmploymentPeriod, $$EmploymentPeriodsTableReferences),
+          (
+            EmploymentPeriod,
+            BaseReferences<
+              _$AppDatabase,
+              $EmploymentPeriodsTable,
+              EmploymentPeriod
+            >,
+          ),
           EmploymentPeriod,
-          PrefetchHooks Function({bool employeeUid})
+          PrefetchHooks Function()
         > {
   $$EmploymentPeriodsTableTableManager(
     _$AppDatabase db,
@@ -5703,13 +5495,13 @@ class $$EmploymentPeriodsTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> periodId = const Value.absent(),
-                Value<String> employeeUid = const Value.absent(),
+                Value<String> iqamaNo = const Value.absent(),
                 Value<String> startDate = const Value.absent(),
                 Value<String?> endDate = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => EmploymentPeriodsCompanion(
                 periodId: periodId,
-                employeeUid: employeeUid,
+                iqamaNo: iqamaNo,
                 startDate: startDate,
                 endDate: endDate,
                 rowid: rowid,
@@ -5717,13 +5509,13 @@ class $$EmploymentPeriodsTableTableManager
           createCompanionCallback:
               ({
                 required String periodId,
-                required String employeeUid,
+                required String iqamaNo,
                 required String startDate,
                 Value<String?> endDate = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => EmploymentPeriodsCompanion.insert(
                 periodId: periodId,
-                employeeUid: employeeUid,
+                iqamaNo: iqamaNo,
                 startDate: startDate,
                 endDate: endDate,
                 rowid: rowid,
@@ -5732,49 +5524,15 @@ class $$EmploymentPeriodsTableTableManager
               .map(
                 (e) => (
                   e.readTable<$EmploymentPeriodsTable, EmploymentPeriod>(table),
-                  $$EmploymentPeriodsTableReferences(db, table, e),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $EmploymentPeriodsTable,
+                    EmploymentPeriod
+                  >(db, table, e),
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({employeeUid = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (employeeUid) {
-                      state = state.withJoin(
-                        currentTable: table,
-                        currentColumn: table.employeeUid,
-                        referencedTable: $$EmploymentPeriodsTableReferences
-                            ._employeeUidTable(db),
-                        referencedColumn: $$EmploymentPeriodsTableReferences
-                            ._employeeUidTable(db)
-                            .employeeUid,
-                      ) as T;
-                    }
-
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -5789,9 +5547,16 @@ typedef $$EmploymentPeriodsTableProcessedTableManager =
       $$EmploymentPeriodsTableAnnotationComposer,
       $$EmploymentPeriodsTableCreateCompanionBuilder,
       $$EmploymentPeriodsTableUpdateCompanionBuilder,
-      (EmploymentPeriod, $$EmploymentPeriodsTableReferences),
+      (
+        EmploymentPeriod,
+        BaseReferences<
+          _$AppDatabase,
+          $EmploymentPeriodsTable,
+          EmploymentPeriod
+        >,
+      ),
       EmploymentPeriod,
-      PrefetchHooks Function({bool employeeUid})
+      PrefetchHooks Function()
     >;
 typedef $$EventsTableCreateCompanionBuilder = EventsCompanion Function({
   required String eventId,
@@ -7069,6 +6834,238 @@ typedef $$AuditLogsTableProcessedTableManager =
       AuditLog,
       PrefetchHooks Function()
     >;
+typedef $$WorkerHistoryTableCreateCompanionBuilder =
+    WorkerHistoryCompanion Function({
+      required String historyId,
+      required String iqamaNo,
+      required String action,
+      Value<String> details,
+      Value<String?> userId,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$WorkerHistoryTableUpdateCompanionBuilder =
+    WorkerHistoryCompanion Function({
+      Value<String> historyId,
+      Value<String> iqamaNo,
+      Value<String> action,
+      Value<String> details,
+      Value<String?> userId,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$WorkerHistoryTableFilterComposer
+    extends Composer<_$AppDatabase, $WorkerHistoryTable> {
+  $$WorkerHistoryTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get historyId => $composableBuilder(
+    column: $table.historyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get iqamaNo => $composableBuilder(
+    column: $table.iqamaNo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get action => $composableBuilder(
+    column: $table.action,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get details => $composableBuilder(
+    column: $table.details,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WorkerHistoryTableOrderingComposer
+    extends Composer<_$AppDatabase, $WorkerHistoryTable> {
+  $$WorkerHistoryTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get historyId => $composableBuilder(
+    column: $table.historyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get iqamaNo => $composableBuilder(
+    column: $table.iqamaNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get action => $composableBuilder(
+    column: $table.action,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get details => $composableBuilder(
+    column: $table.details,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WorkerHistoryTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WorkerHistoryTable> {
+  $$WorkerHistoryTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get historyId =>
+      $composableBuilder(column: $table.historyId, builder: (column) => column);
+
+  GeneratedColumn<String> get iqamaNo =>
+      $composableBuilder(column: $table.iqamaNo, builder: (column) => column);
+
+  GeneratedColumn<String> get action =>
+      $composableBuilder(column: $table.action, builder: (column) => column);
+
+  GeneratedColumn<String> get details =>
+      $composableBuilder(column: $table.details, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$WorkerHistoryTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WorkerHistoryTable,
+          WorkerHistoryData,
+          $$WorkerHistoryTableFilterComposer,
+          $$WorkerHistoryTableOrderingComposer,
+          $$WorkerHistoryTableAnnotationComposer,
+          $$WorkerHistoryTableCreateCompanionBuilder,
+          $$WorkerHistoryTableUpdateCompanionBuilder,
+          (
+            WorkerHistoryData,
+            BaseReferences<
+              _$AppDatabase,
+              $WorkerHistoryTable,
+              WorkerHistoryData
+            >,
+          ),
+          WorkerHistoryData,
+          PrefetchHooks Function()
+        > {
+  $$WorkerHistoryTableTableManager(_$AppDatabase db, $WorkerHistoryTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WorkerHistoryTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WorkerHistoryTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WorkerHistoryTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> historyId = const Value.absent(),
+                Value<String> iqamaNo = const Value.absent(),
+                Value<String> action = const Value.absent(),
+                Value<String> details = const Value.absent(),
+                Value<String?> userId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WorkerHistoryCompanion(
+                historyId: historyId,
+                iqamaNo: iqamaNo,
+                action: action,
+                details: details,
+                userId: userId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String historyId,
+                required String iqamaNo,
+                required String action,
+                Value<String> details = const Value.absent(),
+                Value<String?> userId = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => WorkerHistoryCompanion.insert(
+                historyId: historyId,
+                iqamaNo: iqamaNo,
+                action: action,
+                details: details,
+                userId: userId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$WorkerHistoryTable, WorkerHistoryData>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $WorkerHistoryTable,
+                    WorkerHistoryData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WorkerHistoryTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WorkerHistoryTable,
+      WorkerHistoryData,
+      $$WorkerHistoryTableFilterComposer,
+      $$WorkerHistoryTableOrderingComposer,
+      $$WorkerHistoryTableAnnotationComposer,
+      $$WorkerHistoryTableCreateCompanionBuilder,
+      $$WorkerHistoryTableUpdateCompanionBuilder,
+      (
+        WorkerHistoryData,
+        BaseReferences<_$AppDatabase, $WorkerHistoryTable, WorkerHistoryData>,
+      ),
+      WorkerHistoryData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7079,8 +7076,6 @@ class $AppDatabaseManager {
       $$EmployeesTableTableManager(_db, _db.employees);
   $$TeamsTableTableManager get teams =>
       $$TeamsTableTableManager(_db, _db.teams);
-  $$HousingsTableTableManager get housings =>
-      $$HousingsTableTableManager(_db, _db.housings);
   $$EmploymentPeriodsTableTableManager get employmentPeriods =>
       $$EmploymentPeriodsTableTableManager(_db, _db.employmentPeriods);
   $$EventsTableTableManager get events =>
@@ -7091,4 +7086,6 @@ class $AppDatabaseManager {
       $$UserScopesTableTableManager(_db, _db.userScopes);
   $$AuditLogsTableTableManager get auditLogs =>
       $$AuditLogsTableTableManager(_db, _db.auditLogs);
+  $$WorkerHistoryTableTableManager get workerHistory =>
+      $$WorkerHistoryTableTableManager(_db, _db.workerHistory);
 }

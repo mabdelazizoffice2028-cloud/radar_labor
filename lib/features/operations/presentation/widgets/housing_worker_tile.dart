@@ -1,18 +1,13 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/l10n/housing_review_strings.dart';
-import 'package:radar_labor/core/l10n/operations_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/operations/presentation/state/housing_check_state.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/search_highlight_text.dart';
 
-/// Single worker card with clean binary absence checkbox (Phase 4 refactored).
 final class HousingWorkerTile extends StatelessWidget {
   const HousingWorkerTile({
-    required this.row,
-    required this.arabic,
-    required this.onStateChanged,
-    this.searchQuery = '',
-    super.key,
+    required this.row, required this.arabic, required this.onStateChanged,
+    this.searchQuery = '', super.key,
   });
 
   final HousingWorkerRow row;
@@ -20,43 +15,28 @@ final class HousingWorkerTile extends StatelessWidget {
   final ValueChanged<HousingReviewState> onStateChanged;
   final String searchQuery;
 
-  static const _codeStyle = TextStyle(
-    color: AppTokens.textSecondary,
-    fontSize: 13,
-  );
+  static const _codeStyle = TextStyle(color: AppTokens.textSecondary, fontSize: 13);
 
   @override
   Widget build(BuildContext context) {
     final worker = row.worker;
     final isAbsent = row.isAbsent;
-
-    final backgroundColor = isAbsent
-        ? AppTokens.statusUnknownSoft
-        : AppTokens.surface;
-    final borderColor = isAbsent ? AppTokens.statusUnknown : AppTokens.outline;
-    final iconColor = isAbsent
-        ? AppTokens.statusUnknown
-        : AppTokens.textSecondary;
-    final checkIcon = isAbsent
-        ? Icons.check_box
-        : Icons.check_box_outline_blank;
+    final bg = isAbsent ? AppTokens.statusUnknownSoft : AppTokens.surface;
+    final border = isAbsent ? AppTokens.statusUnknown : AppTokens.outline;
+    final iconColor = isAbsent ? AppTokens.statusUnknown : AppTokens.textSecondary;
+    final checkIcon = isAbsent ? Icons.check_box : Icons.check_box_outline_blank;
 
     return Card(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppTokens.space12,
-        vertical: AppTokens.space4,
-      ),
-      color: backgroundColor,
+      margin: const EdgeInsets.symmetric(horizontal: AppTokens.space12, vertical: AppTokens.space4),
+      color: bg,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTokens.radius12),
-        side: BorderSide(color: borderColor, width: isAbsent ? 1.5 : 1.0),
+        side: BorderSide(color: border, width: isAbsent ? 1.5 : 1.0),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppTokens.radius12),
         onTap: () => onStateChanged(
-          isAbsent
-              ? HousingReviewState.reviewedPresent
-              : HousingReviewState.absent,
+          isAbsent ? HousingReviewState.reviewedPresent : HousingReviewState.absent,
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppTokens.space12),
@@ -70,26 +50,15 @@ final class HousingWorkerTile extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SearchHighlightText(
-                      text: worker.displayName(arabic: arabic),
-                      query: searchQuery,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
+                      text: worker.displayName(arabic: arabic), query: searchQuery,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                     ),
                     const SizedBox(height: 2),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          '${OperationsStrings.codeLabel(arabic)}: ',
-                          style: _codeStyle,
-                        ),
-                        SearchHighlightText(
-                          text: worker.code,
-                          query: searchQuery,
-                          style: _codeStyle,
-                        ),
+                        Text(arabic ? 'الإقامة: ' : 'Iqama: ', style: _codeStyle),
+                        SearchHighlightText(text: worker.code, query: searchQuery, style: _codeStyle),
                       ],
                     ),
                   ],
@@ -98,11 +67,7 @@ final class HousingWorkerTile extends StatelessWidget {
               if (isAbsent)
                 Text(
                   HousingReviewStrings.reviewStateAbsent(arabic),
-                  style: const TextStyle(
-                    color: AppTokens.statusUnknown,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
+                  style: const TextStyle(color: AppTokens.statusUnknown, fontWeight: FontWeight.bold, fontSize: 13),
                 ),
             ],
           ),

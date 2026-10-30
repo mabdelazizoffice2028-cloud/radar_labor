@@ -1,38 +1,9 @@
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
+import 'package:radar_labor/features/operations/domain/worker_search_filter.dart';
+import 'package:radar_labor/features/operations/presentation/state/housing_worker_row.dart';
 
-/// 3-State review model for housing checks (kept for backward compatibility).
-enum HousingReviewState { unreviewed, reviewedPresent, absent }
+export 'package:radar_labor/features/operations/presentation/state/housing_worker_row.dart';
 
-/// Presentation row representing a worker in the housing check.
-final class HousingWorkerRow {
-  const HousingWorkerRow({
-    required this.worker,
-    this.reviewState = HousingReviewState.unreviewed,
-  });
-
-  const HousingWorkerRow.binary({
-    required WorkerOption worker,
-    required bool isAbsent,
-  }) : this(
-         worker: worker,
-         reviewState: isAbsent
-             ? HousingReviewState.absent
-             : HousingReviewState.reviewedPresent,
-       );
-
-  final WorkerOption worker;
-  final HousingReviewState reviewState;
-
-  bool get isAbsent => reviewState == HousingReviewState.absent;
-
-  HousingWorkerRow copyWith({HousingReviewState? reviewState}) =>
-      HousingWorkerRow(
-        worker: worker,
-        reviewState: reviewState ?? this.reviewState,
-      );
-}
-
-/// Immutable state for the campus (housing) check workflow.
 final class HousingCheckState {
   const HousingCheckState({
     required this.selectedDate,
@@ -62,63 +33,32 @@ final class HousingCheckState {
   final bool hasDraftSaved;
   final HousingCheckUndo? lastUndo;
   final String? errorMessage;
-
-  /// True while edits are not yet persisted as a local draft (or a draft write failed).
   final bool hasUnsavedChanges;
 
   int get totalCount => rows.length;
-  int get unreviewedCount =>
-      rows.where((r) => r.reviewState == HousingReviewState.unreviewed).length;
-  int get reviewedCount => rows
-      .where((r) => r.reviewState == HousingReviewState.reviewedPresent)
-      .length;
-  int get absentCount =>
-      rows.where((r) => r.reviewState == HousingReviewState.absent).length;
+  int get absentCount => rows.where((r) => r.isAbsent).length;
+  int get reviewedCount => rows.where((r) => r.reviewState == HousingReviewState.reviewedPresent).length;
+  int get unreviewedCount => rows.where((r) => r.reviewState == HousingReviewState.unreviewed).length;
 
-  Set<String> get absentWorkerIds => {
-    for (final r in rows)
-      if (r.reviewState == HousingReviewState.absent) r.worker.id,
-  };
-
-  Set<String> get reviewedWorkerIds => {
-    for (final r in rows)
-      if (r.reviewState == HousingReviewState.reviewedPresent) r.worker.id,
-  };
+  Set<String> get absentWorkerIds => {for (final r in rows) if (r.isAbsent) r.worker.id};
+  Set<String> get reviewedWorkerIds => {for (final r in rows) if (r.reviewState == HousingReviewState.reviewedPresent) r.worker.id};
 
   List<HousingWorkerRow> get filteredRows {
     if (searchQuery.trim().isEmpty) return rows;
-    final q = searchQuery.trim().toLowerCase();
-    return rows
-        .where((r) {
-          final nameAr = r.worker.nameAr.toLowerCase();
-          final nameEn = (r.worker.nameEn ?? '').toLowerCase();
-          final code = r.worker.code.toLowerCase();
-          return nameAr.contains(q) || nameEn.contains(q) || code.contains(q);
-        })
-        .toList(growable: false);
+    return rows.where((r) => WorkerSearchFilter.matches(
+      query: searchQuery, code: r.worker.code, nameAr: r.worker.nameAr, nameEn: r.worker.nameEn,
+    )).toList(growable: false);
   }
 
   HousingCheckState copyWith({
-    EntityOption? selectedHousing,
-    bool clearSelectedHousing = false,
-    String? selectedDate,
-    String? todayDate,
-    bool? isLoading,
-    bool? isSaving,
-    bool? isPastDate,
-    String? searchQuery,
-    List<HousingWorkerRow>? rows,
-    bool? hasSavedRecordToday,
-    bool? hasDraftSaved,
-    HousingCheckUndo? lastUndo,
+    EntityOption? selectedHousing, bool clearHousing = false,
+    String? selectedDate, String? todayDate, bool? isLoading, bool? isSaving,
+    bool? isPastDate, String? searchQuery, List<HousingWorkerRow>? rows,
+    bool? hasSavedRecordToday, bool? hasDraftSaved, HousingCheckUndo? lastUndo,
     bool clearUndo = false,
-    String? errorMessage,
-    bool clearError = false,
-    bool? hasUnsavedChanges,
+    String? errorMessage, bool clearError = false, bool? hasUnsavedChanges,
   }) => HousingCheckState(
-    selectedHousing: clearSelectedHousing
-        ? null
-        : (selectedHousing ?? this.selectedHousing),
+    selectedHousing: clearHousing ? null : (selectedHousing ?? this.selectedHousing),
     selectedDate: selectedDate ?? this.selectedDate,
     todayDate: todayDate ?? this.todayDate,
     isLoading: isLoading ?? this.isLoading,

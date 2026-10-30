@@ -89,21 +89,21 @@ void main() {
 
     final res = await importer.commit([
       const WorkforceRow(
-        code: 'S1',
+        code: '1000000001',
         name: 'أحمد مشرف موقع',
         designation: 'Site Supervisor',
         supplier: 'Supp1',
         team: 'فريق أ',
       ),
       const WorkforceRow(
-        code: 'H1',
+        code: '1000000002',
         name: 'خالد مشرف سكن',
         designation: 'Housing Supervisor',
         supplier: 'Supp1',
         campus: 'سكن النرجس',
       ),
       const WorkforceRow(
-        code: 'W1',
+        code: '1000000003',
         name: 'عامر عامل',
         designation: 'Mason',
         supplier: 'Supp1',

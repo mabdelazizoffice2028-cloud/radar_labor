@@ -1,126 +1,38 @@
+import 'package:radar_labor/app/accounts/accounts_admin_import_picker.dart';
+import 'package:radar_labor/app/accounts/accounts_admin_loader.dart';
+import 'package:radar_labor/app/accounts/accounts_admin_models.dart';
 import 'package:radar_labor/core/auth/account_provisioning_repository.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
 import 'package:radar_labor/core/auth/local_auth_repository.dart';
 import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
-import 'package:radar_labor/features/roster/data/workforce_file_picker.dart';
 import 'package:radar_labor/features/roster/data/workforce_import_repository.dart';
-import 'package:radar_labor/features/roster/domain/supervisor_role_resolver.dart';
-import 'package:radar_labor/features/roster/domain/workforce_import_parser.dart';
-import 'package:radar_labor/features/roster/domain/workforce_row.dart';
 
-/// Reference data shown on the names & roles administration screen.
-final class AccountsAdminData {
-  const AccountsAdminData({
-    required this.accounts,
-    required this.employees,
-    required this.teams,
-    required this.housings,
-  });
+export 'package:radar_labor/app/accounts/accounts_admin_models.dart';
 
-  final List<LocalAccount> accounts;
-  final List<Employee> employees;
-  final List<Team> teams;
-  final List<Housing> housings;
-
-  /// Whether any supervisor can already pick their name on the login screen.
-  bool get hasSupervisors => accounts.any(
-    (a) =>
-        a.role == AuthRole.siteSupervisor ||
-        a.role == AuthRole.housingSupervisor,
-  );
-}
-
-/// Parsed roster awaiting the administrator's confirmation.
-final class ImportPreview {
-  const ImportPreview({required this.rows, required this.supervisorCount});
-  final List<WorkforceRow> rows;
-  final int supervisorCount;
-}
-
-/// Values entered in the add/edit account dialog.
-final class AccountFormResult {
-  const AccountFormResult({
-    required this.displayName,
-    required this.role,
-    this.employeeUid,
-    this.teamIds = const [],
-    this.housingIds = const [],
-  });
-
-  final String? employeeUid;
-  final String displayName;
-  final AuthRole role;
-  final List<String> teamIds;
-  final List<String> housingIds;
-}
-
-/// Thrown when removing the only active project manager account.
-final class LastManagerException implements Exception {
-  const LastManagerException();
-}
-
-/// Orchestrates names/roles administration so the screen stays presentational.
 final class AccountsAdminController {
-  AccountsAdminController(this._database)
-    : _auth = LocalAuthRepository(_database),
-      _importer = WorkforceImportRepository(_database);
+  AccountsAdminController(this._database, [LocalAuthRepository? auth])
+      : _auth = auth ?? LocalAuthRepository(_database),
+        _importer = WorkforceImportRepository(_database);
 
   final AppDatabase _database;
   final LocalAuthRepository _auth;
   final WorkforceImportRepository _importer;
 
-  Future<AccountsAdminData> load() async {
-    final db = _database;
-    final accounts = await _auth.accounts(activeOnly: true);
-    final employees = await (db.select(
-      db.employees,
-    )..where((r) => r.isActive)).get();
-    final teams = await (db.select(db.teams)..where((r) => r.isActive)).get();
-    final housings = await (db.select(
-      db.housings,
-    )..where((r) => r.isActive)).get();
-    return AccountsAdminData(
-      accounts: accounts,
-      employees: employees,
-      teams: teams,
-      housings: housings,
-    );
-  }
+  Future<AccountsAdminData> load() => AccountsAdminLoader(_database, _auth).load();
 
-  /// Opens the local file picker and parses the roster; null when cancelled.
-  Future<ImportPreview?> pickImport() async {
-    final file = await WorkforceFilePicker().pick();
-    if (file == null) return null;
-    final rows = const WorkforceImportParser().parse(
-      filename: file.name,
-      bytes: file.bytes,
-    );
-    const resolver = SupervisorRoleResolver();
-    final supervisors = rows.where((r) => resolver.resolve(r) != null).length;
-    return ImportPreview(rows: rows, supervisorCount: supervisors);
-  }
+  Future<ImportPreview?> pickImport() => const AccountsAdminImportPicker().pick();
 
-  Future<WorkforceImportResult> commitImport(ImportPreview preview) =>
-      _importer.commit(preview.rows);
+  Future<WorkforceImportResult> commitImport(ImportPreview p) => _importer.commit(p.rows);
 
-  Future<void> create(AccountFormResult form) {
-    final effectiveHousingIds = form.role == AuthRole.housingSupervisor
-        ? (form.housingIds.isEmpty
-              ? [AppConstants.defaultHousingId]
-              : (form.housingIds.contains(AppConstants.defaultHousingId)
-                    ? form.housingIds
-                    : [AppConstants.defaultHousingId, ...form.housingIds]))
-        : form.housingIds;
-    return _auth.createAccount(
-      employeeUid: form.employeeUid,
-      displayName: form.displayName,
-      role: form.role,
-      teamIds: form.teamIds,
-      housingIds: effectiveHousingIds,
-    );
-  }
+  Future<void> create(AccountFormResult form) => _auth.createAccount(
+        employeeUid: form.employeeUid,
+        displayName: form.displayName,
+        role: form.role,
+        teamIds: form.teamIds,
+        housingIds: form.housingIds.isEmpty ? [HousingConstants.defaultHousingId] : form.housingIds,
+      );
 
   Future<void> update(LocalAccount account, AccountFormResult form) async {
     if (form.role != AuthRole.projectManager) await _guardLastManager(account);
@@ -133,13 +45,11 @@ final class AccountsAdminController {
     );
   }
 
-  Future<void> resetPassword(String accountId) =>
-      _auth.resetPassword(accountId);
+  Future<void> resetPassword(String id) => _auth.resetPassword(id);
 
-  /// Removes the account from the sign-in list (soft delete keeps history).
-  Future<void> remove(LocalAccount account) async {
-    await _guardLastManager(account);
-    await _auth.deactivateAccount(account.id);
+  Future<void> remove(LocalAccount a) async {
+    await _guardLastManager(a);
+    await _auth.deactivateAccount(a.id);
   }
 
   Future<void> _guardLastManager(LocalAccount account) async {

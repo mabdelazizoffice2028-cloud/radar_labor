@@ -135,10 +135,8 @@ void main() {
         .into(db.employees)
         .insert(
           EmployeesCompanion.insert(
-            employeeUid: 'emp-1',
-            employeeCode: 'E-1',
+            iqamaNo: 'emp-1',
             fullNameAr: 'عامل 1',
-            category: 'Worker',
           ),
         );
 
@@ -203,10 +201,8 @@ void main() {
         .into(db.employees)
         .insert(
           EmployeesCompanion.insert(
-            employeeUid: 'emp-1',
-            employeeCode: 'E-1',
+            iqamaNo: 'emp-1',
             fullNameAr: 'عامل 1',
-            category: 'Worker',
           ),
         );
     await events.append(

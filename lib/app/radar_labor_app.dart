@@ -171,6 +171,14 @@ final class _RadarLaborAppState extends State<RadarLaborApp> {
                   backgroundColor: AppTokens.primary,
                   foregroundColor: AppTokens.onPrimary,
                 ),
+                snackBarTheme: SnackBarThemeData(
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: AppTokens.textPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTokens.space8),
+                  ),
+                  dismissDirection: DismissDirection.horizontal,
+                ),
               ),
               home: AuthGate(
                 database: startup.database,

@@ -5,6 +5,7 @@ import 'package:radar_labor/core/auth/local_account.dart';
 import 'package:radar_labor/core/auth/local_auth_repository.dart';
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
 import 'package:radar_labor/core/database/app_database.dart';
+import 'package:radar_labor/core/database/app_setting_keys.dart';
 import 'package:radar_labor/core/database/local_settings_repository.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/core/sync/outbox_repository.dart';
@@ -169,6 +170,13 @@ final housingDraftStoreProvider = Provider<HousingDraftStore>((ref) {
   final settings = ref.watch(settingsRepositoryProvider);
   final clock = ref.watch(clockProvider);
   return SettingsHousingDraftStore(settings: settings, clock: clock);
+});
+
+/// Housing lockout hour provider.
+final housingLockoutHourProvider = FutureProvider<int>((ref) async {
+  final s = ref.watch(settingsRepositoryProvider);
+  final v = await s.read(AppSettingKeys.housingLockoutHour);
+  return int.tryParse(v ?? '20') ?? 20;
 });
 
 /// Smart daily site attendance store provider (PRD §8, §9, §10).

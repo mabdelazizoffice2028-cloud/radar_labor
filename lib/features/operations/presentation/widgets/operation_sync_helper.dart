@@ -2,35 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/app_providers.dart';
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
-import 'package:radar_labor/core/l10n/operations_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 import 'package:radar_labor/features/operations/domain/operation_sync_outcome.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/operation_sync_message.dart';
 
-/// Localized message for [outcome]; failures reuse the typed failure catalog.
-String operationSyncMessage(
-  OperationSyncOutcome outcome,
-  bool arabic,
-) => switch (outcome) {
-  OperationSyncOutcome.synced => OperationsStrings.syncSuccessMessage(arabic),
-  OperationSyncOutcome.pending => OperationsStrings.syncPendingMessage(arabic),
-  OperationSyncOutcome.offline => OperationsStrings.syncOfflineFallbackMessage(
-    arabic,
-  ),
-  OperationSyncOutcome.failed => OperationFailureMessage.of(
-    const SyncFailed(),
-    arabic,
-  ),
-  OperationSyncOutcome.sessionRevoked => OperationFailureMessage.of(
-    const SessionRevoked(),
-    arabic,
-  ),
-};
+export 'package:radar_labor/features/operations/presentation/widgets/operation_sync_message.dart';
 
-/// Executes server synchronization and reports an accurate localized result.
-///
-/// Green feedback is shown only for a confirmed, fully drained sync. Returns
-/// `null` when no actor/scope is available and sync was not attempted.
 Future<OperationSyncOutcome?> performOperationSync({
   required WidgetRef ref,
   required BuildContext context,
@@ -65,8 +43,7 @@ Future<OperationSyncOutcome?> performOperationSync({
   } on OperationException catch (error) {
     outcome = OperationSyncOutcome.failed;
     typedMessage = OperationFailureMessage.of(error.failure, arabic);
-  } on Exception catch (error) {
-    debugPrint('Operation sync failed (${error.runtimeType}).');
+  } on Exception {
     outcome = OperationSyncOutcome.failed;
   }
   if (context.mounted) {
@@ -80,7 +57,6 @@ Future<OperationSyncOutcome?> performOperationSync({
   return outcome;
 }
 
-/// Shows the completion state: green only when [outcome] is confirmed synced.
 void showOperationSyncSnackBar(
   BuildContext context,
   OperationSyncOutcome outcome, {
@@ -88,11 +64,14 @@ void showOperationSyncSnackBar(
   String? messageOverride,
 }) {
   final confirmed = outcome.isConfirmedSuccess;
-  ScaffoldMessenger.of(context).showSnackBar(
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.clearSnackBars();
+  messenger.showSnackBar(
     SnackBar(
-      backgroundColor: confirmed
-          ? AppTokens.statusOnSite
-          : AppTokens.statusHousingOnly,
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 3),
+      backgroundColor:
+          confirmed ? AppTokens.statusOnSite : AppTokens.statusHousingOnly,
       content: Text(messageOverride ?? operationSyncMessage(outcome, arabic)),
     ),
   );

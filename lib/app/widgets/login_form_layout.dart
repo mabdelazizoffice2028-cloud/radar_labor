@@ -18,7 +18,7 @@ final class LoginFormLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(AppTokens.space16),
+      padding: const EdgeInsets.all(AppTokens.space24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -26,9 +26,9 @@ final class LoginFormLayout extends StatelessWidget {
           Text(
             AppStrings.login(arabic),
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: AppTokens.space12),
+          const SizedBox(height: AppTokens.space16),
           child,
           if (banner != null) ...[
             const SizedBox(height: AppTokens.space12),

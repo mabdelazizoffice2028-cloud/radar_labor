@@ -34,6 +34,13 @@
 
 ## محلولة
 
+### B-011 — Windows Smart App Control يمنع تشغيل gen_snapshot أثناء بناء armeabi-v7a
+
+- **العَرَض:** ظهور خطأ ProcessException: An Application Control policy has blocked this file عند محاولة تشغيل lutter build apk مباشرة في PowerShell؛ يمنع Windows سياسة التطبيقات (Smart App Control / WDAC) من تنفيذ gen_snapshot.exe في مجلد engine\\android-arm-release.
+- **السبب:** تفعيل Smart App Control (SAC) في نظام Windows 11 وحظره للملفات التنفيذية غير الموقعة في كاش محرك Flutter عند استدعائها عبر Dart VM.
+- **الحل:** بناء الـ Release عبر سكربت البيئة المعزول work\\flutter-profile\\android-env.cmd مع lutter build apk --release --no-pub، أو البناء المخصص للأجهزة الحديثة ARM64 (--target-platform android-arm64)، أو إضافة استثناء لمجلد C:\\src\\flutter في Windows Defender.
+- **التحقق:** اكتمل البناء بنجاح وأُنتج الملف outputs/Radar Labour.apk بحجم 70,029,527 بايت.
+
 ### B-005 — قيود اختبار Flutter على Temp والاتصال المحلي
 
 - **العَرَض:** محاولة الاختبار الأولى فشلت في نسخ listener إلى Temp، ثم ظهرت

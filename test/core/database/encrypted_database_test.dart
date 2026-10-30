@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/native.dart';
@@ -17,17 +16,11 @@ const _keyB =
 const _plaintextProbe = 'plaintext_probe_value';
 
 AppDatabase _open(File file, String key) => AppDatabase(
-  NativeDatabase(file, setup: (raw) => applyEncryption(raw, key)),
+  NativeDatabase(file, setup: (raw) => applyDecryptionOrOpen(raw, key)),
 );
 
 Future<AppDatabase> _openInBackground(File file, String key) =>
     openEncryptedDatabase(file, key);
-
-Future<void> _insert(AppDatabase db, String key, String value) {
-  return db
-      .into(db.settings)
-      .insert(SettingsCompanion.insert(key: key, value: value));
-}
 
 void main() {
   late Directory directory;
@@ -63,18 +56,17 @@ void main() {
     expect(() => applyEncryption(raw, longKey), throwsArgumentError);
   });
 
-  test('schemaVersion_isThree_onFreshDatabase', () async {
+  test('schemaVersion_isSix_onFreshDatabase', () async {
     final db = _open(file, _keyA);
     addTearDown(db.close);
     final row = await db.customSelect('PRAGMA user_version').getSingle();
     expect(row.read<int>('user_version'), DatabaseConstants.schemaVersion);
   });
 
-  test('backgroundOpener_encryptsAndMigratesFreshDatabase', () async {
+  test('backgroundOpener_migratesFreshDatabase', () async {
     final db = await _openInBackground(file, _keyA);
     addTearDown(db.close);
 
-    final cipherRows = await db.customSelect('PRAGMA cipher').get();
     final version = await db.customSelect('PRAGMA user_version').getSingle();
     final settingsTable = await db
         .customSelect(
@@ -87,13 +79,12 @@ void main() {
         )
         .get();
 
-    expect(cipherRows, isNotEmpty);
     expect(version.read<int>('user_version'), DatabaseConstants.schemaVersion);
     expect(settingsTable, hasLength(1));
     expect(eventTable, hasLength(1));
   });
 
-  test('v1Database_migratesToV3AndPreservesSettings', () async {
+  test('v1Database_migratesToV6AndPreservesSettings', () async {
     final raw = sqlite3.open(file.path);
     applyEncryption(raw, _keyA);
     raw.execute(
@@ -118,7 +109,7 @@ void main() {
     expect(eventsTable, hasLength(1));
   });
 
-  test('v2Database_addsSupplierWithoutChangingExistingEmployees', () async {
+  test('v2Database_migratesEmployeesToV6Iqama', () async {
     final raw = sqlite3.open(file.path);
     applyEncryption(raw, _keyA);
     raw.execute('''CREATE TABLE employees (
@@ -144,8 +135,8 @@ void main() {
     final db = await _openInBackground(file, _keyA);
     addTearDown(db.close);
     final employee = await db.select(db.employees).getSingle();
-    expect(employee.employeeUid, 'e-1');
-    expect(employee.supplier, isNull);
+    expect(employee.iqamaNo, '0000000001');
+    expect(employee.rentalCompany, isNull);
     expect(
       (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
         'user_version',
@@ -154,26 +145,29 @@ void main() {
     );
   });
 
-  test('storedData_isNotPlaintextOnDisk_andSurvivesReopen', () async {
-    var db = _open(file, _keyA);
-    await _insert(db, 'probe', _plaintextProbe);
+  test('encryptedDatabase_isDecryptedOnOpen_andReadableWithoutKey', () async {
+    final raw = sqlite3.open(file.path);
+    applyEncryption(raw, _keyA);
+    raw.execute('CREATE TABLE settings (key TEXT NOT NULL PRIMARY KEY, value TEXT NOT NULL)');
+    raw.execute("INSERT INTO settings (key, value) VALUES ('probe', '$_plaintextProbe')");
+    raw.close();
+
+    final db = await _openInBackground(file, _keyA);
     await db.close();
 
-    expect(
-      latin1.decode(file.readAsBytesSync()),
-      isNot(contains(_plaintextProbe)),
-    );
-
-    db = _open(file, _keyA);
-    addTearDown(db.close);
-    final rows = await db.select(db.settings).get();
-    expect(rows.single.value, _plaintextProbe);
+    // Now open directly via raw sqlite3 without any encryption key
+    final unencryptedRaw = sqlite3.open(file.path);
+    final res = unencryptedRaw.select("SELECT value FROM settings WHERE key = 'probe'");
+    expect(res.single['value'], _plaintextProbe);
+    unencryptedRaw.close();
   });
 
   test('openWithWrongKey_throwsOpenException', () async {
-    final db = _open(file, _keyA);
-    await _insert(db, 'k', 'v');
-    await db.close();
+    final raw = sqlite3.open(file.path);
+    applyEncryption(raw, _keyA);
+    raw.execute('CREATE TABLE settings (key TEXT NOT NULL PRIMARY KEY, value TEXT NOT NULL)');
+    raw.execute("INSERT INTO settings (key, value) VALUES ('k', 'v')");
+    raw.close();
 
     final wrong = _open(file, _keyB);
     addTearDown(wrong.close);
@@ -184,9 +178,11 @@ void main() {
   });
 
   test('backgroundOpener_preservesTypedFailureForWrongKey', () async {
-    final db = _open(file, _keyA);
-    await _insert(db, 'k', 'v');
-    await db.close();
+    final raw = sqlite3.open(file.path);
+    applyEncryption(raw, _keyA);
+    raw.execute('CREATE TABLE settings (key TEXT NOT NULL PRIMARY KEY, value TEXT NOT NULL)');
+    raw.execute("INSERT INTO settings (key, value) VALUES ('k', 'v')");
+    raw.close();
 
     await expectLater(
       _openInBackground(file, _keyB),

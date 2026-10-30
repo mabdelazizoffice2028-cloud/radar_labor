@@ -1,22 +1,15 @@
-import 'package:drift/drift.dart' as drift;
 import 'package:material_ui/material_ui.dart';
+import 'package:radar_labor/app/screens/worker_add_dialog.dart';
+import 'package:radar_labor/app/screens/worker_list_view.dart';
 import 'package:radar_labor/core/database/app_database.dart';
-import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
-import 'package:uuid/uuid.dart';
 
-/// Screen for viewing and managing workforce employees (BC-2: direct event recording removed).
 final class WorkersScreen extends StatefulWidget {
-  const WorkersScreen({
-    required this.database,
-    required this.events,
-    required this.arabic,
-    super.key,
-  });
+  const WorkersScreen({required this.database, required this.arabic, this.events, super.key});
 
   final AppDatabase database;
-  final EventRepository events;
   final bool arabic;
+  final Object? events;
 
   @override
   State<WorkersScreen> createState() => _WorkersScreenState();
@@ -25,221 +18,46 @@ final class WorkersScreen extends StatefulWidget {
 final class _WorkersScreenState extends State<WorkersScreen> {
   String _query = '';
 
-  Future<void> _add() async {
-    final teams = await (widget.database.select(
-      widget.database.teams,
-    )..where((row) => row.isActive)).get();
-    final housings = await (widget.database.select(
-      widget.database.housings,
-    )..where((row) => row.isActive)).get();
+  void _showMessage(String msg) {
     if (!mounted) return;
-
-    final code = TextEditingController();
-    final arabicName = TextEditingController();
-    final englishName = TextEditingController();
-    String? selectedTeam;
-    String? selectedHousing;
-
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, updateDialog) => AlertDialog(
-          title: Text(AppStrings.addWorker(widget.arabic)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: code,
-                  decoration: InputDecoration(
-                    labelText: AppStrings.workerCode(widget.arabic),
-                  ),
-                ),
-                TextField(
-                  controller: arabicName,
-                  decoration: InputDecoration(
-                    labelText: AppStrings.arabicName(widget.arabic),
-                  ),
-                ),
-                TextField(
-                  controller: englishName,
-                  decoration: InputDecoration(
-                    labelText: AppStrings.englishName(widget.arabic),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                DropdownButtonFormField<String?>(
-                  initialValue: selectedTeam,
-                  decoration: InputDecoration(
-                    labelText: AppStrings.currentTeam(widget.arabic),
-                  ),
-                  items: [
-                    DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text(AppStrings.noTeam(widget.arabic)),
-                    ),
-                    ...teams.map(
-                      (team) => DropdownMenuItem<String?>(
-                        value: team.teamId,
-                        child: Text(
-                          widget.arabic
-                              ? team.nameAr
-                              : (team.nameEn ?? team.nameAr),
-                        ),
-                      ),
-                    ),
-                  ],
-                  onChanged: (value) =>
-                      updateDialog(() => selectedTeam = value),
-                ),
-                const SizedBox(height: 10),
-                DropdownButtonFormField<String?>(
-                  initialValue: selectedHousing,
-                  decoration: InputDecoration(
-                    labelText: AppStrings.currentHousing(widget.arabic),
-                  ),
-                  items: [
-                    DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text(AppStrings.noHousing(widget.arabic)),
-                    ),
-                    ...housings.map(
-                      (housing) => DropdownMenuItem<String?>(
-                        value: housing.housingId,
-                        child: Text(
-                          widget.arabic
-                              ? housing.nameAr
-                              : (housing.nameEn ?? housing.nameAr),
-                        ),
-                      ),
-                    ),
-                  ],
-                  onChanged: (value) =>
-                      updateDialog(() => selectedHousing = value),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(AppStrings.cancel(widget.arabic)),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(AppStrings.save(widget.arabic)),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (saved != true ||
-        code.text.trim().isEmpty ||
-        arabicName.text.trim().isEmpty) {
-      return;
-    }
-
-    try {
-      final trimmedCode = code.text.trim();
-      final existing =
-          await (widget.database.select(widget.database.employees)..where(
-                (e) => e.employeeCode.lower().equals(trimmedCode.toLowerCase()),
-              ))
-              .get();
-      if (existing.isNotEmpty) {
-        _showMessage(AppStrings.workerCodeExists(widget.arabic));
-        return;
-      }
-      await widget.database
-          .into(widget.database.employees)
-          .insert(
-            EmployeesCompanion.insert(
-              employeeUid: const Uuid().v4(),
-              employeeCode: code.text.trim(),
-              fullNameAr: arabicName.text.trim(),
-              fullNameEn: drift.Value(
-                englishName.text.trim().isEmpty
-                    ? null
-                    : englishName.text.trim(),
-              ),
-              category: 'general',
-              currentTeamId: drift.Value(selectedTeam),
-              housingId: drift.Value(selectedHousing),
-            ),
-          );
-    } on Exception catch (error) {
-      debugPrint('Add worker failed (${error.runtimeType}).');
-      _showMessage(AppStrings.workerSaveFailed(widget.arabic));
-    }
-  }
-
-  void _showMessage(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: Colors.transparent,
-    floatingActionButton: FloatingActionButton.extended(
-      onPressed: _add,
-      icon: const Icon(Icons.person_add_alt_1),
-      label: Text(AppStrings.addWorker(widget.arabic)),
-    ),
-    body: Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(12),
-          child: TextField(
-            onChanged: (value) => setState(() => _query = value),
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search),
-              hintText: AppStrings.searchWorker(widget.arabic),
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => showAddWorkerDialog(
+          context: context,
+          database: widget.database,
+          arabic: widget.arabic,
+          showMessage: _showMessage,
+        ),
+        icon: const Icon(Icons.person_add),
+        label: Text(AppStrings.add(widget.arabic)),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: TextField(
+              onChanged: (v) => setState(() => _query = v),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: AppStrings.searchWorker(widget.arabic),
+              ),
             ),
           ),
-        ),
-        Expanded(
-          child: StreamBuilder<List<Employee>>(
-            stream: widget.database.select(widget.database.employees).watch(),
-            builder: (context, state) {
-              final queryNorm = _query.trim().toLowerCase();
-              final workers = (state.data ?? []).where((worker) {
-                if (queryNorm.isEmpty) return true;
-                return worker.fullNameAr.toLowerCase().contains(queryNorm) ||
-                    worker.employeeCode.toLowerCase().contains(queryNorm) ||
-                    (worker.fullNameEn ?? '').toLowerCase().contains(queryNorm);
-              }).toList();
-              if (workers.isEmpty) {
-                return Center(
-                  child: Text(AppStrings.noWorkersYet(widget.arabic)),
-                );
-              }
-              return ListView.builder(
-                padding: const EdgeInsets.only(bottom: 100),
-                itemCount: workers.length,
-                itemBuilder: (context, i) {
-                  final worker = workers[i];
-                  return Card(
-                    child: ListTile(
-                      leading: const CircleAvatar(child: Icon(Icons.person)),
-                      title: Text(
-                        widget.arabic
-                            ? worker.fullNameAr
-                            : (worker.fullNameEn ?? worker.fullNameAr),
-                      ),
-                      subtitle: Text(
-                        '${AppStrings.workerCode(widget.arabic)}: ${worker.employeeCode}',
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
+          Expanded(
+            child: WorkerListView(
+              stream: widget.database.select(widget.database.employees).watch(),
+              query: _query,
+              arabic: widget.arabic,
+            ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }

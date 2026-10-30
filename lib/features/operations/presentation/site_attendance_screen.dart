@@ -12,13 +12,15 @@ import 'package:radar_labor/features/operations/domain/operations_models.dart';
 import 'package:radar_labor/features/operations/domain/team_setup_store.dart';
 import 'package:radar_labor/features/operations/presentation/state/operations_controller.dart';
 import 'package:radar_labor/features/operations/presentation/state/site_attendance_notifier.dart';
+import 'package:radar_labor/core/ui/app_snack_bar.dart';
+import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 import 'package:radar_labor/features/operations/presentation/team_setup/team_edit_screen.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/attendance_conflict_dialog.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/attendance_counter_bar.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/attendance_diff_dialog.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/cross_team_search_sheet.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/operation_background_sync.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/operation_confirm_sync_dialog.dart';
-import 'package:radar_labor/features/operations/presentation/widgets/operation_sync_helper.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/operation_whatsapp_dialog.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/site_attendance_header.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/site_worker_list_view.dart';
@@ -74,85 +76,93 @@ final class _SiteAttendanceScreenState
     final ar = widget.arabic;
     final notifier = ref.read(siteAttendanceNotifierProvider.notifier);
     final state = ref.read(siteAttendanceNotifierProvider);
-    final prepared = await notifier.prepareSave();
-    if (prepared == null || !mounted) return;
+    try {
+      final prepared = await notifier.prepareSave();
+      if (prepared == null || !mounted) return;
 
-    final diffOk = await AttendanceDiffDialog.show(
-      context: context,
-      team: prepared.team,
-      date: prepared.date,
-      diff: prepared.diff,
-      arabic: ar,
-    );
-    if (!diffOk || !mounted) return;
-
-    var resolutions = <String, ConflictResolutionChoice>{};
-    if (prepared.conflicts.isNotEmpty) {
-      final res = await AttendanceConflictDialog.show(
+      final diffOk = await AttendanceDiffDialog.show(
         context: context,
-        conflicts: prepared.conflicts,
-        currentTeamName: prepared.team.displayName(arabic: ar),
-        arabic: ar,
-        currentDate: prepared.date,
-      );
-      if (res == null || !mounted) return;
-      resolutions = res;
-    }
-
-    final presentWorkers = state.rows
-        .where((r) => r.isPresent)
-        .map((r) => r.worker)
-        .toList();
-    final action = await OperationConfirmSyncDialog.show(
-      context: context,
-      title: OperationsStrings.confirmSiteAttendanceTitle(ar),
-      entityName: prepared.team.displayName(arabic: ar),
-      date: prepared.date,
-      countSummaryText: OperationsStrings.presentCountLabel(
-        ar,
-        state.presentCount,
-      ),
-      selectedWorkers: presentWorkers,
-      emptySelectionText: OperationsStrings.zeroWorkersConfirmation(ar),
-      arabic: ar,
-    );
-    if (action == null || !mounted) return;
-
-    final result = await notifier.confirmSave(
-      prepared: prepared,
-      resolutions: resolutions,
-    );
-    if (result == null || !mounted) return;
-
-    if (action == ConfirmSaveAction.saveAndSync) {
-      await performOperationSync(
-        ref: ref,
-        context: context,
-        actor: widget.actor,
-        scope: widget.scope,
+        team: prepared.team,
+        date: prepared.date,
+        diff: prepared.diff,
         arabic: ar,
       );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(OperationsStrings.teamSavedLocally(ar)),
-          duration: OperationsConstants.undoWindow,
-          action: SnackBarAction(
-            label: OperationsStrings.undoAction(ar),
-            onPressed: () => unawaited(notifier.undoLastSave()),
-          ),
+      if (!diffOk || !mounted) return;
+
+      var resolutions = <String, ConflictResolutionChoice>{};
+      if (prepared.conflicts.isNotEmpty) {
+        final res = await AttendanceConflictDialog.show(
+          context: context,
+          conflicts: prepared.conflicts,
+          currentTeamName: prepared.team.displayName(arabic: ar),
+          arabic: ar,
+          currentDate: prepared.date,
+        );
+        if (res == null || !mounted) return;
+        resolutions = res;
+      }
+
+      final presentWorkers = state.rows
+          .where((r) => r.isPresent)
+          .map((r) => r.worker)
+          .toList();
+      final confirmed = await OperationConfirmSyncDialog.show(
+        context: context,
+        title: OperationsStrings.confirmSiteAttendanceTitle(ar),
+        entityName: prepared.team.displayName(arabic: ar),
+        date: prepared.date,
+        countSummaryText: OperationsStrings.presentCountLabel(
+          ar,
+          state.presentCount,
+        ),
+        selectedWorkers: presentWorkers,
+        emptySelectionText: OperationsStrings.zeroWorkersConfirmation(ar),
+        arabic: ar,
+      );
+      if (confirmed != true || !mounted) return;
+
+      final result = await notifier.confirmSave(
+        prepared: prepared,
+        resolutions: resolutions,
+      );
+      if (result == null || !mounted) return;
+
+      AppSnackBar.show(
+        context,
+        message: OperationsStrings.teamSavedLocally(ar),
+        duration: OperationsConstants.undoWindow,
+        action: SnackBarAction(
+          label: OperationsStrings.undoAction(ar),
+          onPressed: () => unawaited(notifier.undoLastSave()),
         ),
       );
-    }
 
-    if (!mounted) return;
-    await showOperationWhatsappDialog(
-      context: context,
-      messageText: result.summary.messageText,
-      arabic: ar,
-    );
-    if (mounted && Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
+      triggerBackgroundSync(ref, actor: widget.actor, scope: widget.scope);
+
+      if (!mounted) return;
+      await showOperationWhatsappDialog(
+        context: context,
+        messageText: result.summary.messageText,
+        arabic: ar,
+      );
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+    } on OperationException catch (e) {
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message: OperationFailureMessage.of(e.failure, ar),
+        );
+      }
+    } on Object catch (e) {
+      debugPrint('Site attendance save error (${e.runtimeType}).');
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message: OperationsStrings.errSaveFailed(ar),
+        );
+      }
     }
   }
 

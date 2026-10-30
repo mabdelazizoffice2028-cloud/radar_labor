@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/core/status/status_models.dart';
@@ -32,15 +33,6 @@ void main() {
 
   test('coverage_warnsUntilHousingAndTeamSubmitForTheSelectedDate', () async {
     await database
-        .into(database.housings)
-        .insert(
-          HousingsCompanion.insert(
-            housingId: 'housing-1',
-            nameAr: 'سكن ١',
-            nameEn: const Value('Housing 1'),
-          ),
-        );
-    await database
         .into(database.teams)
         .insert(
           TeamsCompanion.insert(
@@ -51,7 +43,7 @@ void main() {
         );
 
     var snapshot = await coverage.watch(_date).first;
-    expect(snapshot.missingHousings.single.id, 'housing-1');
+    expect(snapshot.missingHousings.single.id, HousingConstants.defaultHousingId);
     expect(snapshot.missingTeams.single.id, 'team-1');
 
     await events.appendBatch([
@@ -59,7 +51,7 @@ void main() {
         type: EventType.housingCheck,
         action: EventAction.set,
         businessDate: _date,
-        housingId: 'housing-1',
+        housingId: HousingConstants.defaultHousingId,
       ),
       const EventDraft(
         type: EventType.siteSubmitted,
@@ -77,7 +69,7 @@ void main() {
         type: EventType.housingCheck,
         action: EventAction.clear,
         businessDate: _date,
-        housingId: 'housing-1',
+        housingId: HousingConstants.defaultHousingId,
       ),
       const EventDraft(
         type: EventType.siteSubmitted,

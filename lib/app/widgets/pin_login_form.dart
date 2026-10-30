@@ -170,6 +170,12 @@ final class _PinLoginFormState extends State<PinLoginForm> {
             height: AppTokens.minTouchTarget,
             child: FilledButton(
               key: const ValueKey('remembered_login_button'),
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
               onPressed: widget.busy ? null : _handleSubmit,
               child: widget.busy
                   ? const SizedBox(

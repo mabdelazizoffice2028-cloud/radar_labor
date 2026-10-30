@@ -1,20 +1,21 @@
 import 'package:drift/drift.dart';
 
-@TableIndex.sql(
-  'CREATE UNIQUE INDEX employees_employee_code ON employees(employee_code COLLATE NOCASE)',
-)
+/// Workforce registry table with 10-digit Iqama as primary key (V2 schema).
 class Employees extends Table {
-  TextColumn get employeeUid => text()();
-  TextColumn get employeeCode => text()();
+  TextColumn get iqamaNo => text()();
   TextColumn get fullNameAr => text()();
   TextColumn get fullNameEn => text().nullable()();
-  TextColumn get category => text()();
-  TextColumn get supplier => text().nullable()();
+  TextColumn get jobTitle => text().nullable()();
+  TextColumn get jobCategory =>
+      text().withDefault(const Constant('direct_labor'))();
+  TextColumn get employmentType =>
+      text().withDefault(const Constant('company'))();
+  TextColumn get rentalCompany => text().nullable()();
+  DateTimeColumn get iqamaExpiry => dateTime().nullable()();
   TextColumn get currentTeamId => text().nullable()();
-  TextColumn get housingId => text().nullable()();
-  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get archivedAt => dateTime().nullable()();
   IntColumn get rowVersion => integer().withDefault(const Constant(1))();
 
   @override
-  Set<Column<Object>> get primaryKey => {employeeUid};
+  Set<Column<Object>> get primaryKey => {iqamaNo};
 }

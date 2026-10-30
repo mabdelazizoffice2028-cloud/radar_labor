@@ -1,12 +1,13 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/l10n/dashboard_strings.dart';
-import 'package:radar_labor/core/l10n/history_strings.dart';
 import 'package:radar_labor/core/status/status_models.dart';
 import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/core/time/clock.dart';
 import 'package:radar_labor/features/dashboard/data/dashboard_actions_repository.dart';
 import 'package:radar_labor/features/dashboard/data/dashboard_coverage_repository.dart';
 import 'package:radar_labor/features/dashboard/data/status_snapshot_repository.dart';
+import 'package:radar_labor/features/dashboard/presentation/daily_report_button.dart';
+import 'package:radar_labor/features/dashboard/presentation/iqama_expiry_alert_card.dart';
 
 part 'dashboard_components.dart';
 part 'dashboard_sections.dart';
@@ -77,27 +78,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          IqamaExpiryAlertCard(arabic: _ar),
           _DateSelector(date: _businessDate, arabic: _ar, onPressed: _pickDate),
           const SizedBox(height: 12),
           _StatusCards(snapshot: snapshot, arabic: _ar),
-          const SizedBox(height: 8),
-          StreamBuilder<DashboardCoverage>(
-            stream: widget.coverageRepository.watch(_businessDate),
-            builder: (context, coverageState) {
-              if (coverageState.hasError) {
-                return _MessageState(
-                  message: DashboardStrings.couldNotLoadWarnings(_ar),
-                  icon: Icons.warning_amber_rounded,
-                );
-              }
-              if (!coverageState.hasData) {
-                return const LinearProgressIndicator();
-              }
-              return _CoverageWarnings(
-                coverage: coverageState.requireData,
-                arabic: _ar,
-              );
-            },
+          DailyReportButton(
+            snapshot: snapshot,
+            date: _businessDate,
+            arabic: _ar,
           ),
           const SizedBox(height: 12),
           _ConflictSection(

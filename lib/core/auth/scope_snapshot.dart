@@ -1,11 +1,11 @@
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/role_capabilities.dart';
 
-/// Live snapshot of a user's assigned team and housing scopes (PRD §5.4).
+/// Active operational scopes assigned to an actor (PRD §5.4).
 final class ScopeSnapshot {
   const ScopeSnapshot({
-    this.teamIds = const <String>{},
-    this.housingIds = const <String>{},
+    this.teamIds = const {},
+    this.housingIds = const {},
   });
 
   final Set<String> teamIds;
@@ -18,10 +18,17 @@ final class ScopeSnapshot {
 
 /// Identifies the authenticated actor performing an operation (PRD §5.4).
 final class ActorContext {
-  const ActorContext({required this.userId, required this.role});
+  const ActorContext({
+    required this.userId,
+    required this.role,
+    this.name,
+  });
 
   final String userId;
   final AuthRole role;
+  final String? name;
+
+  String get displayName => (name != null && name!.isNotEmpty) ? name! : userId;
 
   RoleCapabilities get capabilities => role.capabilities;
 }

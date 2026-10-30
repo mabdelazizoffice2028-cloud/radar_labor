@@ -1,14 +1,12 @@
 import 'package:drift/drift.dart';
-import 'package:radar_labor/core/database/tables/employees_table.dart';
 
 @TableIndex(
-  name: 'employment_period_employee_start',
-  columns: {#employeeUid, #startDate},
+  name: 'employment_period_iqama_start',
+  columns: {#iqamaNo, #startDate},
 )
 class EmploymentPeriods extends Table {
   TextColumn get periodId => text()();
-  TextColumn get employeeUid =>
-      text().references(Employees, #employeeUid, onDelete: KeyAction.cascade)();
+  TextColumn get iqamaNo => text()();
   TextColumn get startDate => text()();
   TextColumn get endDate => text().nullable()();
 

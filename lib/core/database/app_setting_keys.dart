@@ -7,6 +7,8 @@ abstract final class AppSettingKeys {
   static const String rosterEpoch = 'roster_epoch';
   static const String deviceActivated = 'device_activated';
   static const String lastLoggedInAccountId = 'last_logged_in_account_id';
+  static const String housingLockoutHour = 'housing_lockout_hour';
+  static const String siteLockoutHour = 'site_lockout_hour';
   static const String draftSiteAttendancePrefix = 'draft_site_attendance_';
   static const String draftHousingCheckPrefix = 'draft_housing_check_';
 

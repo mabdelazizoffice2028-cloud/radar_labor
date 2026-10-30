@@ -8,6 +8,8 @@ abstract interface class OperationsStore {
 
   Stream<List<WorkerOption>> watchHousingWorkers(String housingId);
 
+  Future<List<WorkerOption>> getHousingWorkers(String housingId);
+
   Stream<List<WorkerOption>> watchTeamWorkers(String teamId);
 
   Future<HousingCheckUndo> saveHousingCheck({
@@ -33,4 +35,6 @@ abstract interface class OperationsStore {
     SiteAttendanceUndo undo, {
     required String actorUserId,
   });
+
+  Future<void> clearTestData();
 }
