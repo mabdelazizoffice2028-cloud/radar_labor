@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/local_accounts_screen.dart';
 import 'package:radar_labor/app/screens/preferences_dev_tool_card.dart';
+import 'package:radar_labor/app/screens/preferences_import_card.dart';
 import 'package:radar_labor/app/widgets/settings_section_header.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/database/local_settings_repository.dart';
@@ -51,6 +52,7 @@ final class _PreferencesAdminSectionState extends State<PreferencesAdminSection>
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       SettingsSectionHeader(title: AppStrings.settingsAdministration(widget.arabic)),
+      PreferencesImportCard(database: widget.database, arabic: widget.arabic),
       Card(
         child: ListTile(
           leading: const Icon(Icons.manage_accounts_outlined),

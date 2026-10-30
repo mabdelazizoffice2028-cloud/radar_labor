@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:radar_labor/core/auth/account_provisioning_repository.dart';
@@ -21,7 +22,7 @@ void main() {
 
   tearDown(() => db.close());
 
-  test('ensureAdminAccounts creates PM and HR on empty database', () async {
+  test('ensureAdminAccounts creates PM and Admin on empty database and updates legacy HR name', () async {
     expect(await auth.accounts(), isEmpty);
     await provisioning.ensureAdminAccounts();
 
@@ -34,13 +35,22 @@ void main() {
       isTrue,
     );
     expect(
-      accounts.any((a) => a.role == AuthRole.hr && a.mustChangePassword),
+      accounts.any((a) => a.role == AuthRole.hr && a.mustChangePassword && a.displayName == 'Admin'),
       isTrue,
     );
 
     // Idempotent: does not duplicate
     await provisioning.ensureAdminAccounts();
     expect((await auth.accounts()).length, 2);
+
+    // Updates existing account if displayName was 'HR'
+    final hrAcc = accounts.firstWhere((a) => a.role == AuthRole.hr);
+    await (db.update(db.appUsers)..where((u) => u.id.equals(hrAcc.id)))
+        .write(const AppUsersCompanion(displayName: Value('HR')));
+    expect((await auth.accounts()).firstWhere((a) => a.id == hrAcc.id).displayName, 'HR');
+
+    await provisioning.ensureAdminAccounts();
+    expect((await auth.accounts()).firstWhere((a) => a.id == hrAcc.id).displayName, 'Admin');
   });
 
   test('SupervisorRoleResolver detects site and campus supervisors', () {
@@ -65,6 +75,30 @@ void main() {
           code: '2',
           name: 'سالم',
           designation: 'Campus Supervisor',
+          supplier: '',
+        ),
+      ),
+      AuthRole.housingSupervisor,
+    );
+
+    expect(
+      resolver.resolve(
+        const WorkforceRow(
+          code: '20',
+          name: 'بدر',
+          designation: 'CAMPOS',
+          supplier: '',
+        ),
+      ),
+      AuthRole.housingSupervisor,
+    );
+
+    expect(
+      resolver.resolve(
+        const WorkforceRow(
+          code: '21',
+          name: 'سعيد',
+          designation: 'مشرف كامبوس',
           supplier: '',
         ),
       ),

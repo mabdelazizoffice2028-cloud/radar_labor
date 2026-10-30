@@ -94,7 +94,7 @@ void main() {
 
     expect(supPage.cards.length, 2);
     expect(supPage.cards[0].businessDate, '2026-04-18');
-    expect(supPage.cards[0].canEdit, isTrue);
+    expect(supPage.cards[0].canEdit, isFalse);
     expect(supPage.cards[0].lastActorName, 'المشرف سالم');
 
     expect(supPage.cards[1].businessDate, '2026-04-10');
@@ -110,8 +110,9 @@ void main() {
       daysWindow: 14,
       arabic: true,
     );
-    expect(adminPage.cards.every((c) => !c.canEdit), isTrue);
-    expect(adminPage.bySite['فرقة أ']?.length, 2);
+    expect(adminPage.cards[0].canEdit, isTrue);
+    expect(adminPage.cards[1].canEdit, isFalse);
+    expect(adminPage.bySite['Team A']?.length, 2);
     expect(adminPage.bySupervisor['المشرف سالم']?.length, 2);
   });
 

@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/operation_confirm_dialog_workers_list.dart';
 
 class OperationConfirmDialogContent extends StatelessWidget {
   const OperationConfirmDialogContent({
@@ -8,6 +9,7 @@ class OperationConfirmDialogContent extends StatelessWidget {
     required this.selectedWorkers,
     required this.emptySelectionText,
     required this.arabic,
+    this.diffLine,
     super.key,
   });
 
@@ -15,6 +17,7 @@ class OperationConfirmDialogContent extends StatelessWidget {
   final List<WorkerOption> selectedWorkers;
   final String emptySelectionText;
   final bool arabic;
+  final String? diffLine;
 
   @override
   Widget build(BuildContext context) {
@@ -40,38 +43,22 @@ class OperationConfirmDialogContent extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
         ),
+        if (diffLine != null && diffLine!.isNotEmpty) ...[
+          const SizedBox(height: AppTokens.space8),
+          Text(
+            diffLine!,
+            style: const TextStyle(fontSize: 12, color: AppTokens.textSecondary),
+            textAlign: TextAlign.center,
+          ),
+        ],
         const SizedBox(height: AppTokens.space12),
         ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 240),
-          child: selectedWorkers.isEmpty
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppTokens.space16),
-                    child: Text(
-                      emptySelectionText,
-                      style: const TextStyle(
-                        color: AppTokens.textSecondary,
-                        fontStyle: FontStyle.italic,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                )
-              : ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: selectedWorkers.length,
-                  itemBuilder: (context, index) {
-                    final w = selectedWorkers[index];
-                    final name = w.displayName(arabic: arabic);
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 3),
-                      child: Text(
-                        '${index + 1}. $name (${w.code})',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    );
-                  },
-                ),
+          child: OperationConfirmDialogWorkersList(
+            selectedWorkers: selectedWorkers,
+            emptySelectionText: emptySelectionText,
+            arabic: arabic,
+          ),
         ),
       ],
     );

@@ -10,7 +10,14 @@ final class SupervisorRoleResolver {
   const SupervisorRoleResolver();
 
   static const _supervisorWords = ['supervisor', 'مشرف'];
-  static const _campusWords = ['campus', 'housing', 'camp', 'سكن'];
+  static const _campusWords = [
+    'campus',
+    'campos',
+    'كامبوس',
+    'housing',
+    'camp',
+    'سكن',
+  ];
   static const _siteWords = ['site', 'موقع'];
 
   AuthRole? resolve(WorkforceRow row) {
@@ -21,9 +28,9 @@ final class SupervisorRoleResolver {
 
   AuthRole? _fromText(String text, {required bool explicit}) {
     if (text.isEmpty) return null;
+    if (_campusWords.any(text.contains)) return AuthRole.housingSupervisor;
     final supervisor = _supervisorWords.any(text.contains);
     if (!explicit && !supervisor) return null;
-    if (_campusWords.any(text.contains)) return AuthRole.housingSupervisor;
     if (supervisor || _siteWords.any(text.contains)) {
       return AuthRole.siteSupervisor;
     }

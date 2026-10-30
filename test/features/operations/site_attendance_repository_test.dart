@@ -164,7 +164,7 @@ void main() {
   test('inactive worker recorded on saved day loads as locked row', () async {
     final seed = SeedBuilder(database: db, events: events);
     await seed.seedSiteAttendance(
-      businessDate: '2026-04-19',
+      businessDate: '2026-04-20',
       teamId: 'team-a',
       presentWorkerUids: const ['w1'],
       actorUserId: 'sup-1',
@@ -176,7 +176,7 @@ void main() {
       actor: actor,
       scope: scope,
       team: teamA,
-      date: '2026-04-19',
+      date: '2026-04-20',
       arabic: true,
     );
     final w1Row = loaded.rows.firstWhere((r) => r.worker.id == 'w1');

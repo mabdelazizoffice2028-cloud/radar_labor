@@ -4,6 +4,165 @@ Append one dated handoff entry for each model/session. Keep prior entries so the
 next model can understand decisions and recoveries. The newest handoff is at the
 top of the log.
 
+## 2026-10-30 — Field & Admin Refinements: Admin Unification, CAMPOS Terminology, 4-8 Password Policy, Direct Workforce Import & Supervisor Activation
+
+- **Tasks executed:**
+  1. **Task 1: Complete Eradication of "HR" -> Unify as "Admin":**
+     - Updated `lib/core/constants/app_constants.dart`: set `AuthConstants.defaultHrName = 'Admin'`.
+     - Updated `lib/core/auth/account_provisioning_repository.dart`: `ensureAdminAccounts()` now provisions `'Admin'` and automatically updates any existing accounts where `role == 'hr' && displayName == 'HR'` to `'Admin'`, preventing database wipe needs.
+     - Updated localized strings across `lib/core/l10n/about_app_content_data.dart` and `auth_flow_strings.dart` ensuring no user-facing UI displays "HR" or "الموارد البشرية".
+  2. **Task 2: Standardize Terminology to "CAMPOS" (Camp + Boss):**
+     - Updated `lib/core/constants/app_constants.dart`: set `HousingConstants.defaultHousingName = 'Main CAMPOS'`.
+     - Standardized English strings to `CAMPOS` and Arabic to `الكامبوس` across:
+       - `auth_flow_strings.dart`: `housingSupervisorRole` -> `'CAMPOS'` / `'الكامبوس'`
+       - `app_auth_strings.dart`: `housingTab` -> `'CAMPOS'` / `'الكامبوس'`
+       - `app_entities_strings.dart`: `'Current CAMPOS'`, `'No CAMPOS'`, `'Add CAMPOS'`, `'team and CAMPOS'`
+       - `admin_user_strings.dart` & `admin_strings.dart`: `'Assigned CAMPOS'`, `'CAMPOS created/updated/deactivated'`, `'scopeHousingCount'`
+       - `operations_actions_strings.dart`: `'Select CAMPOS'`, `'Add a CAMPOS to start a check'`, `'Confirm CAMPOS check'`, `'CAMPOS check saved locally'`, `'CAMPOS check'`, `'Record CAMPOS Absences'`
+       - `dashboard_strings.dart`, `dashboard_dialog_strings.dart`, `history_strings.dart`, `housing_review_strings.dart`, `about_app_content_data.dart`, `attendance_message_strings.dart`.
+  3. **Task 3: Flexible Password Policy (4 to 8 Characters — Digits or Letters):**
+     - Updated `AuthConstants.minPasswordLength = 4` and added `AuthConstants.maxPasswordLength = 8`.
+     - Refactored `lib/core/auth/` into clean micro-modular single-responsibility components (`local_auth_account_reader.dart`, `local_auth_password_service.dart`, `local_auth_signer.dart`, `local_auth_account_mutator.dart`, and facade `local_auth_repository.dart`), each `<= 80` lines.
+     - Enforced 4-8 characters in `changePassword(...)`, throwing `ArgumentError('Password must be between 4 and 8 characters')` and rejecting temporary password `123456`.
+     - Updated `ChangeTemporaryPasswordDialog`, `HomePasswordChanger`, `ChangeTemporaryPasswordFields`, and `UserPasswordChangeDialog` with 4-8 validation and `maxLength: 8`.
+     - Updated localization strings in `auth_flow_strings.dart` and `app_auth_strings.dart`.
+  4. **Task 4: Direct Excel/CSV Import Card in Admin Settings:**
+     - Created `lib/app/screens/preferences_import_card.dart` (`<= 80` lines) with `Icons.upload_file_outlined` and localized import workforce action.
+     - Integrated `PreferencesImportCard` directly into `PreferencesAdminSection` above `Manage Users`. Hidden from supervisors since `PreferencesAdminSection` only renders for Admin and Project Manager.
+  5. **Task 5: Streamlined One-Time Supervisor & CAMPOS Activation:**
+     - Broadened `SupervisorRoleResolver` to auto-detect `'campos'` and `'كامبوس'`, immediately provisioning rows with these designations as `AuthRole.housingSupervisor` with `main_campus` scope.
+     - Modularized `AccountFormDialog` into `account_form_dialog.dart`, `account_form_fields.dart`, `account_worker_search_field.dart`, `account_team_scope_tile.dart`, and `account_form_submitter.dart` (all `<= 80` lines).
+     - Added searchable worker picker via `Autocomplete<ScopeOption>` auto-filling employee display name.
+     - Selecting `AuthRole.housingSupervisor` automatically binds `HousingConstants.defaultHousingId` (`main_campus`) behind the scenes as a 1-tap activation without requiring manual campus box checking.
+  6. **Task 6: Verification, Testing & Production Release APK:**
+     - Verified all 31 created/modified `.dart` files in `lib/` are strictly `<= 80` lines.
+     - Static analysis (`flutter analyze --no-pub`): `No issues found!`.
+     - Unit/Widget test suite (`flutter test --no-pub`): 213/213 tests passed (100%).
+     - Built ARM64 production release APK via `flutter build apk --target-platform android-arm64 --release --no-pub`.
+     - Copied APK to `outputs/Radar Labour.apk`:
+       - Exact Size: 25,079,728 bytes (~23.92 MB)
+       - SHA-256: `81F413178116152920067BB22BEA8D12782AAA14986AA7F37880120A3D34CB20`
+
+## 2026-10-30 — Task 6 Completed: Friday Overtime Exception & Zero-Absence Rule (استثناء يوم الجمعة والعمل الإضافي)
+
+- **Owner request:**
+  تنفيذ المهمة السادسة (Task 6) من الخطة الشاملة V2.5: استثناء يوم الجمعة والعمل الإضافي وضمان صفر غيابات في كافة أقسام التطبيق مع الالتزام الصارم بقاعدة الـ 80 سطراً (Micro-modularization <= 80 lines) وهندسة الواجهات النظيفة:
+
+  1. **محدد يوم الجمعة (FridayResolver):**
+     - إنشاء الملف النقي `lib/core/time/friday_resolver.dart` للتحقق من يوم الجمعة عبر `FridayResolver.isFriday(businessDate)`.
+     - ربطه مع `lib/core/time/business_date.dart` مع الحفاظ على التوافقية الكاملة.
+
+  2. **محرك الحالات وقاعدة صفر غيابات يوم الجمعة (StatusEngine & Zero-Absence Guarantee):**
+     - تحديث `StatusEngineWorkerEvaluator` لضمان:
+       - أي عامل مسجل في الموقع يوم الجمعة يحصل على حالة `WorkerStatus.onSite` (يُعامل كعمل إضافي).
+       - العمال غير المسجلين يحصلون على حالة `WorkerStatus.notRecorded` (في راحة الجمعة ولا يُحتسب لهم أي غياب).
+       - تجاهل أي أحداث غياب كامبوس مسجلة خطأً يوم الجمعة لضمان أن إجمالي الغياب = 0 دائماً.
+       - تعطيل التحضير التلقائي للكادر الإداري والفني (`StaffCategoryResolver`) يوم الجمعة.
+       - تعطيل مهلة المتابعة وتنبيهات SLA يوم الجمعة.
+     - تحديث `WorkerSummaryCalculator` لاحتساب حضور الجمعة كيوم عمل إضافي مع منع زيادة عداد الغياب نهائياً يوم الجمعة.
+
+  3. **واجهات تحضير الموقع والرسائل التنبيهية (Site Attendance Screen & Dialogs):**
+     - إنشاء المكون `SiteFridayBanner` في `lib/features/operations/presentation/widgets/site_friday_banner.dart` لإظهار شريط تنبيهي متباين بلون عنبري يوضح وضع العمل الإضافي.
+     - تحديث شريط الحفظ `AttendanceCounterBar` لإظهار عداد إضافي الجمعة وتغيير نص زر الحفظ إلى "تأكيد العمل الإضافي" / "Confirm Overtime".
+     - تحديث نافذة التأكيد `OperationConfirmSyncDialog` لعرض نص تأكيد إضافي الجمعة `OperationsStrings.fridaySaveConfirm`.
+
+  4. **لوحة التحكم وتقارير الواتساب (Dashboard & WhatsApp Overtime Report):**
+     - مواءمة بطاقات لوحة التحكم `DashboardStatusCards` لإظهار بطاقتي "إضافي الجمعة" و"في راحة الجمعة" وإخفاء بطاقة الغياب بالكامل.
+     - تحديث مولد تقرير الواتساب `DailyReportGenerator` ليكون العنوان في يوم الجمعة `📋 *تقرير العمل الإضافي — يوم الجمعة*` / `📋 *Friday Overtime Report*` وتفصيل `إجمالي عمالة الإضافي` واستبعاد سطر إجمالي الغياب كلياً.
+
+  5. **التحقق والاختبار والبناء (Verification, Tests & Release Build):**
+     - إضافة حزمة اختبارات شاملة في `test/core/status/friday_overtime_and_zero_absence_test.dart`.
+     - جميع الملفات البرمجية الجديدة والمعدلة `<= 80 سطراً` بدون أي استثناء.
+     - اجتياز اختبارات المعمارية بنسبة 100%.
+     - تشغيل حزمة الاختبارات بالكامل: 203/203 اختبار نجح بنسبة 100%.
+     - التحليل الساكن للكود (`flutter analyze --no-pub`): `No issues found!`.
+     - بناء نسخة الإنتاج الرسمية وحفظها في `outputs/Radar Labour.apk`.
+
+## 2026-10-30 — Master Execution Plan V2.5 Completed (Tasks 1-5, Micro-Modularization & Guardrails)
+
+- **Owner request:**
+  تنفيذ حزمة التطوير V2.5 المعمارية الشاملة لتطبيق Radar Labour عبر 5 مهام تكاملية مع الالتزام التام بقاعدة الـ 80 سطراً (Micro-modularization <= 80 lines) وهندسة الواجهات النظيفة (Dumb UI / Pure Dart):
+
+  1. **Task 1: زر تحديد الفرقة المعتادة بنقرة واحدة (Default Crew One-Tap Button):**
+     - إضافة زر `selectDefaultCrew` في واجهة تحضير الموقع بجانب "تحديد الكل".
+     - تنفيذ منطق `SiteAttendanceNotifier.selectDefaultCrew()` الذي يحدد تلقائياً فقط أعضاء الفريق النظاميين (`WorkerRowOrigin.member`) غير المقفلين مع الحفاظ على صفوف الضيوف والمقفلين.
+     - تقسيم شريط التحكم العلوي إلى `SiteAttendanceHeader`, `SiteAttendanceTeamRow`, `SiteAttendanceActionRow` لضمان أن كل ملف برمجي <= 80 سطراً.
+
+  2. **Task 2: الحضور التلقائي للكادر الإداري والفني (Auto-Attendance for Non-Labor Staff):**
+     - إنشاء محدد الفئات النقي `StaffCategoryResolver` في `lib/core/status/staff_category_resolver.dart` للتعرف على المهندسين ومسؤولي السلامة والإداريين ومدراء المشاريع والمراقبين بالعربية والإنجليزية.
+     - تمرير `jobCategory` إلى `WorkerProfile` عبر `StatusSnapshotWorkerBuilder`.
+     - تحديث محرك الحالات `StatusEngineWorkerEvaluator` لاحتساب الكادر الإداري والفني كـ "حاضر بالموقع تلقائياً" (`WorkerStatus.onSite`) في الأيام العادية دون الحاجة لتحضيرهم من قِبل المشرف، مع إمكانية تسجيل غيابهم يدوياً من قِبل الإدارة.
+
+  3. **Task 3: إدارة الإجازات المرنة والتاريخية (Flexible Leave Management - Admin & HR):**
+     - بناء نموذج البيانات النقي `WorkerLeave` ومستودع `LeaveRepository` لتسجيل الإجازات من تاريخ بداية إلى تاريخ نهاية (سواء كانت سابقة بأثر رجعي أو مستقبلية).
+     - تخزين الإجازات بأمان عبر مفتاح `AppSettingKeys.workerLeaves = 'worker_leaves_v1'` في `LocalSettingsRepository` وتسجيل عمليات الإنشاء والحذف في `AuditLogRepository` مع تفادي الحاجة لأي ترحيل لقاعدة البيانات.
+     - استثناء العمال المجازين فورياً من كافة العمليات:
+       - مسار تحضير الموقع (`SiteAttendanceLoader`): استبعاد العامل المجاز من القائمة النشطة للفريق.
+       - مسار فحص الكامبوس (`OperationsHousingWorkersLoader`): منع تسجيل غياب العامل المجاز.
+       - مسار لوحة التحكم ومحرك الحالات (`StatusSnapshotRepository` & `StatusEngine`): اعتبار العامل غير مؤهل (`isEligible = false`) بحيث يصبح `Absent = 0` خلال فترة الإجازة حتى عند إدخال الإجازة بأثر رجعي.
+
+  4. **Task 4: بطاقة سجل العامل وإدارة الإجازات (Worker History Card & Actions Sheet):**
+     - بناء حاسبة نقية `WorkerSummaryCalculator` لحساب:
+       1. إجمالي أيام العمل (`totalDaysWorked`): تشمل أيام الحضور بالموقع، والغياب المبرر (وفق القاعدة الذهبية: أي غياب مبرر يحتسب كيوم عمل)، وعمل الكادر الإداري التلقائي.
+       2. إجمالي أيام الغياب الفعلي (`totalDaysAbsent`): استبعاد الإجازات والغياب المبرر وأيام الجمعة.
+       3. سجل العمل مع الفرق (`teamHistory`): تفصيل أسماء الفرق وأيام العمل مع كل فريق مرتبة تنازلياً.
+     - ربط النقر على أي عامل في `WorkersScreen` لفتح ورقة الإجراءات السفلية `WorkerSummarySheet` والتي تتضمن:
+       - بطاقات المؤشرات الرئيسية الثلاث (`WorkerSummaryKpiCards`).
+       - قسم إدارة الإجازات وإضافتها وحذفها مع نافذة منتقي التواريخ `WorkerLeaveDialog`.
+       - زر سريع للإدارة لتسجيل أو إلغاء غياب اليوم (`WorkerSummaryHeader`).
+
+  5. **Task 5: تعديل مسمى دور HR إلى Admin:**
+     - تحديث `AuthFlowStrings.hrRole` ليعيد 'Admin' بالإنجليزية و'الإداري' بالعربية مع الحفاظ التام على الـ enum الداخلي `AuthRole.hr`.
+
+- **Verification:**
+  - تم فحص وتفكيك كافة الملفات البرمجية لتكون جميع الملفات الجديدة والمعدلة `<= 80 سطراً`.
+  - اجتياز اختبارات المعمارية الصارمة (`architecture_test.dart`) بنسبة 100%.
+  - تشغيل كامل حزمة الاختبارات (`flutter test --no-pub`) بنجاح تام: 200/200 اختبار نجح بنسبة 100%.
+  - فحص الكود الساكن (`flutter analyze --no-pub`): `No issues found!`.
+
+## 2026-10-30 — Master Execution Plan Completed (Tasks 1-7, Architectural Guardrails, & Release Build)
+
+- **Owner request:**
+  تنفيذ خطة المعمارية المتقنة والتطوير الشامل لتطبيق Radar Labour عبر 7 مهام تكاملية مع الالتزام الصارم بالضوابط المعمارية العليا (Micro-Modularization <= 80 lines، Dumb UI، Clean Architecture، عدم حذف أي ميزات، والفحص والاختبار الشامل 100%):
+
+  1. **المهمة 1 (قاعدة الجمعة الاستثنائية وقفل الأيام السابقة للمشرفين):**
+     - إضافة دالة الفحص النقية `isFridayBusinessDate` في `lib/core/time/business_date.dart`.
+     - منع مشرف الكامبوس (`housingSupervisor`) من تسجيل الغياب نهائياً يوم الجمعة، مع إمكانية الدخول ومراجعة الأيام السابقة من السجل، وعرض تنبيه إرشادي بارز وتعطيل أزرار الحفظ وخانات الاختيار يوم الجمعة (`FridayAbsenceNotAllowed`).
+     - احتساب عمل عمال الموقع يوم الجمعة كـ "إضافي الجمعة" (Friday Overtime)، واحتساب العمال غير المحددين في وضع راحة دون تسجيل أي غياب (`Absent = 0`).
+     - تعديل `StatusEngine` و `DailyReportGenerator` و `DailyReportCompiler` و `SiteWhatsappFormatter` لدعم تقرير إضافي الجمعة.
+     - قفل الأيام السابقة فور انتهاء اليوم على كافة المشرفين (`canEditPastDays: false` لمشرفي الموقع والكامبوس، وحصر التعديل وتبرير الغياب على الإدارة `projectManager` و `hr`).
+
+  2. **المهمة 2 (حذف تبويب السكن من شريط التنقل وتوحيد مصطلح الكامبوس):**
+     - إزالة تبويب `AppSection.housing` من شريط التنقل للإدارة في `role_capabilities.dart` و `home_scaffold.dart`.
+     - توحيد مسمى الكامبوس (`Campus` / `الكامبوس`) في كافة نصوص التطبيق واستبدال مسميات "السكن" القديمة.
+
+  3. **المهمة 3 (صفحة "حول التطبيق" بثلاث لغات تعمل محلياً 100% دون إنترنت):**
+     - استبدال بطاقات الجهاز التقنية في شاشة الإعدادات ببطاقة تفاعلية تنقل إلى شاشة `AboutAppScreen`.
+     - إتاحة مبدل لغوي فوري داخل الشاشة لـ 3 لغات: الإنجليزية (افتراضياً)، العربية (RTL)، والأردية (RTL) بالاعتماد الكامل على نصوص استاتيكية محلية.
+
+  4. **المهمة 4 (حصر إدخال وعرض البيانات الداخلية باللغة الإنجليزية):**
+     - توحيد حقول الإدخال في إضافة العمال والفرق والكامبوس إلى حقل اسم إنجليزي واحد، مع تخزينه في `fullNameAr` و `fullNameEn` لضمان توافق قاعدة البيانات.
+     - فرض العرض الدائم باللغة الإنجليزية لأسماء العمال والفرق في كافة القوائم وعارض سجل العمليات بغض النظر عن لغة واجهة التطبيق.
+
+  5. **المهمة 5 (تبسيط تجربة حفظ المشرف ودمج شاشات التأكيد في حوار واحد):**
+     - استبدال حوارات التأكيد الأربعة المتتالية بحوار موحد ذكي `OperationConfirmSyncDialog` يعرض ملخص الحضور/الغياب، الفروقات (+A / -R)، وقائمة العمال، وشارة إضافي الجمعة عند الانطباق.
+     - حفظ التغييرات فوراً في الخلفية مع نسخ نص الواتساب للحافظة وعرض إشعار SnackBar قابل للتراجع.
+
+  6. **المهمة 6 (تبسيط بطاقات لوحة التحكم وشارات الحالات):**
+     - تخصيص عرض لوحة التحكم يوم الجمعة ليعرض شريط إضافي الجمعة وبطاقتين فقط: إضافي الجمعة (أخضر) وراحة الجمعة (رمادي مزرق).
+     - عرض 4 بطاقات واضحة في الأيام العادية: موجود بالموقع، غائب، مبرر / بعذر، ولم يُرصد بعد.
+     - تحديث شارات `SupervisorTaskBanner` و `AttendanceDateBar`.
+
+  7. **المهمة 7 (تسجيل عمليات الإضافة الإدارية في سجل المراجعة التدقيقي):**
+     - ربط إنشاء العمال والفرق الجديدة في شاشات الإدارة بتسجيل تلقائي آمن داخل `AuditLogRepository.record`.
+
+  8. **التحقق المعماري والاختبارات وبناء الإصدار:**
+     - الالتزام بقاعدة الـ 80 سطراً: كل ملف جديد أو معدل في `lib/` لا يتجاوز 80 سطراً.
+     - الفحص الساكن: `flutter analyze --no-pub` -> **No issues found!**
+     - الاختبارات: `flutter test --no-pub` -> **All 189 tests passed! (100%)**.
+     - بناء نسخة الإنتاج: `flutter build apk --target-platform android-arm64 --release --no-pub` وحفظها في `outputs/Radar Labour.apk` (الحجم: 24.9 MB، البصمة: `BC8001D8D83D3011E4C18010F039CDC14018FFCA8724FAF944312C8B043381EB`).
+
+
 ## 2026-10-30 — Global Multi-Language GitHub Documentation Overhaul Completed
 
 - **Owner request:**

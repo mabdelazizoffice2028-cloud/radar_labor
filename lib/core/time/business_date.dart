@@ -1,4 +1,7 @@
 import 'package:radar_labor/core/constants/app_constants.dart';
+import 'package:radar_labor/core/time/friday_resolver.dart';
+
+export 'package:radar_labor/core/time/friday_resolver.dart';
 
 /// Returns the Riyadh business date for an instant, using the configured
 /// start-of-day cutoff and a fixed UTC+3 offset.
@@ -28,3 +31,6 @@ String businessDateFor(
   final day = businessDate.day.toString().padLeft(2, '0');
   return '$year-$month-$day';
 }
+
+/// Returns true if the Riyadh business date represents a Friday.
+bool isFridayBusinessDate(String businessDate) => FridayResolver.isFriday(businessDate);

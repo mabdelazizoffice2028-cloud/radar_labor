@@ -1,3 +1,5 @@
+import 'package:radar_labor/core/time/business_date.dart';
+
 final class DailyReportGenerator {
   static String generate({
     required String date,
@@ -8,13 +10,14 @@ final class DailyReportGenerator {
     required Map<String, int> rentalPresentByCompany,
     bool arabic = true,
   }) {
+    final isFriday = isFridayBusinessDate(date);
     final b = StringBuffer();
     if (arabic) {
-      b.writeln('📋 *تقرير العمليات والتشغيل اليومي*');
+      b.writeln(isFriday ? '📋 *تقرير العمل الإضافي — يوم الجمعة*' : '📋 *تقرير العمليات والتشغيل اليومي*');
       b.writeln('📅 التاريخ: $date\n━━━━━━━━━━━━━━━━━');
-      b.writeln('✅ إجمالي الحضور: $totalPresent');
-      b.writeln('❌ إجمالي الغياب: $totalAbsent');
-      if (totalUnreviewed > 0) b.writeln('⚠️ غير مراجع: $totalUnreviewed');
+      b.writeln(isFriday ? '✅ إجمالي عمالة الإضافي: $totalPresent' : '✅ إجمالي الحضور: $totalPresent');
+      if (!isFriday) b.writeln('❌ إجمالي الغياب: $totalAbsent');
+      if (totalUnreviewed > 0 && !isFriday) b.writeln('⚠️ غير مراجع: $totalUnreviewed');
       b.writeln('━━━━━━━━━━━━━━━━━\n👥 *تفصيل عمالة الحضور:*');
       b.writeln('• عمالة الشركة: $companyPresent');
       if (rentalPresentByCompany.isNotEmpty) {
@@ -24,11 +27,11 @@ final class DailyReportGenerator {
         }
       }
     } else {
-      b.writeln('📋 *Daily Operations Report*');
+      b.writeln(isFriday ? '📋 *Friday Overtime Report*' : '📋 *Daily Operations Report*');
       b.writeln('📅 Date: $date\n━━━━━━━━━━━━━━━━━');
-      b.writeln('✅ Total Present: $totalPresent');
-      b.writeln('❌ Total Absent: $totalAbsent');
-      if (totalUnreviewed > 0) b.writeln('⚠️ Unreviewed: $totalUnreviewed');
+      b.writeln(isFriday ? '✅ Total Overtime Workers: $totalPresent' : '✅ Total Present: $totalPresent');
+      if (!isFriday) b.writeln('❌ Total Absent: $totalAbsent');
+      if (totalUnreviewed > 0 && !isFriday) b.writeln('⚠️ Unreviewed: $totalUnreviewed');
       b.writeln('━━━━━━━━━━━━━━━━━\n👥 *Present Breakdown:*');
       b.writeln('• Company Direct: $companyPresent');
       if (rentalPresentByCompany.isNotEmpty) {

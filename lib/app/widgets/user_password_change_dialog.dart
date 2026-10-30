@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
 
 /// Dialog allowing a signed-in user to input their current and replacement password.
@@ -44,14 +45,14 @@ final class _UserPasswordChangeDialogState
           TextField(
             controller: _replacement,
             obscureText: true,
+            maxLength: AuthConstants.maxPasswordLength,
             decoration: InputDecoration(labelText: AppStrings.newPassword(ar)),
           ),
           TextField(
             controller: _confirmation,
             obscureText: true,
-            decoration: InputDecoration(
-              labelText: AppStrings.confirmPassword(ar),
-            ),
+            maxLength: AuthConstants.maxPasswordLength,
+            decoration: InputDecoration(labelText: AppStrings.confirmPassword(ar)),
           ),
         ],
       ),

@@ -30,7 +30,7 @@ final class HousingReviewStrings {
       : 'There are $count unreviewed workers. Mark them as reviewed and continue?';
 
   static String housingDraftSaved(bool ar) =>
-      ar ? 'تم حفظ مسودة السكن محليًا' : 'Campus draft saved locally';
+      ar ? 'تم حفظ مسودة الكامبوس محلياً' : 'CAMPOS draft saved locally';
 
   static String filterAll(bool ar) => ar ? 'الكل' : 'All';
 

@@ -167,7 +167,7 @@ void main() {
         expect(validAttempt, isNotNull);
 
         // Change password, then lock account, then reset password
-        await auth.changePassword(sup, 'new-secret-88');
+        await auth.changePassword(sup, 'newsec88');
         for (var i = 0; i < AuthConstants.maxFailedAttempts; i++) {
           await auth.signIn(
             role: AuthRole.siteSupervisor,
@@ -179,7 +179,7 @@ void main() {
           await auth.signIn(
             role: AuthRole.siteSupervisor,
             accountId: sup.id,
-            password: 'new-secret-88',
+            password: 'newsec88',
           ),
           isNull,
         );

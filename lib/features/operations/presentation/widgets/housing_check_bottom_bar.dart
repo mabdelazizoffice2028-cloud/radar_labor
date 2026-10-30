@@ -8,6 +8,7 @@ final class HousingCheckBottomBar extends StatelessWidget {
     required this.absentCount,
     required this.isSaving,
     required this.onSavePressed,
+    this.isFriday = false,
     super.key,
   });
 
@@ -15,6 +16,7 @@ final class HousingCheckBottomBar extends StatelessWidget {
   final int absentCount;
   final bool isSaving;
   final VoidCallback onSavePressed;
+  final bool isFriday;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +34,7 @@ final class HousingCheckBottomBar extends StatelessWidget {
             ),
             const SizedBox(height: AppTokens.space8),
             FilledButton(
-              onPressed: isSaving ? null : onSavePressed,
+              onPressed: isSaving || isFriday ? null : onSavePressed,
               style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
               child: Text(OperationsStrings.nextConfirmAction(arabic)),
             ),

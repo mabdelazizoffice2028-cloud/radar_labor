@@ -1,5 +1,6 @@
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/status/status_models.dart';
+import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/features/dashboard/domain/daily_report_generator.dart';
 
 final class DailyReportCompiler {
@@ -27,8 +28,11 @@ final class DailyReportCompiler {
       }
     }
 
-    final absentCount = snapshot.count(WorkerStatus.housingOnly) + snapshot.count(WorkerStatus.unknown);
-    final unreviewedCount = snapshot.count(WorkerStatus.notRecorded);
+    final isFriday = isFridayBusinessDate(date);
+    final absentCount = isFriday
+        ? 0
+        : (snapshot.count(WorkerStatus.housingOnly) + snapshot.count(WorkerStatus.unknown));
+    final unreviewedCount = isFriday ? 0 : snapshot.count(WorkerStatus.notRecorded);
 
     return DailyReportGenerator.generate(
       date: date,

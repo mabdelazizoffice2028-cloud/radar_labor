@@ -32,6 +32,13 @@ Radar Labour resolves these field challenges through a **local-first, offline-re
 
 ## 🚀 What's New (Latest Release Highlights)
 
+* **🌙 Friday Overtime Exception & Zero-Absence Rule:** Guarantees zero absences on Fridays across the entire app; present workers are recorded as overtime with high-contrast amber banner, dedicated dashboard cards, and customized WhatsApp reports.
+* **🧪 213 Automated Tests & Stress Benchmarks:** 100% test pass rate across 213 unit, integration, and stress tests, proving draft resilience against crashes, atomic rollback, and rapid processing (1,500 profiles in 40ms).
+* **👥 "Default Crew" One-Tap Button:** Site supervisors can auto-select all regular crew members with a single tap, only unchecking absent workers for lightning-fast site attendance.
+* **⚡ Auto-Attendance for Non-Labor Staff:** Engineers, safety officers, HR, PMs, and foremen are automatically treated as "Present on Site" every regular day, with quick absence toggling by Admin/HR.
+* **🏖️ Flexible Leave Management (Retroactive & Future):** Assign past or future vacation leaves to any worker; workers on leave are immediately excluded from site check-ins, campus checks, and dashboard absences (Absent = 0).
+* **📋 Comprehensive Worker History & Actions Sheet:** Tapping any worker displays 3 clean KPI metrics (Days Worked including justified, Unexcused Absences, Teams History breakdown), active leave management, and today's absence toggle.
+* **🛡️ Role Renaming (HR -> Admin):** Standardized user-facing role label to "Admin" / "الإداري" across all app views.
 * **🔔 Centralized Notification Center:** Replaced cluttered dashboard warning cards with an intelligent AppBar notification badge and slide-up sheet (`NotificationsSheet`) tracking pending outbox synchronization and unrecorded teams/camps in real time.
 * **🪪 Proactive Iqama Expiry Management:** Built-in residency compliance monitoring alerting managers to worker documents expiring within 30 days or already expired, with detailed breakdown drawers.
 * **📊 Automated Daily WhatsApp Report Compiler:** Generates formatted executive daily operational reports categorized by direct labor and rental suppliers, automatically enforcing Riyadh-time lockout rules.

@@ -35,11 +35,11 @@ abstract final class ScopeDateGuard {
       throw const OperationException(FutureDate());
     }
     if (diffDays > 0) {
-      if (!capabilities.canEditPastDays) {
-        throw const OperationException(PermissionDenied());
-      }
       if (diffDays > maxBackdateDays) {
         throw const OperationException(DateOutOfWindow());
+      }
+      if (!capabilities.canEditPastDays) {
+        throw const OperationException(PermissionDenied());
       }
     }
   }

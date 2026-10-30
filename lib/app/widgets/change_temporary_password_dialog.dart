@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/widgets/change_temporary_password_fields.dart';
+import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
 import 'package:radar_labor/core/l10n/auth_flow_strings.dart';
 
@@ -36,9 +37,11 @@ final class _ChangeTemporaryPasswordDialogState
   void _submit() {
     final p1 = _passwordCtrl.text.trim();
     final p2 = _confirmCtrl.text.trim();
-    final err = p1.length < 8
+    final invalidLen = p1.length < AuthConstants.minPasswordLength ||
+        p1.length > AuthConstants.maxPasswordLength;
+    final err = invalidLen
         ? AuthFlowStrings.passwordMinLength(widget.arabic)
-        : p1 == '123456'
+        : p1 == AuthConstants.temporaryPassword
             ? AuthFlowStrings.passwordCannotBe123456(widget.arabic)
             : p1 != p2
                 ? AuthFlowStrings.passwordsDoNotMatch(widget.arabic)

@@ -1,25 +1,21 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:radar_labor/core/l10n/operations_strings.dart';
+import 'package:radar_labor/core/time/friday_resolver.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
 import 'package:radar_labor/features/operations/presentation/state/site_attendance_state.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/attendance_date_bar.dart';
-import 'package:radar_labor/features/operations/presentation/widgets/site_attendance_more_menu.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/site_attendance_action_row.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/site_attendance_team_row.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/site_friday_banner.dart';
 
 /// Top controls for team selection, date picker, bulk actions, and guest search.
 class SiteAttendanceHeader extends StatelessWidget {
   const SiteAttendanceHeader({
-    required this.teams,
-    required this.selected,
-    required this.state,
-    required this.arabic,
-    required this.canEditTeam,
-    required this.onTeamChanged,
-    required this.onDateSelected,
-    required this.onSelectAll,
-    required this.onAddGuest,
-    this.onEditTeam,
-    super.key,
+    required this.teams, required this.selected, required this.state,
+    required this.arabic, required this.canEditTeam, required this.onTeamChanged,
+    required this.onDateSelected, required this.onSelectAll,
+    required this.onSelectDefaultCrew, required this.onAddGuest,
+    this.onEditTeam, super.key,
   });
 
   final List<EntityOption> teams;
@@ -31,78 +27,42 @@ class SiteAttendanceHeader extends StatelessWidget {
   final ValueChanged<String> onDateSelected;
   final VoidCallback? onEditTeam;
   final ValueChanged<bool> onSelectAll;
+  final VoidCallback onSelectDefaultCrew;
   final VoidCallback onAddGuest;
-
-  void _onMenuAction(SiteAttendanceMenuAction action) => switch (action) {
-    SiteAttendanceMenuAction.clearAll => onSelectAll(false),
-    SiteAttendanceMenuAction.addFromAnotherTeam => onAddGuest(),
-    SiteAttendanceMenuAction.editTeam => onEditTeam?.call(),
-  };
 
   @override
   Widget build(BuildContext context) {
-    final singleTeam = teams.length == 1 ? (selected ?? teams.first) : null;
+    final isFriday = FridayResolver.isFriday(state.selectedDate);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppTokens.space16,
-        AppTokens.space12,
-        AppTokens.space16,
-        AppTokens.space8,
+        AppTokens.space16, AppTokens.space12, AppTokens.space16, AppTokens.space8,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: singleTeam != null
-                    ? Text(
-                        singleTeam.displayName(arabic: arabic),
-                        style: Theme.of(context).textTheme.titleLarge,
-                      )
-                    : DropdownButtonFormField<String>(
-                        initialValue: selected?.id,
-                        decoration: InputDecoration(
-                          labelText: OperationsStrings.selectTeam(arabic),
-                          border: const OutlineInputBorder(),
-                        ),
-                        items: teams
-                            .map(
-                              (row) => DropdownMenuItem(
-                                value: row.id,
-                                child: Text(row.displayName(arabic: arabic)),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: onTeamChanged,
-                      ),
-              ),
-              SiteAttendanceMoreMenu(
-                arabic: arabic,
-                canEditTeam: canEditTeam && onEditTeam != null,
-                onSelected: _onMenuAction,
-              ),
-            ],
+          SiteAttendanceTeamRow(
+            teams: teams, selected: selected, arabic: arabic,
+            canEditTeam: canEditTeam && onEditTeam != null,
+            onTeamChanged: onTeamChanged, onEditTeam: onEditTeam,
+            onClearAll: () => onSelectAll(false), onAddGuest: onAddGuest,
           ),
           const SizedBox(height: AppTokens.space8),
           AttendanceDateBar(
-            selectedDate: state.selectedDate,
-            todayDate: state.todayDate,
-            isPastDate: state.isPastDate,
-            initialSource: state.initialSource,
+            selectedDate: state.selectedDate, todayDate: state.todayDate,
+            isPastDate: state.isPastDate, initialSource: state.initialSource,
             initialSourceDate: state.initialSourceDate,
             skippedDraftCount: state.skippedDraftCount,
-            arabic: arabic,
-            onDateSelected: onDateSelected,
+            arabic: arabic, onDateSelected: onDateSelected,
           ),
+          if (isFriday) ...[
+            const SizedBox(height: AppTokens.space8),
+            SiteFridayBanner(arabic: arabic),
+          ],
           const SizedBox(height: AppTokens.space8),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: OutlinedButton.icon(
-              onPressed: () => onSelectAll(true),
-              icon: const Icon(Icons.done_all, size: 18),
-              label: Text(OperationsStrings.selectAll(arabic)),
-            ),
+          SiteAttendanceActionRow(
+            arabic: arabic,
+            onSelectAll: onSelectAll,
+            onSelectDefaultCrew: onSelectDefaultCrew,
           ),
         ],
       ),

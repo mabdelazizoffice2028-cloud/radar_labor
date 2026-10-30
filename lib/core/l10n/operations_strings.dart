@@ -1,249 +1,80 @@
-import 'package:radar_labor/core/l10n/bidi.dart';
+import 'package:radar_labor/core/l10n/operations_actions_strings.dart';
+import 'package:radar_labor/core/l10n/operations_checkin_strings.dart';
+import 'package:radar_labor/core/l10n/operations_error_strings.dart';
+import 'package:radar_labor/core/l10n/operations_wizard_strings.dart';
 
-/// Localized strings for team wizard, smart check-in, diffs, conflicts, and errors (PRD §13, §14).
+export 'package:radar_labor/core/l10n/operations_actions_strings.dart';
+export 'package:radar_labor/core/l10n/operations_checkin_strings.dart';
+export 'package:radar_labor/core/l10n/operations_error_strings.dart';
+export 'package:radar_labor/core/l10n/operations_wizard_strings.dart';
+
+/// Central façade preserving full backward compatibility for OperationsStrings.
 abstract final class OperationsStrings {
-  // §14.1 Team Wizard & Team Edit
-  static String setupTeamWizardTitle(bool ar) =>
-      ar ? 'معالج إعداد الفريق' : 'Team Setup Wizard';
-  static String createNewTeam(bool ar) =>
-      ar ? 'إنشاء فريق جديد' : 'Create New Team';
-  static String wizardStepOf(bool ar, int c, int t) =>
-      ar ? 'الخطوة $c من $t' : 'Step $c of $t';
-  static String wizardNext(bool ar) => ar ? 'التالي' : 'Next';
-  static String wizardBack(bool ar) => ar ? 'رجوع' : 'Back';
-  static String confirmAndSave(bool ar) => ar ? 'تأكيد وحفظ' : 'Confirm & Save';
-  static String confirmWorkersTitle(bool ar) =>
-      ar ? 'راجع أعضاء الفريق' : 'Review the team members';
-  static String confirmCreateEmptyTeam(bool ar) => ar
-      ? 'لم تختر أي عامل. هل تريد إنشاء فريق فارغ؟'
-      : 'No workers selected. Create an empty team?';
-  static String teamCreated(bool ar) => ar ? 'تم إنشاء الفريق' : 'Team created';
-  static String editTeam(bool ar) => ar ? 'تعديل الفريق' : 'Edit team';
-  static String teamMembersSaved(bool ar) =>
-      ar ? 'تم تحديث أعضاء الفريق' : 'Team members updated';
-  static String noTeamsYetSupervisor(bool ar) => ar
-      ? 'ليس لديك فريق بعد. أنشئ فريقًا لتبدأ التسجيل.'
-      : 'You have no team yet. Create one to start recording.';
-  static String teamsLoadFailed(bool ar) => ar
-      ? 'تعذر تحميل فرقك. أغلق الشاشة وافتحها من جديد.'
-      : 'Could not load your teams. Close this screen and open it again.';
+  static String setupTeamWizardTitle(bool ar) => OperationsWizardStrings.setupTeamWizardTitle(ar);
+  static String createNewTeam(bool ar) => OperationsWizardStrings.createNewTeam(ar);
+  static String wizardStepOf(bool ar, int c, int t) => OperationsWizardStrings.wizardStepOf(ar, c, t);
+  static String wizardNext(bool ar) => OperationsWizardStrings.wizardNext(ar); static String wizardBack(bool ar) => OperationsWizardStrings.wizardBack(ar);
+  static String confirmAndSave(bool ar) => OperationsWizardStrings.confirmAndSave(ar); static String confirmWorkersTitle(bool ar) => OperationsWizardStrings.confirmWorkersTitle(ar);
+  static String confirmCreateEmptyTeam(bool ar) => OperationsWizardStrings.confirmCreateEmptyTeam(ar); static String teamCreated(bool ar) => OperationsWizardStrings.teamCreated(ar);
+  static String editTeam(bool ar) => OperationsWizardStrings.editTeam(ar); static String teamMembersSaved(bool ar) => OperationsWizardStrings.teamMembersSaved(ar);
+  static String noTeamsYetSupervisor(bool ar) => OperationsWizardStrings.noTeamsYetSupervisor(ar); static String teamsLoadFailed(bool ar) => OperationsWizardStrings.teamsLoadFailed(ar);
+  static String workersSelected(bool ar, int n) => OperationsWizardStrings.workersSelected(ar, n); static String selectAll(bool ar) => OperationsWizardStrings.selectAll(ar);
+  static String clearAll(bool ar) => OperationsWizardStrings.clearAll(ar); static String inactiveBadge(bool ar) => OperationsWizardStrings.inactiveBadge(ar);
+  static String workerAssignedElsewhere(bool ar, String t) => OperationsWizardStrings.workerAssignedElsewhere(ar, t);
+  static String teamNameArabicLabel(bool ar) => OperationsWizardStrings.teamNameArabicLabel(ar); static String teamNameEnglishLabel(bool ar) => OperationsWizardStrings.teamNameEnglishLabel(ar);
+  static String searchWorkersHint(bool ar) => OperationsWizardStrings.searchWorkersHint(ar);
+  static String workerSelectedState(bool ar) => OperationsWizardStrings.workerSelectedState(ar); static String workerUnselectedState(bool ar) => OperationsWizardStrings.workerUnselectedState(ar);
 
-  static String workersSelected(bool ar, int n) {
-    if (!ar) {
-      if (n <= 0) return 'No workers selected';
-      if (n == 1) return '1 worker selected';
-      return '$n workers selected';
-    }
-    if (n <= 0) return 'لم يتم اختيار أي عامل';
-    if (n == 1) return 'تم اختيار عامل واحد';
-    if (n == 2) return 'تم اختيار عاملين';
-    if (n >= 3 && n <= 10) return 'تم اختيار $n عمال';
-    return 'تم اختيار $n عاملًا';
-  }
+  static String recordingForDate(bool ar, String d) => OperationsCheckinStrings.recordingForDate(ar, d);
+  static String pastDateWarning(bool ar) => OperationsCheckinStrings.pastDateWarning(ar); static String changeDate(bool ar) => OperationsCheckinStrings.changeDate(ar);
+  static String draftRestored(bool ar) => OperationsCheckinStrings.draftRestored(ar); static String draftRestoredPartial(bool ar, int n) => OperationsCheckinStrings.draftRestoredPartial(ar, n);
+  static String suggestionFromDate(bool ar, String d) => OperationsCheckinStrings.suggestionFromDate(ar, d); static String savedDayLoaded(bool ar) => OperationsCheckinStrings.savedDayLoaded(ar);
+  static String addFromAnotherTeam(bool ar) => OperationsCheckinStrings.addFromAnotherTeam(ar); static String fromTeamBadge(bool ar, String t) => OperationsCheckinStrings.fromTeamBadge(ar, t);
+  static String crossTeamSearchHint(bool ar) => OperationsCheckinStrings.crossTeamSearchHint(ar); static String noSearchResults(bool ar) => OperationsCheckinStrings.noSearchResults(ar);
+  static String removeGuest(bool ar) => OperationsCheckinStrings.removeGuest(ar); static String presentLabel(bool ar) => OperationsCheckinStrings.presentLabel(ar);
+  static String notPresentLabel(bool ar) => OperationsCheckinStrings.notPresentLabel(ar); static String noTeam(bool ar) => OperationsCheckinStrings.noTeam(ar);
+  static String zeroWorkersConfirmation(bool ar) => OperationsCheckinStrings.zeroWorkersConfirmation(ar);
+  static String preSaveDiffTotal(bool ar, int t, int a, int r) => OperationsCheckinStrings.preSaveDiffTotal(ar, t, a, r);
+  static String diffBaselineLastSave(bool ar) => OperationsCheckinStrings.diffBaselineLastSave(ar); static String diffBaselineDate(bool ar, String d) => OperationsCheckinStrings.diffBaselineDate(ar, d);
+  static String diffNoBaseline(bool ar) => OperationsCheckinStrings.diffNoBaseline(ar); static String diffAddedTitle(bool ar) => OperationsCheckinStrings.diffAddedTitle(ar);
+  static String diffRemovedTitle(bool ar) => OperationsCheckinStrings.diffRemovedTitle(ar); static String diffNoChanges(bool ar) => OperationsCheckinStrings.diffNoChanges(ar);
+  static String localConflictTitle(bool ar) => OperationsCheckinStrings.localConflictTitle(ar); static String localConflictRecordedAt(bool ar, String time) => OperationsCheckinStrings.localConflictRecordedAt(ar, time);
+  static String localConflictBody(bool ar, String w, String t) => OperationsCheckinStrings.localConflictBody(ar, w, t);
+  static String resolveAsTransfer(bool ar) => OperationsCheckinStrings.resolveAsTransfer(ar); static String resolveAsCorrection(bool ar) => OperationsCheckinStrings.resolveAsCorrection(ar);
+  static String resolveSkipWorker(bool ar) => OperationsCheckinStrings.resolveSkipWorker(ar);
 
-  static String selectAll(bool ar) => ar ? 'تحديد الكل' : 'Select All';
-  static String clearAll(bool ar) => ar ? 'إلغاء التحديد' : 'Clear All';
-  static String workerAssignedElsewhere(bool ar, String t) =>
-      ar ? 'ضمن فريق: $t' : 'In team: $t';
-  static String inactiveBadge(bool ar) => ar ? 'معطّل' : 'Inactive';
-  static String teamNameArabicLabel(bool ar) =>
-      ar ? 'اسم الفريق بالعربية' : 'Team name (Arabic)';
-  static String teamNameEnglishLabel(bool ar) =>
-      ar ? 'اسم الفريق بالإنجليزية (اختياري)' : 'Team name (English, optional)';
-  static String searchWorkersHint(bool ar) =>
-      ar ? 'ابحث بالاسم أو الكود' : 'Search by name or code';
-  static String workerSelectedState(bool ar) => ar ? 'محدد' : 'Selected';
-  static String workerUnselectedState(bool ar) =>
-      ar ? 'غير محدد' : 'Not selected';
+  static String selectTeam(bool ar) => OperationsActionsStrings.selectTeam(ar); static String selectHousing(bool ar) => OperationsActionsStrings.selectHousing(ar);
+  static String addTeamToStart(bool ar) => OperationsActionsStrings.addTeamToStart(ar); static String addHousingToStart(bool ar) => OperationsActionsStrings.addHousingToStart(ar);
+  static String noWorkersInTeam(bool ar) => OperationsActionsStrings.noWorkersInTeam(ar); static String noWorkersInHousing(bool ar) => OperationsActionsStrings.noWorkersInHousing(ar);
+  static String codeLabel(bool ar) => OperationsActionsStrings.codeLabel(ar); static String presentCountLabel(bool ar, int count) => OperationsActionsStrings.presentCountLabel(ar, count);
+  static String markedAbsentCount(bool ar, int count) => OperationsActionsStrings.markedAbsentCount(ar, count); static String savingLabel(bool ar) => OperationsActionsStrings.savingLabel(ar);
+  static String confirmTeamSubmission(bool ar) => OperationsActionsStrings.confirmTeamSubmission(ar); static String noAbsencesSaveCheck(bool ar) => OperationsActionsStrings.noAbsencesSaveCheck(ar);
+  static String confirmAbsencesAndSave(bool ar) => OperationsActionsStrings.confirmAbsencesAndSave(ar); static String confirmSiteAttendanceTitle(bool ar) => OperationsActionsStrings.confirmSiteAttendanceTitle(ar);
+  static String confirmHousingCheckTitle(bool ar) => OperationsActionsStrings.confirmHousingCheckTitle(ar); static String reviewAction(bool ar) => OperationsActionsStrings.reviewAction(ar);
+  static String confirmAction(bool ar) => OperationsActionsStrings.confirmAction(ar); static String undoAction(bool ar) => OperationsActionsStrings.undoAction(ar);
+  static String teamSavedLocally(bool ar) => OperationsActionsStrings.teamSavedLocally(ar); static String housingSavedLocally(bool ar) => OperationsActionsStrings.housingSavedLocally(ar);
+  static String whatsappSummaryTitle(bool ar) => OperationsActionsStrings.whatsappSummaryTitle(ar); static String copyTextAction(bool ar) => OperationsActionsStrings.copyTextAction(ar);
+  static String closeAction(bool ar) => OperationsActionsStrings.closeAction(ar); static String housingCheckTab(bool ar) => OperationsActionsStrings.housingCheckTab(ar);
+  static String siteAttendanceTab(bool ar) => OperationsActionsStrings.siteAttendanceTab(ar); static String startCampusCheckAction(bool ar) => OperationsActionsStrings.startCampusCheckAction(ar);
+  static String noAbsencesTodayAction(bool ar) => OperationsActionsStrings.noAbsencesTodayAction(ar); static String dayLockedOut(bool ar) => OperationsActionsStrings.dayLockedOut(ar);
+  static String noAbsencesConfirmed(bool ar) => OperationsActionsStrings.noAbsencesConfirmed(ar); static String startSiteAttendanceAction(bool ar) => OperationsActionsStrings.startSiteAttendanceAction(ar);
+  static String nextConfirmAction(bool ar) => OperationsActionsStrings.nextConfirmAction(ar); static String saveLocallyOnlyAction(bool ar) => OperationsActionsStrings.saveLocallyOnlyAction(ar);
+  static String saveAndSyncNowAction(bool ar) => OperationsActionsStrings.saveAndSyncNowAction(ar); static String syncSuccessMessage(bool ar) => OperationsActionsStrings.syncSuccessMessage(ar);
+  static String syncOfflineFallbackMessage(bool ar) => OperationsActionsStrings.syncOfflineFallbackMessage(ar); static String syncPendingMessage(bool ar) => OperationsActionsStrings.syncPendingMessage(ar);
+  static String unsavedChangesTitle(bool ar) => OperationsActionsStrings.unsavedChangesTitle(ar); static String unsavedChangesBody(bool ar) => OperationsActionsStrings.unsavedChangesBody(ar);
+  static String stayAction(bool ar) => OperationsActionsStrings.stayAction(ar); static String leaveAction(bool ar) => OperationsActionsStrings.leaveAction(ar);
+  static String selectAbsentWorkersHint(bool ar) => OperationsActionsStrings.selectAbsentWorkersHint(ar); static String selectPresentWorkersHint(bool ar) => OperationsActionsStrings.selectPresentWorkersHint(ar);
+  static String fridayOvertimeMode(bool ar) => OperationsActionsStrings.fridayOvertimeMode(ar); static String fridayRestAbsenceClosed(bool ar) => OperationsActionsStrings.fridayRestAbsenceClosed(ar);
+  static String fridayOvertimeCountLabel(bool ar, int count) => OperationsActionsStrings.fridayOvertimeCountLabel(ar, count); static String selectDefaultCrew(bool ar) => OperationsActionsStrings.selectDefaultCrew(ar);
+  static String fridayBannerTitle(bool ar) => OperationsActionsStrings.fridayBannerTitle(ar); static String fridaySaveConfirm(bool ar, int count) => OperationsActionsStrings.fridaySaveConfirm(ar, count);
+  static String fridayOvertimeLabel(bool ar) => OperationsActionsStrings.fridayOvertimeLabel(ar); static String fridayRestLabel(bool ar) => OperationsActionsStrings.fridayRestLabel(ar);
+  static String confirmFridayOvertime(bool ar) => OperationsActionsStrings.confirmFridayOvertime(ar);
 
-  // §14.2 Daily Check-in
-  static String recordingForDate(bool ar, String d) =>
-      ar ? 'تسجيل حضور ليوم: $d' : 'Recording for: $d';
-  static String pastDateWarning(bool ar) =>
-      ar ? 'هذا تاريخ سابق' : 'This is a past date';
-  static String changeDate(bool ar) => ar ? 'تغيير التاريخ' : 'Change date';
-  static String draftRestored(bool ar) =>
-      ar ? 'تم استعادة المسودة' : 'Draft restored';
-  static String draftRestoredPartial(bool ar, int n) =>
-      ar ? 'تم استعادة المسودة (تم تخطي $n)' : 'Draft restored ($n skipped)';
-  static String suggestionFromDate(bool ar, String d) =>
-      ar ? 'تم التحديد مسبقًا من يوم $d' : 'Pre-filled from $d';
-  static String savedDayLoaded(bool ar) => ar
-      ? 'يعرض التسجيل المحفوظ لهذا اليوم'
-      : 'Showing the saved record for this day';
-  static String addFromAnotherTeam(bool ar) =>
-      ar ? 'إضافة عامل من فريق آخر' : 'Add from another team';
-  static String fromTeamBadge(bool ar, String t) =>
-      ar ? 'من فريق: $t' : 'From: $t';
-  static String crossTeamSearchHint(bool ar) => ar
-      ? 'ابحث بالاسم أو الكود (حرفان على الأقل)'
-      : 'Search by name or code (2+ characters)';
-  static String noSearchResults(bool ar) =>
-      ar ? 'لا يوجد عمال مطابقون' : 'No matching workers';
-  static String removeGuest(bool ar) => ar ? 'إزالة' : 'Remove';
-  static String presentLabel(bool ar) => ar ? 'حاضر' : 'Present';
-  static String notPresentLabel(bool ar) => ar ? 'غير حاضر' : 'Not present';
-  static String noTeam(bool ar) => ar ? 'بدون فريق' : 'No team';
-  static String zeroWorkersConfirmation(bool ar) => ar
-      ? 'تنبيه: لم يتم تحديد أي عامل حاضر (0 حاضرين).'
-      : 'Warning: 0 workers are marked present.';
-
-  // §14.3 Pre-Save Diff & Local Conflict
-  static String preSaveDiffTotal(bool ar, int t, int a, int r) {
-    if (!ar) return 'Total: $t (Added: +$a, Removed: -$r)';
-    final added = Bidi.isolateLtr('+$a');
-    final removed = Bidi.isolateLtr('-$r');
-    return 'الإجمالي: $t (زيادة: $added، نقص: $removed)';
-  }
-
-  static String diffBaselineLastSave(bool ar) =>
-      ar ? 'مقارنة بآخر تسجيل محفوظ' : 'Compared with the last saved record';
-  static String diffBaselineDate(bool ar, String d) =>
-      ar ? 'مقارنة بيوم $d' : 'Compared with $d';
-  static String diffNoBaseline(bool ar) =>
-      ar ? 'لا يوجد تسجيل سابق للمقارنة' : 'No previous record to compare';
-  static String diffAddedTitle(bool ar) => ar ? 'المضافون' : 'Added';
-  static String diffRemovedTitle(bool ar) => ar ? 'المحذوفون' : 'Removed';
-  static String diffNoChanges(bool ar) => ar ? 'لا توجد تغييرات' : 'No changes';
-  static String localConflictTitle(bool ar) =>
-      ar ? 'تعارض في التسجيل' : 'Attendance Conflict';
-  static String localConflictBody(bool ar, String w, String t) => ar
-      ? 'العامل $w مسجل بالفعل مع فريق $t.'
-      : 'Worker $w is already recorded with team $t.';
-  static String localConflictRecordedAt(bool ar, String time) =>
-      ar ? 'سُجّل الساعة $time' : 'Recorded at $time';
-  static String resolveAsTransfer(bool ar) =>
-      ar ? 'تسجيل كنقل خلال اليوم' : 'Record as transfer';
-  static String resolveAsCorrection(bool ar) =>
-      ar ? 'إلغاء حضوره من الفريق الآخر' : 'Remove from other team';
-  static String resolveSkipWorker(bool ar) =>
-      ar ? 'عدم إضافة هذا العامل' : "Don't add this worker";
-
-  // Housing & Site screen common strings & launcher actions
-  static String selectTeam(bool ar) => ar ? 'اختر الفريق' : 'Select team';
-  static String selectHousing(bool ar) => ar ? 'اختر السكن' : 'Select campus';
-  static String addTeamToStart(bool ar) =>
-      ar ? 'أضف فريقًا ثم ابدأ التسجيل' : 'Add a team to start';
-  static String addHousingToStart(bool ar) =>
-      ar ? 'أضف سكنًا ثم ابدأ الفحص' : 'Add a campus to start a check';
-  static String noWorkersInTeam(bool ar) => ar
-      ? 'لا يوجد عمال مسندون لهذا الفريق'
-      : 'No workers assigned to this team';
-  static String noWorkersInHousing(bool ar) => ar
-      ? 'لا يوجد عمال مسندون لهذا السكن'
-      : 'No workers assigned to this campus';
-  static String codeLabel(bool ar) => ar ? 'الكود' : 'Code';
-  static String presentCountLabel(bool ar, int count) =>
-      ar ? 'الحاضرون: $count' : 'Present: $count';
-  static String markedAbsentCount(bool ar, int count) =>
-      ar ? 'الغياب المحدد: $count' : 'Marked absent: $count';
-  static String savingLabel(bool ar) => ar ? 'جارٍ الحفظ…' : 'Saving…';
-  static String confirmTeamSubmission(bool ar) =>
-      ar ? 'تأكيد وإرسال تسجيل الفريق' : 'Confirm team submission';
-  static String noAbsencesSaveCheck(bool ar) =>
-      ar ? 'لا يوجد غائبون — حفظ الفحص' : 'No absences — save check';
-  static String confirmAbsencesAndSave(bool ar) =>
-      ar ? 'تأكيد الغياب والحفظ' : 'Confirm absences and save';
-  static String confirmSiteAttendanceTitle(bool ar) =>
-      ar ? 'تأكيد تسجيل الموقع' : 'Confirm site attendance';
-  static String confirmHousingCheckTitle(bool ar) =>
-      ar ? 'تأكيد فحص السكن' : 'Confirm campus check';
-  static String reviewAction(bool ar) => ar ? 'مراجعة' : 'Review';
-  static String confirmAction(bool ar) => ar ? 'تأكيد' : 'Confirm';
-  static String teamSavedLocally(bool ar) =>
-      ar ? 'تم حفظ تسجيل الفريق محليًا' : 'Team submission saved locally';
-  static String housingSavedLocally(bool ar) =>
-      ar ? 'تم حفظ الفحص محليًا' : 'Check saved locally';
-  static String undoAction(bool ar) => ar ? 'تراجع' : 'Undo';
-  static String whatsappSummaryTitle(bool ar) =>
-      ar ? 'ملخص واتساب' : 'WhatsApp summary';
-  static String copyTextAction(bool ar) => ar ? 'نسخ النص' : 'Copy text';
-  static String closeAction(bool ar) => ar ? 'إغلاق' : 'Close';
-  static String housingCheckTab(bool ar) => ar ? 'فحص السكن' : 'Campus check';
-  static String siteAttendanceTab(bool ar) =>
-      ar ? 'تسجيل الموقع' : 'Site attendance';
-
-  // Launcher actions & Sync dialog strings
-  static String startCampusCheckAction(bool ar) =>
-      ar ? 'تسجيل غياب السكن' : 'Record Campus Absences';
-
-  static String noAbsencesTodayAction(bool ar) =>
-      ar ? 'لا يوجد غياب اليوم' : 'No absences today';
-
-  static String dayLockedOut(bool ar) =>
-      ar ? 'اليوم أُقفل، تواصل مع الإدارة' : 'Day is locked out, contact administration';
-
-  static String noAbsencesConfirmed(bool ar) =>
-      ar ? 'تم تسجيل حضور جميع العمال بنجاح' : 'All workers marked present successfully';
-  static String startSiteAttendanceAction(bool ar) =>
-      ar ? 'تسجيل حضور الموقع' : 'Record Site Attendance';
-  static String nextConfirmAction(bool ar) =>
-      ar ? 'التالي (تأكيد)' : 'Next (Confirm)';
-  static String saveLocallyOnlyAction(bool ar) =>
-      ar ? 'حفظ محلي فقط' : 'Save Locally Only';
-  static String saveAndSyncNowAction(bool ar) =>
-      ar ? 'حفظ ورفع للسيرفر الآن' : 'Save & Sync to Server Now';
-  static String syncSuccessMessage(bool ar) => ar
-      ? 'تم الحفظ والرفع للسيرفر بنجاح'
-      : 'Saved and synced to server successfully';
-  static String syncOfflineFallbackMessage(bool ar) => ar
-      ? 'تم الحفظ محلياً (سيتم الرفع عند توفر الشبكة)'
-      : 'Saved locally (will upload when online)';
-  static String syncPendingMessage(bool ar) => ar
-      ? 'تم الحفظ على هذا الجهاز، والمزامنة مع السيرفر معلّقة.'
-      : 'Saved on this device. Server sync is still pending.';
-  static String unsavedChangesTitle(bool ar) =>
-      ar ? 'تغييرات غير محفوظة' : 'Unsaved changes';
-  static String unsavedChangesBody(bool ar) => ar
-      ? 'تعذر حفظ تغييراتك على هذا الجهاز. إذا غادرت الآن ستفقدها.'
-      : 'Your changes could not be stored on this device. Leaving now will lose them.';
-  static String stayAction(bool ar) => ar ? 'البقاء' : 'Stay';
-  static String leaveAction(bool ar) => ar ? 'مغادرة' : 'Leave';
-  static String selectAbsentWorkersHint(bool ar) => ar
-      ? 'ضع علامة على العامل الغائب فقط'
-      : 'Check only the workers who are ABSENT';
-  static String selectPresentWorkersHint(bool ar) => ar
-      ? 'ضع علامة على العامل الحاضر فقط'
-      : 'Check only the workers who are PRESENT';
-
-  // §13 Error Catalog
-  static String errPermissionDenied(bool ar) => ar
-      ? 'ليست لديك صلاحية لهذا الإجراء.'
-      : "You don't have permission for this action.";
-  static String errDateOutOfWindow(bool ar) => ar
-      ? 'هذا التاريخ خارج المدة المسموح بها للتسجيل.'
-      : 'This date is outside the allowed recording window.';
-  static String errFutureDate(bool ar) =>
-      ar ? 'لا يمكن التسجيل لتاريخ مستقبلي.' : 'Future dates are not allowed.';
-  static String errWorkersUnavailable(bool ar) => ar
-      ? 'بعض العمال لم يعودوا متاحين وأُزيلوا من تحديدك. راجع القائمة واحفظ من جديد.'
-      : 'Some workers are no longer available and were removed from your selection. Review and save again.';
-  static String errScopeChanged(bool ar) => ar
-      ? 'هذا الفريق لم يعد مسندًا إليك. راجع الإدارة.'
-      : 'This team is no longer assigned to you. Contact management.';
-  static String errUnresolvedConflicts(bool ar) =>
-      ar ? 'عالج كل التعارضات للمتابعة.' : 'Resolve all conflicts to continue.';
-  static String errTeamNameInvalid(bool ar) =>
-      ar ? 'أدخل اسم فريق صحيحًا.' : 'Enter a valid team name.';
-  static String errTeamNameExists(bool ar) => ar
-      ? 'يوجد فريق بهذا الاسم بالفعل.'
-      : 'A team with this name already exists.';
-  static String errSaveFailed(bool ar) => ar
-      ? 'تعذر الحفظ. تحديدك محفوظ، حاول مرة أخرى.'
-      : 'Could not save. Your selection is kept, please try again.';
-  static String errDatabaseBusy(bool ar) => ar
-      ? 'قاعدة البيانات مشغولة. انتظر لحظة وحاول مجددًا.'
-      : 'The database is busy. Wait a moment and try again.';
-  static String errSessionRevoked(bool ar) => ar
-      ? 'أنهت الإدارة جلستك. سجّل الدخول من جديد.'
-      : 'Your session was ended by management. Sign in again.';
-  static String errActivationRequired(bool ar) => ar
-      ? 'اتصل بالإنترنت مرة واحدة لتفعيل هذا الجهاز.'
-      : 'Connect to the internet once to activate this device.';
-  static String errSyncFailed(bool ar) => ar
-      ? 'تم الحفظ على هذا الجهاز، لكن فشلت المزامنة مع السيرفر. بياناتك محفوظة وستبقى معلّقة.'
-      : 'Saved on this device, but syncing with the server failed. Your data is safe and stays pending.';
-  static String errRosterWipeNotConfirmed(bool ar) => ar
-      ? 'أكّد المسح وصدّر نسخة احتياطية أولًا.'
-      : 'Confirm the wipe and export a backup first.';
+  static String errPermissionDenied(bool ar) => OperationsErrorStrings.errPermissionDenied(ar); static String errDateOutOfWindow(bool ar) => OperationsErrorStrings.errDateOutOfWindow(ar);
+  static String errFutureDate(bool ar) => OperationsErrorStrings.errFutureDate(ar); static String errWorkersUnavailable(bool ar) => OperationsErrorStrings.errWorkersUnavailable(ar);
+  static String errScopeChanged(bool ar) => OperationsErrorStrings.errScopeChanged(ar); static String errUnresolvedConflicts(bool ar) => OperationsErrorStrings.errUnresolvedConflicts(ar);
+  static String errTeamNameInvalid(bool ar) => OperationsErrorStrings.errTeamNameInvalid(ar); static String errTeamNameExists(bool ar) => OperationsErrorStrings.errTeamNameExists(ar);
+  static String errSaveFailed(bool ar) => OperationsErrorStrings.errSaveFailed(ar); static String errDatabaseBusy(bool ar) => OperationsErrorStrings.errDatabaseBusy(ar);
+  static String errSessionRevoked(bool ar) => OperationsErrorStrings.errSessionRevoked(ar); static String errActivationRequired(bool ar) => OperationsErrorStrings.errActivationRequired(ar);
+  static String errSyncFailed(bool ar) => OperationsErrorStrings.errSyncFailed(ar); static String errRosterWipeNotConfirmed(bool ar) => OperationsErrorStrings.errRosterWipeNotConfirmed(ar); static String errFridayAbsenceNotAllowed(bool ar) => OperationsErrorStrings.errFridayAbsenceNotAllowed(ar);
 }

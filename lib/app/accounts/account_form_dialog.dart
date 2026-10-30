@@ -1,16 +1,14 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:radar_labor/app/accounts/account_form_fields.dart';
+import 'package:radar_labor/app/accounts/account_form_submitter.dart';
 import 'package:radar_labor/app/accounts/accounts_admin_controller.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
-import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/l10n/admin_strings.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
-import 'package:radar_labor/core/ui/app_tokens.dart';
 
-/// Selectable scope option: `(id, label)`.
 typedef ScopeOption = (String, String);
 
-/// Add/edit dialog for a sign-in name: person, display name, role and scope.
 final class AccountFormDialog extends StatefulWidget {
   const AccountFormDialog({
     required this.arabic,
@@ -22,34 +20,24 @@ final class AccountFormDialog extends StatefulWidget {
   });
 
   final bool arabic;
-
-  /// `(employeeUid, name)` choices; only used when adding a new account.
   final List<ScopeOption> employees;
   final List<ScopeOption> teams;
   final List<ScopeOption> housings;
   final LocalAccount? initial;
 
-  static Future<AccountFormResult?> show(
-    BuildContext context,
-    AccountFormDialog dialog,
-  ) => showDialog<AccountFormResult>(context: context, builder: (_) => dialog);
+  static Future<AccountFormResult?> show(BuildContext context, AccountFormDialog dialog) =>
+      showDialog<AccountFormResult>(context: context, builder: (_) => dialog);
 
   @override
   State<AccountFormDialog> createState() => _AccountFormDialogState();
 }
 
 final class _AccountFormDialogState extends State<AccountFormDialog> {
-  late final _name = TextEditingController(
-    text: widget.initial?.displayName ?? widget.employees.firstOrNull?.$2,
-  );
+  late final _name = TextEditingController(text: widget.initial?.displayName ?? widget.employees.firstOrNull?.$2);
   late String? _employeeUid = widget.employees.firstOrNull?.$1;
   late AuthRole _role = widget.initial?.role ?? AuthRole.siteSupervisor;
   late final Set<String> _teams = {...?widget.initial?.teamIds};
-  late final Set<String> _housings = {...?widget.initial?.housingIds};
   String? _error;
-
-  bool get _ar => widget.arabic;
-  bool get _adding => widget.initial == null;
 
   @override
   void dispose() {
@@ -60,130 +48,41 @@ final class _AccountFormDialogState extends State<AccountFormDialog> {
   void _submit() {
     final name = _name.text.trim();
     if (name.isEmpty) {
-      setState(() => _error = AdminStrings.nameRequired(_ar));
+      setState(() => _error = AdminStrings.nameRequired(widget.arabic));
       return;
     }
-    final effectiveHousings = _role == AuthRole.housingSupervisor
-        ? (_housings.isEmpty
-              ? [AppConstants.defaultHousingId]
-              : _housings.toList())
-        : const <String>[];
     Navigator.pop(
       context,
-      AccountFormResult(
-        employeeUid: _adding ? _employeeUid : widget.initial?.employeeUid,
+      AccountFormSubmitter.buildResult(
+        isAdding: widget.initial == null,
+        employeeUid: _employeeUid,
+        initialEmployeeUid: widget.initial?.employeeUid,
         displayName: name,
         role: _role,
-        teamIds: _role == AuthRole.siteSupervisor ? _teams.toList() : const [],
-        housingIds: effectiveHousings,
+        teams: _teams,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: Text(
-      _adding ? AdminStrings.addUser(_ar) : AdminStrings.editUser(_ar),
-    ),
-    content: SizedBox(
-      width: 420,
-      child: SingleChildScrollView(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(context).bottom + AppTokens.space16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_adding)
-              DropdownButtonFormField<String>(
-                isExpanded: true,
-                initialValue: _employeeUid,
-                decoration: InputDecoration(
-                  labelText: AdminStrings.employeeLabel(_ar),
-                ),
-                items: [
-                  for (final e in widget.employees)
-                    DropdownMenuItem(
-                      value: e.$1,
-                      child: Text(e.$2, overflow: TextOverflow.ellipsis),
-                    ),
-                ],
-                onChanged: (uid) => setState(() {
-                  _employeeUid = uid;
-                  final match = widget.employees.where((e) => e.$1 == uid);
-                  if (match.isNotEmpty) _name.text = match.first.$2;
-                }),
-              ),
-            TextField(
-              controller: _name,
-              decoration: InputDecoration(
-                labelText: AdminStrings.displayNameLabel(_ar),
-              ),
-            ),
-            DropdownButtonFormField<AuthRole>(
-              isExpanded: true,
-              initialValue: _role,
-              decoration: InputDecoration(
-                labelText: AdminStrings.roleLabel(_ar),
-              ),
-              items: [
-                for (final r in AuthRole.values)
-                  DropdownMenuItem(
-                    value: r,
-                    child: Text(
-                      r.label(arabic: _ar),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-              ],
-              onChanged: (r) => setState(() => _role = r ?? _role),
-            ),
-            if (_role == AuthRole.siteSupervisor)
-              _scopeList(widget.teams, _teams, AdminStrings.assignedTeams(_ar)),
-            if (_role == AuthRole.housingSupervisor)
-              _scopeList(
-                widget.housings,
-                _housings,
-                AdminStrings.assignedHousing(_ar),
-              ),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  _error!,
-                  style: const TextStyle(color: AppTokens.statusUnknown),
-                ),
-              ),
-          ],
-        ),
-      ),
+    title: Text(widget.initial == null ? AdminStrings.addUser(widget.arabic) : AdminStrings.editUser(widget.arabic)),
+    content: AccountFormFields(
+      arabic: widget.arabic,
+      isAdding: widget.initial == null,
+      employees: widget.employees,
+      nameController: _name,
+      selectedRole: _role,
+      teams: widget.teams,
+      selectedTeams: _teams,
+      errorMessage: _error,
+      onSelectEmployee: (uid, name) => setState(() { _employeeUid = uid; _name.text = name; }),
+      onRoleChanged: (r) => setState(() => _role = r),
+      onToggleTeam: (id, sel) => setState(() => sel ? _teams.add(id) : _teams.remove(id)),
     ),
     actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: Text(AppStrings.cancel(_ar)),
-      ),
-      FilledButton(onPressed: _submit, child: Text(AppStrings.save(_ar))),
-    ],
-  );
-
-  Widget _scopeList(
-    List<ScopeOption> options,
-    Set<String> selection,
-    String title,
-  ) => ExpansionTile(
-    title: Text(title),
-    initiallyExpanded: true,
-    children: [
-      for (final o in options)
-        CheckboxListTile(
-          value: selection.contains(o.$1),
-          title: Text(o.$2),
-          onChanged: (checked) => setState(
-            () =>
-                checked == true ? selection.add(o.$1) : selection.remove(o.$1),
-          ),
-        ),
+      TextButton(onPressed: () => Navigator.pop(context), child: Text(AppStrings.cancel(widget.arabic))),
+      FilledButton(onPressed: _submit, child: Text(AppStrings.save(widget.arabic))),
     ],
   );
 }

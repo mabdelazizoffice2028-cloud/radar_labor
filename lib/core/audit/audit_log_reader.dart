@@ -11,67 +11,40 @@ final class AuditLogReader {
   final AppDatabase database;
 
   Future<List<ResolvedAuditEntry>> readForAdmin({
-    required ActorContext actor,
-    required bool arabic,
-    String? filterUserId,
-    String? filterEntityType,
+    required ActorContext actor, required bool arabic,
+    String? filterUserId, String? filterEntityType,
   }) async {
-    if (!actor.capabilities.canViewAuditLog) {
-      throw const OperationException(PermissionDenied());
-    }
-    final rows = await (database.select(database.auditLogs)
-          ..orderBy([(r) => OrderingTerm.desc(r.deviceTime)]))
-        .get();
+    if (!actor.capabilities.canViewAuditLog) throw const OperationException(PermissionDenied());
+    final rows = await (database.select(database.auditLogs)..orderBy([(r) => OrderingTerm.desc(r.deviceTime)])).get();
     final users = await database.select(database.appUsers).get();
     final employees = await database.select(database.employees).get();
     final teams = await database.select(database.teams).get();
 
     final usersById = {for (final u in users) u.id: u.displayName};
-    final employeesById = {
-      for (final e in employees)
-        e.iqamaNo: arabic ? e.fullNameAr : (e.fullNameEn ?? e.fullNameAr),
-    };
-    final teamsById = {
-      for (final t in teams) t.teamId: arabic ? t.nameAr : (t.nameEn ?? t.nameAr),
-    };
-    final housingsById = {
-      HousingConstants.defaultHousingId: arabic
-          ? HousingConstants.defaultHousingNameAr
-          : HousingConstants.defaultHousingName,
-    };
+    final employeesById = {for (final e in employees) e.iqamaNo: e.fullNameEn ?? e.fullNameAr};
+    final teamsById = {for (final t in teams) t.teamId: t.nameEn ?? t.nameAr};
+    final housingsById = {HousingConstants.defaultHousingId: HousingConstants.defaultHousingName};
 
     final result = <ResolvedAuditEntry>[];
     for (final row in rows) {
       if (filterUserId != null && row.userId != filterUserId) continue;
-      if (filterEntityType != null && row.entityType != filterEntityType) {
-        continue;
-      }
+      if (filterEntityType != null && row.entityType != filterEntityType) continue;
       final entry = AuditEntry(
-        auditId: row.auditId,
-        userId: row.userId,
-        action: row.action,
-        entityType: row.entityType,
-        entityId: row.entityId,
-        deviceId: row.deviceId,
-        deviceTime: row.deviceTime,
-        receivedAt: row.receivedAt,
-        syncStatus: row.syncStatus,
+        auditId: row.auditId, userId: row.userId, action: row.action,
+        entityType: row.entityType, entityId: row.entityId, deviceId: row.deviceId,
+        deviceTime: row.deviceTime, receivedAt: row.receivedAt, syncStatus: row.syncStatus,
       );
       final actorName = row.userId == null
           ? HistoryStrings.historyUnknownActor(arabic)
           : (usersById[row.userId!] ?? HistoryStrings.historyUnknownActor(arabic));
       final entityName = switch (row.entityType) {
-        'employee' => employeesById[row.entityId],
+        'employee' || 'worker' => employeesById[row.entityId],
         'team' => teamsById[row.entityId],
         'housing' => housingsById[row.entityId],
         'account' => usersById[row.entityId],
         _ => null,
       };
-      result.add(ResolvedAuditEntry(
-        entry: entry,
-        actorDisplayName: actorName,
-        entityDisplayName: entityName,
-      ));
+      result.add(ResolvedAuditEntry(entry: entry, actorDisplayName: actorName, entityDisplayName: entityName));
     }
     return List.unmodifiable(result);
   }

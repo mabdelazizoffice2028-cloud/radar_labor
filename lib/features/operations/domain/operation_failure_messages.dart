@@ -18,5 +18,6 @@ abstract final class OperationFailureMessage {
     ActivationRequired() => OperationsStrings.errActivationRequired(ar),
     RosterWipeNotConfirmed() => OperationsStrings.errRosterWipeNotConfirmed(ar),
     SyncFailed() => OperationsStrings.errSyncFailed(ar),
+    FridayAbsenceNotAllowed() => OperationsStrings.errFridayAbsenceNotAllowed(ar),
   };
 }

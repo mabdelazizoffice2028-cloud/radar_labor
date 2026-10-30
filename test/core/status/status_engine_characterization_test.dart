@@ -2,8 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:radar_labor/core/status/status_engine.dart';
 import 'package:radar_labor/core/status/status_models.dart';
 
-const _day = '2026-10-23';
-final _now = DateTime.utc(2026, 10, 23, 14, 0, 0);
+const _day = '2026-10-22';
+final _now = DateTime.utc(2026, 10, 22, 14, 0, 0);
 
 WorkerProfile _makeWorker({
   String id = 'w-1',
@@ -179,7 +179,7 @@ void main() {
     test('employment periods boundaries characterization', () {
       final pastOnly = _makeWorker(
         id: 'w-past',
-        periods: [const EmploymentPeriod('2026-01-01', endDate: '2026-10-22')],
+        periods: [const EmploymentPeriod('2026-01-01', endDate: '2026-10-21')],
       );
       final futureOnly = _makeWorker(
         id: 'w-future',

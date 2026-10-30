@@ -6,32 +6,33 @@ import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 final class TeamSetupValidator {
   static final RegExp whitespace = RegExp(r'\s+');
 
-  static Future<({String nameAr, String? nameEn})> validate({
+  static Future<({String nameAr, String nameEn})> validate({
     required AppDatabase database,
     required String nameAr,
     String? nameEn,
   }) async {
-    final normAr = nameAr.trim().replaceAll(whitespace, ' ');
-    final normEn = nameEn?.trim().replaceAll(whitespace, ' ');
-    if (normAr.isEmpty || normAr.length > OperationsConstants.teamNameMaxLength) {
-      throw const OperationException(TeamNameInvalid());
-    }
-    if (normEn != null && normEn.length > OperationsConstants.teamNameMaxLength) {
+    final cleanAr = nameAr.trim().replaceAll(whitespace, ' ');
+    final cleanEn = (nameEn != null && nameEn.trim().isNotEmpty)
+        ? nameEn.trim().replaceAll(whitespace, ' ')
+        : cleanAr;
+    final resolvedAr = cleanAr.isNotEmpty ? cleanAr : cleanEn;
+    final targetName = cleanEn.isNotEmpty ? cleanEn : resolvedAr;
+
+    if (targetName.isEmpty || targetName.length > OperationsConstants.teamNameMaxLength) {
       throw const OperationException(TeamNameInvalid());
     }
 
     final existingTeams = await database.select(database.teams).get();
-    final keyAr = NameCollation.sortKey(normAr);
-    final keyEn = (normEn != null && normEn.isNotEmpty) ? NameCollation.sortKey(normEn) : null;
+    final keyAr = NameCollation.sortKey(resolvedAr);
+    final keyEn = NameCollation.sortKey(cleanEn);
 
     for (final existing in existingTeams) {
-      if (NameCollation.sortKey(existing.nameAr) == keyAr) {
-        throw const OperationException(TeamNameExists());
-      }
-      if (keyEn != null && existing.nameEn != null && NameCollation.sortKey(existing.nameEn!) == keyEn) {
+      final exKeyAr = NameCollation.sortKey(existing.nameAr);
+      final exKeyEn = existing.nameEn != null ? NameCollation.sortKey(existing.nameEn!) : exKeyAr;
+      if (exKeyAr == keyAr || exKeyAr == keyEn || exKeyEn == keyAr || exKeyEn == keyEn) {
         throw const OperationException(TeamNameExists());
       }
     }
-    return (nameAr: normAr, nameEn: (normEn == null || normEn.isEmpty) ? null : normEn);
+    return (nameAr: resolvedAr, nameEn: cleanEn);
   }
 }

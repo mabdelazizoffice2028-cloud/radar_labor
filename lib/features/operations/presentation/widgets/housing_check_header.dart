@@ -9,6 +9,7 @@ final class HousingCheckHeader extends StatelessWidget {
     required this.onSearchChanged,
     required this.onNoAbsencesPressed,
     this.isSaving = false,
+    this.isFriday = false,
     super.key,
   });
 
@@ -17,23 +18,46 @@ final class HousingCheckHeader extends StatelessWidget {
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onNoAbsencesPressed;
   final bool isSaving;
+  final bool isFriday;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppTokens.space12, vertical: AppTokens.space8),
-          child: FilledButton.tonalIcon(
-            onPressed: isSaving ? null : onNoAbsencesPressed,
-            icon: const Icon(Icons.check_circle_outline, color: Colors.green),
-            label: Text(
-              OperationsStrings.noAbsencesTodayAction(arabic),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        if (isFriday)
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: AppTokens.space12, vertical: AppTokens.space8),
+            padding: const EdgeInsets.all(AppTokens.space12),
+            decoration: BoxDecoration(
+              color: AppTokens.primarySoft,
+              borderRadius: BorderRadius.circular(AppTokens.radius12),
             ),
-            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, color: AppTokens.primary),
+                const SizedBox(width: AppTokens.space8),
+                Expanded(
+                  child: Text(
+                    OperationsStrings.errFridayAbsenceNotAllowed(arabic),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppTokens.space12, vertical: AppTokens.space8),
+            child: FilledButton.tonalIcon(
+              onPressed: isSaving ? null : onNoAbsencesPressed,
+              icon: const Icon(Icons.check_circle_outline, color: Colors.green),
+              label: Text(
+                OperationsStrings.noAbsencesTodayAction(arabic),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+              style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+            ),
           ),
-        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppTokens.space12, vertical: AppTokens.space4),
           child: TextField(

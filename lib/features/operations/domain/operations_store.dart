@@ -8,7 +8,7 @@ abstract interface class OperationsStore {
 
   Stream<List<WorkerOption>> watchHousingWorkers(String housingId);
 
-  Future<List<WorkerOption>> getHousingWorkers(String housingId);
+  Future<List<WorkerOption>> getHousingWorkers(String housingId, {String? date});
 
   Stream<List<WorkerOption>> watchTeamWorkers(String teamId);
 

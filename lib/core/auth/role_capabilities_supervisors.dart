@@ -1,0 +1,41 @@
+import 'package:radar_labor/core/auth/role_capabilities.dart';
+
+const RoleCapabilities housingSupervisorRoleCapabilities = RoleCapabilities(
+  canViewDashboard: false,
+  canViewAllHistory: false,
+  canViewOwnHistory: true,
+  canManageReferenceData: false,
+  canManageAccounts: false,
+  canResolveConflicts: false,
+  canJustifyAbsence: false,
+  canRecordHousing: true,
+  canRecordSite: false,
+  canSetupTeam: false,
+  canEditOwnTeamMembers: false,
+  canAddCrossTeamWorker: false,
+  canResolveOwnSaveConflicts: false,
+  canEditPastDays: false,
+  canWipeRoster: false,
+  canViewAuditLog: false,
+  sections: [AppSection.checkIn, AppSection.history, AppSection.settings],
+);
+
+const RoleCapabilities siteSupervisorRoleCapabilities = RoleCapabilities(
+  canViewDashboard: false,
+  canViewAllHistory: false,
+  canViewOwnHistory: true,
+  canManageReferenceData: false,
+  canManageAccounts: false,
+  canResolveConflicts: false,
+  canJustifyAbsence: false,
+  canRecordHousing: false,
+  canRecordSite: true,
+  canSetupTeam: true,
+  canEditOwnTeamMembers: true,
+  canAddCrossTeamWorker: true,
+  canResolveOwnSaveConflicts: true,
+  canEditPastDays: false,
+  canWipeRoster: false,
+  canViewAuditLog: false,
+  sections: [AppSection.checkIn, AppSection.history, AppSection.settings],
+);

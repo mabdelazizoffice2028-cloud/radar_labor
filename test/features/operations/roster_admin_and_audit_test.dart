@@ -133,7 +133,7 @@ void main() {
     // Resolved audit log resolves actor and entity names for admin
     final resolved = await audit.readForAdmin(actor: adminActor, arabic: true);
     expect(resolved.first.actorDisplayName, 'مدير المشروع');
-    expect(resolved.first.entityDisplayName, 'سعيد القحطاني');
+    expect(resolved.first.entityDisplayName, 'Saeed Alqahtani');
 
     // Supervisor is denied access to audit log
     expect(

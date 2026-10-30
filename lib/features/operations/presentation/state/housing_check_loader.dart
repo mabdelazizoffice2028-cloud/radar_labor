@@ -14,7 +14,7 @@ final class HousingCheckLoader {
   Future<({List<HousingWorkerRow> rows, bool hasSaved, bool hasDraft})> load({
     required EntityOption housing, required String date,
   }) async {
-    final workers = await store.getHousingWorkers(housing.id);
+    final workers = await store.getHousingWorkers(housing.id, date: date);
     final ledger = AttendanceLedger(await events.readBusinessDate(date));
     final saved = ledger.isHousingChecked(housing.id);
     final draft = saved ? null : await draftStore.readDraft(housingId: housing.id, date: date);

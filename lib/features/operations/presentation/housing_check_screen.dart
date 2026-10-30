@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
 import 'package:radar_labor/core/l10n/operations_strings.dart';
+import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/features/operations/presentation/state/housing_check_notifier.dart';
 import 'package:radar_labor/features/operations/presentation/state/operations_controller.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/housing_check_bottom_bar.dart';
@@ -35,6 +36,7 @@ final class _HousingCheckScreenState extends ConsumerState<HousingCheckScreen> {
     final ar = widget.arabic;
     final notifier = ref.read(housingCheckNotifierProvider.notifier);
     final state = ref.watch(housingCheckNotifierProvider);
+    final isFriday = isFridayBusinessDate(state.selectedDate);
 
     return Scaffold(
       appBar: AppBar(title: Text(OperationsStrings.startCampusCheckAction(ar))),
@@ -45,9 +47,8 @@ final class _HousingCheckScreenState extends ConsumerState<HousingCheckScreen> {
         child: Column(
           children: [
             HousingCheckHeader(
-              arabic: ar, searchQuery: state.searchQuery,
-              onSearchChanged: notifier.setSearchQuery,
-              isSaving: state.isSaving,
+              arabic: ar, searchQuery: state.searchQuery, isFriday: isFriday,
+              onSearchChanged: notifier.setSearchQuery, isSaving: state.isSaving,
               onNoAbsencesPressed: () => HousingCheckDialogHelper.handleNoAbsences(
                 context: context, ref: ref, controller: widget.controller, notifier: notifier,
                 state: state, arabic: ar, actor: widget.actor, scope: widget.scope,
@@ -57,11 +58,11 @@ final class _HousingCheckScreenState extends ConsumerState<HousingCheckScreen> {
               Padding(padding: const EdgeInsets.all(8), child: Text(state.errorMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error))),
             Expanded(
               child: HousingCheckListView(
-                state: state, arabic: ar, onToggleAbsent: notifier.toggleAbsent,
+                state: state, arabic: ar, onToggleAbsent: isFriday ? (_) {} : notifier.toggleAbsent,
               ),
             ),
             HousingCheckBottomBar(
-              arabic: ar, absentCount: state.absentCount, isSaving: state.isSaving,
+              arabic: ar, absentCount: state.absentCount, isSaving: state.isSaving, isFriday: isFriday,
               onSavePressed: () => HousingCheckDialogHelper.handleSave(
                 context: context, ref: ref, controller: widget.controller, notifier: notifier,
                 state: state, arabic: ar, actor: widget.actor, scope: widget.scope,

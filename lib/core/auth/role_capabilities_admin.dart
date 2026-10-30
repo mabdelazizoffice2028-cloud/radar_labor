@@ -1,0 +1,47 @@
+import 'package:radar_labor/core/auth/role_capabilities.dart';
+
+const RoleCapabilities adminRoleCapabilities = RoleCapabilities(
+  canViewDashboard: true,
+  canViewAllHistory: true,
+  canViewOwnHistory: false,
+  canManageReferenceData: true,
+  canManageAccounts: true,
+  canResolveConflicts: true,
+  canJustifyAbsence: true,
+  canRecordHousing: false,
+  canRecordSite: false,
+  canSetupTeam: false,
+  canEditOwnTeamMembers: false,
+  canAddCrossTeamWorker: false,
+  canResolveOwnSaveConflicts: false,
+  canEditPastDays: true,
+  canWipeRoster: true,
+  canViewAuditLog: true,
+  sections: [
+    AppSection.dashboard,
+    AppSection.workers,
+    AppSection.teams,
+    AppSection.history,
+    AppSection.settings,
+  ],
+);
+
+const RoleCapabilities viewerRoleCapabilities = RoleCapabilities(
+  canViewDashboard: true,
+  canViewAllHistory: false,
+  canViewOwnHistory: false,
+  canManageReferenceData: false,
+  canManageAccounts: false,
+  canResolveConflicts: false,
+  canJustifyAbsence: false,
+  canRecordHousing: false,
+  canRecordSite: false,
+  canSetupTeam: false,
+  canEditOwnTeamMembers: false,
+  canAddCrossTeamWorker: false,
+  canResolveOwnSaveConflicts: false,
+  canEditPastDays: false,
+  canWipeRoster: false,
+  canViewAuditLog: false,
+  sections: [AppSection.dashboard, AppSection.settings],
+);

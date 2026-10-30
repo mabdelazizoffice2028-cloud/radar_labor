@@ -7,29 +7,25 @@ import 'package:radar_labor/features/dashboard/data/dashboard_actions_repository
 import 'package:radar_labor/features/dashboard/data/dashboard_coverage_repository.dart';
 import 'package:radar_labor/features/dashboard/data/status_snapshot_repository.dart';
 import 'package:radar_labor/features/dashboard/presentation/daily_report_button.dart';
+import 'package:radar_labor/features/dashboard/presentation/dashboard_action_handlers.dart';
+import 'package:radar_labor/features/dashboard/presentation/dashboard_date_selector.dart';
+import 'package:radar_labor/features/dashboard/presentation/dashboard_friday_banner.dart';
+import 'package:radar_labor/features/dashboard/presentation/dashboard_status_cards.dart';
 import 'package:radar_labor/features/dashboard/presentation/iqama_expiry_alert_card.dart';
 
-part 'dashboard_components.dart';
 part 'dashboard_sections.dart';
 part 'dashboard_action_sheets.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({
-    required this.statusRepository,
-    required this.coverageRepository,
-    required this.actionsRepository,
-    required this.arabic,
-    required this.actorUserId,
-    this.canEdit = true,
-    super.key,
+    required this.statusRepository, required this.coverageRepository,
+    required this.actionsRepository, required this.arabic,
+    required this.actorUserId, this.canEdit = true, super.key,
   });
-
   final StatusSnapshotRepository statusRepository;
   final DashboardCoverageRepository coverageRepository;
   final DashboardActionsRepository actionsRepository;
-  final bool arabic;
-  final String actorUserId;
-  final bool canEdit;
+  final bool arabic; final String actorUserId; final bool canEdit;
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -40,128 +36,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool get _ar => widget.arabic;
 
   Future<void> _pickDate() async {
-    final initialDate = DateTime.parse('${_businessDate}T12:00:00');
-    final selected = await showDatePicker(
-      context: context,
-      initialDate: initialDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-      helpText: DashboardStrings.chooseBusinessDate(_ar),
+    final d = await showDatePicker(
+      context: context, initialDate: DateTime.parse('${_businessDate}T12:00:00'),
+      firstDate: DateTime(2020), lastDate: DateTime(2100), helpText: DashboardStrings.chooseBusinessDate(_ar),
     );
-    if (!mounted || selected == null) return;
-    setState(() => _businessDate = _toIsoDate(selected));
+    if (mounted && d != null) setState(() => _businessDate = '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}');
   }
-
-  String _toIsoDate(DateTime date) =>
-      '${date.year.toString().padLeft(4, '0')}-'
-      '${date.month.toString().padLeft(2, '0')}-'
-      '${date.day.toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) => StreamBuilder<StatusSnapshot>(
-    stream: widget.statusRepository.watch(
-      arabic: _ar,
-      businessDate: _businessDate,
-    ),
+    stream: widget.statusRepository.watch(arabic: _ar, businessDate: _businessDate),
     builder: (context, state) {
-      if (state.hasError) {
-        return _MessageState(
-          message: DashboardStrings.couldNotLoadDashboard(_ar),
-          icon: Icons.error_outline,
-        );
-      }
-      if (!state.hasData) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      final snapshot = state.requireData;
-      final eligible = snapshot.workers.where((row) => row.isEligible);
-      return ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          IqamaExpiryAlertCard(arabic: _ar),
-          _DateSelector(date: _businessDate, arabic: _ar, onPressed: _pickDate),
-          const SizedBox(height: 12),
-          _StatusCards(snapshot: snapshot, arabic: _ar),
-          DailyReportButton(
-            snapshot: snapshot,
-            date: _businessDate,
-            arabic: _ar,
-          ),
-          const SizedBox(height: 12),
-          _ConflictSection(
-            rows: [
-              for (final row in eligible)
-                if (row.flags.contains(StatusFlag.housingSiteConflict) ||
-                    row.flags.contains(StatusFlag.multipleSiteTeams))
-                  row,
-            ],
-            arabic: _ar,
-            onResolve: widget.canEdit ? _resolve : null,
-          ),
-          _UnknownSection(
-            rows: [
-              for (final row in eligible)
-                if (row.status == WorkerStatus.unknown) row,
-            ],
-            arabic: _ar,
-            onJustify: widget.canEdit ? _justify : null,
-          ),
-          _IntegritySection(
-            rows: [
-              for (final row in snapshot.workers)
-                if (row.flags.contains(StatusFlag.inactiveWorkerEvent) ||
-                    row.flags.contains(StatusFlag.eventOutsideEmployment) ||
-                    row.flags.contains(StatusFlag.lateEvent) ||
-                    row.flags.contains(StatusFlag.rejectedEvent))
-                  row,
-            ],
-            arabic: _ar,
-          ),
-        ],
-      );
+      if (state.hasError) return _MessageState(message: DashboardStrings.couldNotLoadDashboard(_ar), icon: Icons.error_outline);
+      if (!state.hasData) return const Center(child: CircularProgressIndicator());
+      final snap = state.requireData;
+      final el = snap.workers.where((r) => r.isEligible);
+      return ListView(padding: const EdgeInsets.all(16), children: [
+        IqamaExpiryAlertCard(arabic: _ar),
+        if (isFridayBusinessDate(_businessDate)) DashboardFridayBanner(arabic: _ar),
+        DashboardDateSelector(date: _businessDate, arabic: _ar, onPressed: _pickDate),
+        const SizedBox(height: 12),
+        DashboardStatusCards(snapshot: snap, businessDate: _businessDate, arabic: _ar),
+        DailyReportButton(snapshot: snap, date: _businessDate, arabic: _ar),
+        const SizedBox(height: 12),
+        _ConflictSection(rows: [for (final r in el) if (r.flags.contains(StatusFlag.housingSiteConflict) || r.flags.contains(StatusFlag.multipleSiteTeams)) r], arabic: _ar, onResolve: widget.canEdit ? _resolve : null),
+        _UnknownSection(rows: [for (final r in el) if (r.status == WorkerStatus.unknown) r], arabic: _ar, onJustify: widget.canEdit ? _justify : null),
+        _IntegritySection(rows: [for (final r in snap.workers) if (r.flags.contains(StatusFlag.inactiveWorkerEvent) || r.flags.contains(StatusFlag.eventOutsideEmployment) || r.flags.contains(StatusFlag.lateEvent) || r.flags.contains(StatusFlag.rejectedEvent)) r], arabic: _ar),
+      ]);
     },
   );
 
-  Future<void> _resolve(WorkerStatusResult row) async {
-    final note = TextEditingController();
-    try {
-      final result =
-          await showModalBottomSheet<({ResolutionKind kind, String note})>(
-            context: context,
-            isScrollControlled: true,
-            builder: (context) => _ResolutionSheet(arabic: _ar, note: note),
-          );
-      if (!mounted || result == null) return;
-      await widget.actionsRepository.resolve(
-        employeeUid: row.worker.employeeUid,
-        businessDate: _businessDate,
-        kind: result.kind,
-        actorUserId: widget.actorUserId,
-        note: result.note,
-      );
-    } finally {
-      note.dispose();
-    }
-  }
+  Future<void> _resolve(WorkerStatusResult r) => DashboardActionHandlers.resolve(
+    context: context, actionsRepository: widget.actionsRepository, row: r, businessDate: _businessDate,
+    actorUserId: widget.actorUserId, sheetBuilder: (_) => _ResolutionSheet(arabic: _ar, note: TextEditingController()),
+  );
 
-  Future<void> _justify(WorkerStatusResult row) async {
-    final note = TextEditingController();
-    try {
-      final result = await showModalBottomSheet<({String? quick, String note})>(
-        context: context,
-        isScrollControlled: true,
-        builder: (context) => _JustificationSheet(arabic: _ar, note: note),
-      );
-      if (!mounted || result == null) return;
-      await widget.actionsRepository.justify(
-        employeeUid: row.worker.employeeUid,
-        businessDate: _businessDate,
-        actorUserId: widget.actorUserId,
-        quickReason: result.quick,
-        note: result.note,
-      );
-    } finally {
-      note.dispose();
-    }
-  }
+  Future<void> _justify(WorkerStatusResult r) => DashboardActionHandlers.justify(
+    context: context, actionsRepository: widget.actionsRepository, row: r, businessDate: _businessDate,
+    actorUserId: widget.actorUserId, sheetBuilder: (_) => _JustificationSheet(arabic: _ar, note: TextEditingController()),
+  );
 }

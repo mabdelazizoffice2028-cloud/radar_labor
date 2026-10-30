@@ -4,6 +4,7 @@ import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/features/operations/data/operations_dev_tools.dart';
 import 'package:radar_labor/features/operations/data/operations_housing_operations.dart';
+import 'package:radar_labor/features/operations/data/operations_housing_workers_loader.dart';
 import 'package:radar_labor/features/operations/data/operations_site_operations.dart';
 import 'package:radar_labor/features/operations/data/operations_undo_executor.dart';
 import 'package:radar_labor/features/operations/domain/ledger_undo_plan.dart';
@@ -40,10 +41,8 @@ final class OperationsRepository implements OperationsStore {
       (database.select(database.employees)..where((r) => r.archivedAt.isNull())).watch().map(_toWorkers);
 
   @override
-  Future<List<WorkerOption>> getHousingWorkers(String housingId) async {
-    final rows = await (database.select(database.employees)..where((r) => r.archivedAt.isNull())).get();
-    return _toWorkers(rows);
-  }
+  Future<List<WorkerOption>> getHousingWorkers(String housingId, {String? date}) =>
+      OperationsHousingWorkersLoader.load(database, housingId, date: date);
 
   @override
   Stream<List<WorkerOption>> watchTeamWorkers(String teamId) =>

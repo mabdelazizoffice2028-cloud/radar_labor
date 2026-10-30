@@ -24,17 +24,20 @@ void main() {
     });
 
     test('customCutoff_isHonored', () {
-      expect(
-        businessDateFor(DateTime.utc(2026, 10, 23, 0, 59), cutoffHour: 4),
-        '2026-10-22',
-      );
+      expect(businessDateFor(DateTime.utc(2026, 10, 23, 0, 59), cutoffHour: 4), '2026-10-22');
     });
 
     test('invalidCutoff_throws', () {
-      expect(
-        () => businessDateFor(DateTime.utc(2026), cutoffHour: 24),
-        throwsArgumentError,
-      );
+      expect(() => businessDateFor(DateTime.utc(2026), cutoffHour: 24), throwsArgumentError);
+    });
+  });
+
+  group('isFridayBusinessDate', () {
+    test('detectsFridayCorrectly', () {
+      expect(isFridayBusinessDate('2026-10-23'), isTrue); // Friday
+      expect(isFridayBusinessDate('2026-10-22'), isFalse); // Thursday
+      expect(isFridayBusinessDate('2026-10-24'), isFalse); // Saturday
+      expect(isFridayBusinessDate('invalid-date'), isFalse);
     });
   });
 }

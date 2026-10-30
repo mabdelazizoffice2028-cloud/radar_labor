@@ -2,6 +2,7 @@ import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/role_capabilities.dart';
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
 import 'package:radar_labor/core/constants/operations_constants.dart';
+import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 import 'package:radar_labor/features/operations/domain/scope_date_guard.dart';
 
@@ -36,6 +37,9 @@ abstract final class ScopeGuard {
   }) {
     requireCapability(actor.capabilities.canRecordHousing);
     if (!scope.allowsHousing(housingId)) throw const OperationException(PermissionDenied());
+    if (date != null && isFridayBusinessDate(date)) {
+      throw const OperationException(FridayAbsenceNotAllowed());
+    }
     if (date != null && todayBusinessDate != null) {
       ScopeDateGuard.guardLockout(
         role: actor.role, date: date, todayBusinessDate: todayBusinessDate,

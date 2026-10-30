@@ -10,6 +10,7 @@ class AttendanceCounterBar extends StatelessWidget {
     required this.enabled,
     required this.isSaving,
     required this.onSave,
+    this.isFriday = false,
     super.key,
   });
 
@@ -18,6 +19,7 @@ class AttendanceCounterBar extends StatelessWidget {
   final bool enabled;
   final bool isSaving;
   final VoidCallback onSave;
+  final bool isFriday;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +35,9 @@ class AttendanceCounterBar extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                OperationsStrings.workersSelected(arabic, presentCount),
+                isFriday
+                    ? OperationsStrings.fridayOvertimeCountLabel(arabic, presentCount)
+                    : OperationsStrings.workersSelected(arabic, presentCount),
                 style: Theme.of(context).textTheme.titleSmall
                     ?.copyWith(fontWeight: FontWeight.w700),
               ),
@@ -53,7 +57,9 @@ class AttendanceCounterBar extends StatelessWidget {
                 label: Text(
                   isSaving
                       ? OperationsStrings.savingLabel(arabic)
-                      : OperationsStrings.confirmTeamSubmission(arabic),
+                      : (isFriday
+                          ? OperationsStrings.confirmFridayOvertime(arabic)
+                          : OperationsStrings.confirmTeamSubmission(arabic)),
                 ),
               ),
             ),

@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
 import 'package:radar_labor/core/l10n/auth_flow_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
@@ -34,6 +35,7 @@ final class ChangeTemporaryPasswordFields extends StatelessWidget {
         TextField(
           controller: passwordCtrl,
           obscureText: obscure,
+          maxLength: AuthConstants.maxPasswordLength,
           decoration: InputDecoration(
             labelText: AppStrings.newPassword(arabic),
             suffixIcon: IconButton(
@@ -50,6 +52,7 @@ final class ChangeTemporaryPasswordFields extends StatelessWidget {
         TextField(
           controller: confirmCtrl,
           obscureText: obscure,
+          maxLength: AuthConstants.maxPasswordLength,
           decoration: InputDecoration(
             labelText: AppStrings.confirmPassword(arabic),
           ),

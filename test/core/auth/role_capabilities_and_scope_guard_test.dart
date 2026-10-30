@@ -23,14 +23,13 @@ void main() {
         expect(cap.canEditOwnTeamMembers, isFalse);
         expect(cap.canAddCrossTeamWorker, isFalse);
         expect(cap.canResolveOwnSaveConflicts, isFalse);
-        expect(cap.canEditPastDays, isFalse);
+        expect(cap.canEditPastDays, isTrue);
         expect(cap.canWipeRoster, isTrue);
         expect(cap.canViewAuditLog, isTrue);
         expect(cap.sections, const [
           AppSection.dashboard,
           AppSection.workers,
           AppSection.teams,
-          AppSection.housing,
           AppSection.history,
           AppSection.settings,
         ]);
@@ -50,7 +49,7 @@ void main() {
       expect(housing.canEditOwnTeamMembers, isFalse);
       expect(housing.canAddCrossTeamWorker, isFalse);
       expect(housing.canResolveOwnSaveConflicts, isFalse);
-      expect(housing.canEditPastDays, isTrue);
+      expect(housing.canEditPastDays, isFalse);
       expect(housing.canWipeRoster, isFalse);
       expect(housing.canViewAuditLog, isFalse);
       expect(housing.sections, const [
@@ -73,7 +72,7 @@ void main() {
       expect(site.canEditOwnTeamMembers, isTrue);
       expect(site.canAddCrossTeamWorker, isTrue);
       expect(site.canResolveOwnSaveConflicts, isTrue);
-      expect(site.canEditPastDays, isTrue);
+      expect(site.canEditPastDays, isFalse);
       expect(site.canWipeRoster, isFalse);
       expect(site.canViewAuditLog, isFalse);
       expect(site.sections, const [
@@ -125,6 +124,7 @@ void main() {
         ),
         returnsNormally,
       );
+      // Supervisor cannot edit past days
       expect(
         () => ScopeGuard.guardSiteRecord(
           actor: actor,
@@ -133,7 +133,37 @@ void main() {
           date: '2026-10-16',
           todayBusinessDate: today,
         ),
-        returnsNormally,
+        throwsA(
+          isA<OperationException>().having(
+            (e) => e.failure,
+            'failure',
+            isA<PermissionDenied>(),
+          ),
+        ),
+      );
+    });
+
+    test('housingSupervisor_rejectsFridayRecord', () {
+      const actor = ActorContext(
+        userId: 'house-1',
+        role: AuthRole.housingSupervisor,
+      );
+      // '2026-10-23' is Friday
+      expect(
+        () => ScopeGuard.guardHousingRecord(
+          actor: actor,
+          scope: scope,
+          housingId: 'housing-1',
+          date: '2026-10-23',
+          todayBusinessDate: today,
+        ),
+        throwsA(
+          isA<OperationException>().having(
+            (e) => e.failure,
+            'failure',
+            isA<FridayAbsenceNotAllowed>(),
+          ),
+        ),
       );
     });
 

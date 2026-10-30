@@ -40,7 +40,7 @@ void main() {
   test('siteSummary_usesSelectedWorkersAndEnglishWhatsappTemplate', () {
     final summary = AttendanceSummary.siteAttendance(
       team: team,
-      date: '2026-10-23',
+      date: '2026-10-22',
       workers: workers,
       presentIds: {'worker-2'},
       arabic: false,
@@ -54,7 +54,7 @@ void main() {
     expect(
       summary.messageText,
       [
-        '2026-10-23',
+        '2026-10-22',
         'Team Attendance: Site team',
         'Supervisor: Ahmed',
         '',
@@ -64,10 +64,35 @@ void main() {
     );
   });
 
-  test('siteSummary_arabicTemplateIncludesBidiIsolationAndLatinNumbering', () {
+  test('siteSummary_fridayOvertimeWhatsappTemplate', () {
     final summary = AttendanceSummary.siteAttendance(
       team: team,
       date: '2026-10-23',
+      workers: workers,
+      presentIds: {'worker-2'},
+      arabic: false,
+      strings: const AttendanceMessageStrings.english(),
+      supervisorName: 'Ahmed',
+    );
+
+    expect(summary.workerCount, 1);
+    expect(
+      summary.messageText,
+      [
+        '2026-10-23',
+        'Friday Overtime: Site team',
+        'Supervisor: Ahmed',
+        '',
+        'Overtime Workers (Labor):',
+        '1. W-02 - Worker Two',
+      ].join('\n'),
+    );
+  });
+
+  test('siteSummary_arabicTemplateIncludesBidiIsolationAndLatinNumbering', () {
+    final summary = AttendanceSummary.siteAttendance(
+      team: team,
+      date: '2026-10-22',
       workers: workers,
       presentIds: {'worker-2', 'worker-1'},
       arabic: true,
@@ -79,13 +104,13 @@ void main() {
     expect(
       summary.messageText,
       [
-        '${Bidi.rlm}${Bidi.lri}2026-10-23${Bidi.pdi}',
-        '${Bidi.rlm}حضور فريق: فريق الموقع',
+        '${Bidi.rlm}${Bidi.lri}2026-10-22${Bidi.pdi}',
+        '${Bidi.rlm}حضور فريق: Site team',
         '${Bidi.rlm}المشرف: أحمد',
         '',
         '${Bidi.rlm}العمال (Labor):',
-        '${Bidi.rlm}1. ${Bidi.lri}W-01${Bidi.pdi} - عامل أول',
-        '${Bidi.rlm}2. ${Bidi.lri}W-02${Bidi.pdi} - عامل ثان',
+        '${Bidi.rlm}1. ${Bidi.lri}W-01${Bidi.pdi} - Worker One',
+        '${Bidi.rlm}2. ${Bidi.lri}W-02${Bidi.pdi} - Worker Two',
       ].join('\n'),
     );
   });
@@ -93,7 +118,7 @@ void main() {
   test('siteSummary_withOperatorIncludesOperatorSectionInArabic', () {
     final summary = AttendanceSummary.siteAttendance(
       team: team,
-      date: '2026-10-23',
+      date: '2026-10-22',
       workers: workers,
       presentIds: {'worker-1', 'worker-3'},
       arabic: true,
@@ -105,15 +130,15 @@ void main() {
     expect(
       summary.messageText,
       [
-        '${Bidi.rlm}${Bidi.lri}2026-10-23${Bidi.pdi}',
-        '${Bidi.rlm}حضور فريق: فريق الموقع',
+        '${Bidi.rlm}${Bidi.lri}2026-10-22${Bidi.pdi}',
+        '${Bidi.rlm}حضور فريق: Site team',
         '${Bidi.rlm}المشرف: أحمد',
         '',
         '${Bidi.rlm}العمال (Labor):',
-        '${Bidi.rlm}1. ${Bidi.lri}W-01${Bidi.pdi} - عامل أول',
+        '${Bidi.rlm}1. ${Bidi.lri}W-01${Bidi.pdi} - Worker One',
         '',
         '${Bidi.rlm}مشغلي المعدات (Operator):',
-        '${Bidi.rlm}1. ${Bidi.lri}W-03${Bidi.pdi} - مشغل رافعة',
+        '${Bidi.rlm}1. ${Bidi.lri}W-03${Bidi.pdi} - Crane Operator',
       ].join('\n'),
     );
   });
@@ -121,7 +146,7 @@ void main() {
   test('siteSummary_zeroWorkersHasExplicitArabicMessage', () {
     final summary = AttendanceSummary.siteAttendance(
       team: team,
-      date: '2026-10-23',
+      date: '2026-10-22',
       workers: workers,
       presentIds: {},
       arabic: true,
@@ -138,8 +163,8 @@ void main() {
     expect(
       summary.messageText,
       [
-        '${Bidi.rlm}${Bidi.lri}2026-10-23${Bidi.pdi}',
-        '${Bidi.rlm}حضور فريق: فريق الموقع',
+        '${Bidi.rlm}${Bidi.lri}2026-10-22${Bidi.pdi}',
+        '${Bidi.rlm}حضور فريق: Site team',
         '${Bidi.rlm}المشرف: أحمد',
         '',
         '${Bidi.rlm}العمال (Labor):',
@@ -155,7 +180,7 @@ void main() {
         nameAr: 'السكن',
         nameEn: 'Housing',
       ),
-      date: '2026-10-23',
+      date: '2026-10-22',
       workers: workers,
       absentIds: {},
       arabic: false,
@@ -167,7 +192,7 @@ void main() {
     expect(
       summary.messageText,
       [
-        'Absent Today: 2026-10-23',
+        'Absent Today: 2026-10-22',
         '',
         'Company Workers:',
         '0',
@@ -185,7 +210,7 @@ void main() {
         nameAr: 'السكن',
         nameEn: 'Housing',
       ),
-      date: '2026-10-23',
+      date: '2026-10-22',
       workers: workers,
       absentIds: {'worker-1', 'worker-3'},
       arabic: true,
@@ -196,13 +221,13 @@ void main() {
     expect(
       summary.messageText,
       [
-        '${Bidi.rlm}غياب اليوم: ${Bidi.lri}2026-10-23${Bidi.pdi}',
+        '${Bidi.rlm}غياب اليوم: ${Bidi.lri}2026-10-22${Bidi.pdi}',
         '',
         '${Bidi.rlm}عمال الشركة:',
-        '${Bidi.rlm}1. ${Bidi.lri}W-01${Bidi.pdi} - عامل أول',
+        '${Bidi.rlm}1. ${Bidi.lri}W-01${Bidi.pdi} - Worker One',
         '',
         '${Bidi.rlm}عمال الإيجار:',
-        '${Bidi.rlm}1. ${Bidi.lri}W-03${Bidi.pdi} - مشغل رافعة',
+        '${Bidi.rlm}1. ${Bidi.lri}W-03${Bidi.pdi} - Crane Operator',
       ].join('\n'),
     );
   });

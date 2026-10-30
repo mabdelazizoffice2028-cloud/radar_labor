@@ -1,44 +1,28 @@
 import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/app_providers.dart';
-import 'package:radar_labor/app/screens/entities_screen.dart';
-import 'package:radar_labor/app/screens/preferences_screen.dart';
-import 'package:radar_labor/app/screens/workers_screen.dart';
+import 'package:radar_labor/app/home_password_changer.dart';
+import 'package:radar_labor/app/home_scaffold_page_router.dart';
+import 'package:radar_labor/app/home_scaffold_section_meta.dart';
+import 'package:radar_labor/app/home_site_editor.dart';
 import 'package:radar_labor/app/widgets/home_date_badge.dart';
 import 'package:radar_labor/app/widgets/notification_badge.dart';
-import 'package:radar_labor/app/widgets/user_password_change_dialog.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
-import 'package:radar_labor/core/auth/local_auth_repository.dart';
 import 'package:radar_labor/core/auth/role_capabilities.dart';
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
 import 'package:radar_labor/core/database/app_database.dart';
-import 'package:radar_labor/core/database/local_settings_repository.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
-import 'package:radar_labor/core/l10n/history_strings.dart';
 import 'package:radar_labor/core/sync/auto_sync_listener.dart';
 import 'package:radar_labor/core/time/clock.dart';
-import 'package:radar_labor/features/dashboard/presentation/dashboard_screen.dart';
-import 'package:radar_labor/features/operations/domain/operations_models.dart';
-import 'package:radar_labor/features/operations/presentation/history_screen.dart';
-import 'package:radar_labor/features/operations/presentation/operations_screen.dart';
-import 'package:radar_labor/features/operations/presentation/site_attendance_screen.dart';
 import 'package:radar_labor/features/operations/presentation/state/history_notifier.dart';
 import 'package:radar_labor/features/operations/presentation/state/operations_controller.dart';
-import 'package:radar_labor/features/operations/presentation/state/site_attendance_notifier.dart';
 
-/// Main scaffold hosting the bottom navigation bar and primary feature views (BC-1, PRD §5.2, §5.4).
 final class HomeScaffold extends ConsumerStatefulWidget {
   const HomeScaffold({
-    required this.database,
-    required this.events,
-    required this.account,
-    required this.onLogout,
-    super.key,
+    required this.database, required this.events, required this.account, required this.onLogout, super.key,
   });
-
   final AppDatabase database;
   final EventRepository events;
   final LocalAccount account;
@@ -51,222 +35,43 @@ final class HomeScaffold extends ConsumerStatefulWidget {
 final class _HomeScaffoldState extends ConsumerState<HomeScaffold> {
   int _tab = 0;
 
-  void _openEditSiteDay({
-    required EntityOption team,
-    required String date,
-    required OperationsController operationsController,
-    required bool ar,
-    required ActorContext actor,
-    required ScopeSnapshot scope,
-  }) {
-    unawaited(
-      ref
-          .read(siteAttendanceNotifierProvider.notifier)
-          .openTeamAndDate(team: team, date: date),
-    );
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SiteAttendanceScreen(
-          controller: operationsController,
-          arabic: ar,
-          teamSetupStore: ref.read(teamSetupStoreProvider),
-          actor: actor,
-          scope: scope,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final locale = ref.watch(appLocaleProvider);
     ref.watch(autoSyncListenerProvider);
     final ar = locale == 'ar';
-    final capabilities = widget.account.role.capabilities;
-    final actor = ActorContext(
-      userId: widget.account.id,
-      role: widget.account.role,
+    final caps = widget.account.role.capabilities;
+    final actor = ActorContext(userId: widget.account.id, role: widget.account.role);
+    final scope = ref.watch(userScopesProvider(widget.account.id)).asData?.value ??
+        ScopeSnapshot(teamIds: widget.account.teamIds.toSet(), housingIds: widget.account.housingIds.toSet());
+    final ctrl = OperationsController(
+      store: ref.watch(operationsRepositoryProvider), clock: const SystemClock(), actorUserId: widget.account.id,
+      capabilities: caps, allowedHousingIds: scope.housingIds.toList(growable: false), allowedTeamIds: scope.teamIds.toList(growable: false),
     );
-    final scope =
-        ref.watch(userScopesProvider(widget.account.id)).asData?.value ??
-        ScopeSnapshot(
-          teamIds: widget.account.teamIds.toSet(),
-          housingIds: widget.account.housingIds.toSet(),
-        );
-    final operationsController = OperationsController(
-      store: ref.watch(operationsRepositoryProvider),
-      clock: const SystemClock(),
-      actorUserId: widget.account.id,
-      capabilities: capabilities,
-      allowedHousingIds: scope.housingIds.toList(growable: false),
-      allowedTeamIds: scope.teamIds.toList(growable: false),
-    );
+    final sections = caps.sections;
+    final pages = [for (final s in sections) HomeScaffoldPageRouter.buildPage(
+      section: s, ref: ref, ar: ar, locale: locale, capabilities: caps, actor: actor, scope: scope, controller: ctrl,
+      database: widget.database, events: widget.events, account: widget.account, onLogout: widget.onLogout,
+      onChangePassword: () => HomePasswordChanger.changePassword(context: context, database: widget.database, account: widget.account, ar: ar),
+      onEditSiteDay: (t, d) => HomeSiteEditor.open(
+        context: context, ref: ref, team: t, date: d, controller: ctrl, arabic: ar, actor: actor, scope: scope,
+      ),
+    )];
+    final selectedIdx = _tab.clamp(0, pages.length - 1);
 
-    final sections = capabilities.sections;
-    final pages = [
-      for (final section in sections)
-        _pageForSection(
-          section,
-          sections,
-          ar,
-          locale,
-          capabilities,
-          actor,
-          scope,
-          operationsController,
-        ),
-    ];
-
-    final selectedIndex = _tab.clamp(0, pages.length - 1);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.appTitle(ar)),
-        actions: [
-          NotificationBadge(arabic: ar),
-          const HomeDateBadge(),
-        ],
-      ),
-      body: IndexedStack(index: selectedIndex, children: pages),
+      appBar: AppBar(title: Text(AppStrings.appTitle(ar)), actions: [NotificationBadge(arabic: ar), const HomeDateBadge()]),
+      body: IndexedStack(index: selectedIdx, children: pages),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (value) {
-          setState(() => _tab = value);
-          if (sections[value] == AppSection.history) {
-            unawaited(ref.read(historyNotifierProvider.notifier).refresh());
-          }
+        selectedIndex: selectedIdx,
+        onDestinationSelected: (v) {
+          setState(() => _tab = v);
+          if (sections[v] == AppSection.history) unawaited(ref.read(historyNotifierProvider.notifier).refresh());
         },
-        destinations: [
-          for (final s in sections)
-            NavigationDestination(
-              icon: Icon(_iconForSection(s)),
-              label: _labelForSection(s, ar),
-            ),
-        ],
+        destinations: [for (final s in sections) NavigationDestination(
+          icon: Icon(HomeScaffoldSectionMeta.iconForSection(s)), label: HomeScaffoldSectionMeta.labelForSection(s, ar),
+        )],
       ),
     );
-  }
-
-  Widget _pageForSection(
-    AppSection section,
-    List<AppSection> sections,
-    bool ar,
-    String locale,
-    RoleCapabilities capabilities,
-    ActorContext actor,
-    ScopeSnapshot scope,
-    OperationsController operationsController,
-  ) => switch (section) {
-    AppSection.dashboard => DashboardScreen(
-      statusRepository: ref.watch(statusSnapshotRepositoryProvider),
-      coverageRepository: ref.watch(dashboardCoverageRepositoryProvider),
-      actionsRepository: ref.watch(dashboardActionsRepositoryProvider),
-      arabic: ar,
-      actorUserId: widget.account.id,
-      canEdit:
-          capabilities.canResolveConflicts || capabilities.canJustifyAbsence,
-    ),
-    AppSection.workers => WorkersScreen(
-      database: widget.database,
-      events: widget.events,
-      arabic: ar,
-    ),
-    AppSection.teams => EntitiesScreen(
-      database: widget.database,
-      arabic: ar,
-      teams: true,
-    ),
-    AppSection.housing => EntitiesScreen(
-      database: widget.database,
-      arabic: ar,
-      teams: false,
-    ),
-    AppSection.checkIn => OperationsScreen(
-      controller: operationsController,
-      arabic: ar,
-      role: widget.account.role,
-      teamSetupStore: ref.watch(teamSetupStoreProvider),
-      actor: actor,
-      scope: scope,
-    ),
-    AppSection.history => HistoryScreen(
-      arabic: ar,
-      actor: actor,
-      scope: scope,
-      onEditSiteDay: (t, d) => _openEditSiteDay(
-        team: t,
-        date: d,
-        operationsController: operationsController,
-        ar: ar,
-        actor: actor,
-        scope: scope,
-      ),
-    ),
-    AppSection.settings => PreferencesScreen(
-      arabic: ar,
-      locale: locale,
-      onLocale: (val) => ref.read(appLocaleProvider.notifier).setLocale(val),
-      database: widget.database,
-      account: widget.account,
-      onLogout: widget.onLogout,
-      onChangePassword: () => _changePassword(ar),
-    ),
-  };
-
-  String _labelForSection(AppSection section, bool ar) => switch (section) {
-    AppSection.dashboard => AppStrings.homeTab(ar),
-    AppSection.workers => AppStrings.workersTab(ar),
-    AppSection.teams => AppStrings.teamsTab(ar),
-    AppSection.housing => AppStrings.housingTab(ar),
-    AppSection.checkIn => AppStrings.checkInTab(ar),
-    AppSection.history => HistoryStrings.historyTab(ar),
-    AppSection.settings => AppStrings.settingsTab(ar),
-  };
-
-  IconData _iconForSection(AppSection section) => switch (section) {
-    AppSection.dashboard => Icons.dashboard_outlined,
-    AppSection.workers => Icons.people_alt_outlined,
-    AppSection.teams => Icons.groups_2_outlined,
-    AppSection.housing => Icons.apartment_outlined,
-    AppSection.checkIn => Icons.fact_check_outlined,
-    AppSection.history => Icons.history_outlined,
-    AppSection.settings => Icons.settings_outlined,
-  };
-
-  Future<void> _changePassword(bool ar) async {
-    final values = await showDialog<(String, String, String)>(
-      context: context,
-      builder: (ctx) => UserPasswordChangeDialog(arabic: ar),
-    );
-    if (values == null || !mounted) return;
-    if (values.$2.length < 8 || values.$2 != values.$3) {
-      _toast(AppStrings.passwordMismatch(ar));
-      return;
-    }
-    try {
-      final auth = LocalAuthRepository(
-        LocalSettingsRepository(widget.database),
-      );
-      final verified = await auth.signIn(
-        role: widget.account.role,
-        accountId: widget.account.id,
-        password: values.$1,
-      );
-      if (verified == null) return _toast(AppStrings.passwordIncorrect(ar));
-      await auth.changePassword(verified, values.$2);
-      _toast(AppStrings.passwordChanged(ar));
-    } on AccountLockedException {
-      _toast(AppStrings.accountLocked(ar));
-    } on AccountDeactivatedException {
-      _toast(AppStrings.accountDisabled(ar));
-    } on Exception catch (error) {
-      debugPrint('Password change failed (${error.runtimeType}).');
-      _toast(AppStrings.passwordChangeFailed(ar));
-    }
-  }
-
-  void _toast(String msg) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-    }
   }
 }

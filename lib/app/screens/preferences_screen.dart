@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:radar_labor/app/screens/about_app_screen.dart';
 import 'package:radar_labor/app/screens/preferences_admin_section.dart';
 import 'package:radar_labor/app/widgets/settings_section_header.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
@@ -47,9 +48,17 @@ final class PreferencesScreen extends StatelessWidget {
       Card(child: ListTile(leading: const Icon(Icons.key_outlined), title: Text(AppStrings.changePassword(arabic)), onTap: onChangePassword)),
       Card(child: ListTile(leading: const Icon(Icons.logout), title: Text(AppStrings.signOut(arabic)), onTap: onLogout)),
       if (_canManage) PreferencesAdminSection(database: database, arabic: arabic),
-      SettingsSectionHeader(title: AppStrings.settingsAboutDevice(arabic)),
-      Card(child: ListTile(leading: const Icon(Icons.lock_outline), title: Text(AppStrings.encryptedDatabase(arabic)))),
-      Card(child: ListTile(leading: const Icon(Icons.wifi_off), title: Text(AppStrings.worksOffline(arabic)))),
+      SettingsSectionHeader(title: AppStrings.aboutApp(arabic)),
+      Card(
+        child: ListTile(
+          leading: const Icon(Icons.info_outline),
+          title: Text(AppStrings.aboutApp(arabic)),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AboutAppScreen()),
+          ),
+        ),
+      ),
     ],
   );
 }

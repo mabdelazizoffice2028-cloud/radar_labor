@@ -26,6 +26,9 @@ final class AccountProvisioningRepository {
       AuthConstants.defaultProjectManagerName,
     );
     await _auth.ensureAccountForRole(AuthRole.hr, AuthConstants.defaultHrName);
+    await (_database.update(_database.appUsers)
+          ..where((u) => u.role.equals(AuthRole.hr.name) & u.displayName.equals('HR')))
+        .write(const AppUsersCompanion(displayName: Value(AuthConstants.defaultHrName)));
   }
 
   Future<int> provisionSupervisors(List<SupervisorSeed> seeds) =>

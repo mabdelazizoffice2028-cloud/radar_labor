@@ -1,21 +1,16 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:radar_labor/core/constants/operations_constants.dart';
 import 'package:radar_labor/core/l10n/operations_strings.dart';
+import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/operations/domain/site_attendance_store.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/attendance_date_picker_helper.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/attendance_date_source_banner.dart';
 
-/// Date selector bar and contextual banners for daily check-in (PRD §8.1, §8.3).
 class AttendanceDateBar extends StatelessWidget {
   const AttendanceDateBar({
-    required this.selectedDate,
-    required this.todayDate,
-    required this.isPastDate,
-    required this.initialSource,
-    required this.skippedDraftCount,
-    required this.arabic,
-    required this.onDateSelected,
-    this.initialSourceDate,
-    super.key,
+    required this.selectedDate, required this.todayDate, required this.isPastDate,
+    required this.initialSource, required this.skippedDraftCount, required this.arabic,
+    required this.onDateSelected, this.initialSourceDate, this.canPickDate = false, super.key,
   });
 
   final String selectedDate;
@@ -26,137 +21,57 @@ class AttendanceDateBar extends StatelessWidget {
   final int skippedDraftCount;
   final bool arabic;
   final ValueChanged<String> onDateSelected;
-
-  Future<void> _pickDate(BuildContext context) async {
-    final today = DateTime.tryParse(todayDate);
-    final initial = DateTime.tryParse(selectedDate) ?? today;
-    if (today == null || initial == null) return;
-    final firstDate = today.subtract(
-      const Duration(days: OperationsConstants.maxBackdateDays),
-    );
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initial.isBefore(firstDate)
-          ? firstDate
-          : (initial.isAfter(today) ? today : initial),
-      firstDate: firstDate,
-      lastDate: today,
-    );
-    if (picked == null) return;
-    final formatted =
-        '${picked.year.toString().padLeft(4, '0')}-'
-        '${picked.month.toString().padLeft(2, '0')}-'
-        '${picked.day.toString().padLeft(2, '0')}';
-    onDateSelected(formatted);
-  }
+  final bool canPickDate;
 
   @override
   Widget build(BuildContext context) {
-    final sourceBanner = _buildSourceBanner(context);
     final dateTitle = OperationsStrings.recordingForDate(arabic, selectedDate);
+    final isFriday = isFridayBusinessDate(selectedDate);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Semantics(
-          button: true,
-          label: dateTitle,
+          button: canPickDate, label: dateTitle,
           child: InkWell(
             borderRadius: BorderRadius.circular(AppTokens.radius12),
-            onTap: () => _pickDate(context),
+            onTap: canPickDate ? () => AttendanceDatePickerHelper.pickDate(
+              context: context, todayDate: todayDate, selectedDate: selectedDate, onDateSelected: onDateSelected,
+            ) : null,
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: AppTokens.space8,
-                horizontal: AppTokens.space4,
-              ),
+              padding: const EdgeInsets.symmetric(vertical: AppTokens.space8, horizontal: AppTokens.space4),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.calendar_month_outlined,
-                    size: 18,
-                    color: AppTokens.primary,
-                  ),
+                  const Icon(Icons.calendar_month_outlined, size: 18, color: AppTokens.primary),
                   const SizedBox(width: AppTokens.space8),
-                  Text(
-                    dateTitle,
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
+                  Expanded(child: Text(dateTitle, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold))),
+                  if (isFriday)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(color: AppTokens.statusOnSiteSoft, borderRadius: BorderRadius.circular(AppTokens.radius12)),
+                      child: Text(OperationsStrings.fridayOvertimeMode(arabic), style: const TextStyle(color: AppTokens.statusOnSite, fontSize: 11, fontWeight: FontWeight.bold)),
+                    )
+                  else if (canPickDate)
+                    Text(OperationsStrings.changeDate(arabic), style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppTokens.primary, decoration: TextDecoration.underline)),
                 ],
               ),
             ),
           ),
         ),
-        if (isPastDate) ...[
-          const SizedBox(height: AppTokens.space8),
+        if (isPastDate)
           Container(
             padding: const EdgeInsets.all(AppTokens.space12),
-            decoration: BoxDecoration(
-              color: AppTokens.statusUnknownSoft,
-              borderRadius: BorderRadius.circular(AppTokens.radius12),
-              border: Border.all(color: AppTokens.statusUnknown),
-            ),
+            decoration: BoxDecoration(color: AppTokens.statusUnknownSoft, borderRadius: BorderRadius.circular(AppTokens.radius12), border: Border.all(color: AppTokens.statusUnknown)),
             child: Row(
               children: [
-                const Icon(
-                  Icons.warning_amber_rounded,
-                  color: AppTokens.statusUnknown,
-                ),
+                const Icon(Icons.warning_amber_rounded, color: AppTokens.statusUnknown),
                 const SizedBox(width: AppTokens.space8),
-                Expanded(
-                  child: Text(
-                    OperationsStrings.pastDateWarning(arabic),
-                    style: Theme.of(context).textTheme.bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                ),
+                Expanded(child: Text(OperationsStrings.pastDateWarning(arabic), style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600))),
               ],
             ),
           ),
-        ],
-        if (sourceBanner != null) ...[
-          const SizedBox(height: AppTokens.space8),
-          sourceBanner,
-        ],
+        AttendanceDateSourceBanner(initialSource: initialSource, initialSourceDate: initialSourceDate, skippedDraftCount: skippedDraftCount, arabic: arabic),
       ],
-    );
-  }
-
-  Widget? _buildSourceBanner(BuildContext context) {
-    String? text;
-    IconData icon = Icons.history_outlined;
-    if (initialSource == AttendanceInitialSource.draft) {
-      text = skippedDraftCount > 0
-          ? OperationsStrings.draftRestoredPartial(arabic, skippedDraftCount)
-          : OperationsStrings.draftRestored(arabic);
-      icon = Icons.restore_outlined;
-    } else if (initialSource == AttendanceInitialSource.savedDay) {
-      text = OperationsStrings.savedDayLoaded(arabic);
-      icon = Icons.check_circle_outline;
-    } else if (initialSource == AttendanceInitialSource.suggestion &&
-        initialSourceDate != null) {
-      text = OperationsStrings.suggestionFromDate(arabic, initialSourceDate!);
-      icon = Icons.auto_awesome_outlined;
-    }
-    if (text == null) return null;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTokens.space12,
-        vertical: AppTokens.space8,
-      ),
-      decoration: BoxDecoration(
-        color: AppTokens.background,
-        borderRadius: BorderRadius.circular(AppTokens.radius12),
-        border: Border.all(color: AppTokens.outline),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: AppTokens.primary),
-          const SizedBox(width: AppTokens.space8),
-          Expanded(
-            child: Text(text, style: Theme.of(context).textTheme.bodySmall),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -217,7 +217,7 @@ void main() {
             ),
           ),
         );
-        expect(find.textContaining('أحمد علي'), findsOneWidget);
+        expect(find.textContaining('Ahmed Ali'), findsOneWidget);
         expect(
           find.textContaining(HousingReviewStrings.reviewStateAbsent(true)),
           findsOneWidget,

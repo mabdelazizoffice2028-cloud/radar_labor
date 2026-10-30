@@ -2,8 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:radar_labor/core/status/status_engine.dart';
 import 'package:radar_labor/core/status/status_models.dart';
 
-const _day = '2026-10-23';
-final _now = DateTime.utc(2026, 10, 23, 12);
+const _day = '2026-10-22';
+final _now = DateTime.utc(2026, 10, 22, 12);
 
 WorkerProfile _worker({
   String id = 'worker-1',
@@ -443,7 +443,7 @@ void main() {
     test('otherBusinessDateEvents_areIgnored', () {
       expect(
         _evaluate([
-          _event(EventType.sitePresent, date: '2026-10-22', teamId: 'team-a'),
+          _event(EventType.sitePresent, date: '2026-10-21', teamId: 'team-a'),
         ]).status,
         WorkerStatus.notRecorded,
       );
@@ -486,7 +486,7 @@ void main() {
     test('clearedStatusEventForUnknownDate_doesNotLeakIntoCurrentDate', () {
       expect(
         _evaluate([
-          _event(EventType.sitePresent, date: '2026-10-22', teamId: 'team-a'),
+          _event(EventType.sitePresent, date: '2026-10-21', teamId: 'team-a'),
           _event(
             EventType.sitePresent,
             id: 'clear',

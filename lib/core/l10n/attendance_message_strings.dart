@@ -45,7 +45,7 @@ final class AttendanceMessageStrings {
       confirmNoPresence = 'No workers selected. Submit zero present?',
       dateLabel = 'Date',
       teamLabel = 'Team',
-      housingLabel = 'Campus',
+      housingLabel = 'CAMPOS',
       totalPresent = 'Total Present',
       totalAbsent = 'Total Absent',
       workersLabel = 'Workers',

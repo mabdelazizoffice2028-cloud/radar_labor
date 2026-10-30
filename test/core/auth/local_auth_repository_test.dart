@@ -46,7 +46,7 @@ void main() {
       isNull,
     );
 
-    await auth.changePassword(manager, 'long-password-1');
+    await auth.changePassword(manager, 'pass1234');
     final changed = (await auth.accounts()).firstWhere(
       (item) => item.id == manager.id,
     );
@@ -63,7 +63,7 @@ void main() {
       await auth.signIn(
         role: manager.role,
         accountId: manager.id,
-        password: 'long-password-1',
+        password: 'pass1234',
       ),
       isNotNull,
     );
@@ -100,14 +100,14 @@ void main() {
     );
 
     expect(
-      () => auth.changePassword(manager, 'short'),
+      () => auth.changePassword(manager, 'abc'),
       throwsA(isA<ArgumentError>()),
     );
 
     expect(
       () => auth.changePassword(
         manager,
-        'new-password-123',
+        'newpass',
         currentPassword: 'wrong-current',
       ),
       throwsA(isA<StateError>()),

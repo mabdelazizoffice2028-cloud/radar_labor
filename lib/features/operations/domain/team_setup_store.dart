@@ -22,12 +22,13 @@ final class SelectableWorker {
   final String? currentTeamNameEn;
 
   String displayName({required bool arabic}) =>
-      arabic ? nameAr : (nameEn ?? nameAr);
+      (nameEn != null && nameEn!.trim().isNotEmpty) ? nameEn! : nameAr;
 
   String? assignedTeamName({required bool arabic}) {
     if (currentTeamId == null) return null;
-    if (arabic) return currentTeamNameAr ?? currentTeamId;
-    return currentTeamNameEn ?? currentTeamNameAr ?? currentTeamId;
+    return (currentTeamNameEn != null && currentTeamNameEn!.trim().isNotEmpty)
+        ? currentTeamNameEn
+        : (currentTeamNameAr ?? currentTeamId);
   }
 }
 

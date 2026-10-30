@@ -7,7 +7,7 @@ final class EntityOption {
   final String? nameEn;
 
   String displayName({required bool arabic}) =>
-      arabic ? nameAr : nameEn ?? nameAr;
+      (nameEn != null && nameEn!.trim().isNotEmpty) ? nameEn! : nameAr;
 }
 
 final class WorkerOption {
@@ -28,7 +28,7 @@ final class WorkerOption {
   final String jobCategory;
 
   String displayName({required bool arabic}) =>
-      arabic ? nameAr : nameEn ?? nameAr;
+      (nameEn != null && nameEn!.trim().isNotEmpty) ? nameEn! : nameAr;
 }
 
 final class HousingCheckUndo {

@@ -18,6 +18,7 @@ final class SessionRevoked extends OperationFailure { const SessionRevoked(); }
 final class ActivationRequired extends OperationFailure { const ActivationRequired(); }
 final class RosterWipeNotConfirmed extends OperationFailure { const RosterWipeNotConfirmed(); }
 final class SyncFailed extends OperationFailure { const SyncFailed(); }
+final class FridayAbsenceNotAllowed extends OperationFailure { const FridayAbsenceNotAllowed(); }
 
 final class WorkersUnavailable extends OperationFailure {
   const WorkersUnavailable(this.workerIds);
