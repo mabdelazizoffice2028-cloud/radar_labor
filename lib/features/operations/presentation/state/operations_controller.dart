@@ -6,40 +6,16 @@ import 'package:radar_labor/features/operations/domain/attendance_summary.dart';
 import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
 import 'package:radar_labor/features/operations/domain/operations_store.dart';
+import 'package:radar_labor/features/operations/presentation/state/operations_housing_coordinator.dart';
+import 'package:radar_labor/features/operations/presentation/state/prepared_operations.dart';
 
-final class PreparedHousingCheck {
-  const PreparedHousingCheck({
-    required this.housing,
-    required this.date,
-    required this.summary,
-  });
-
-  final EntityOption housing;
-  final String date;
-  final AttendanceSummary summary;
-}
-
-final class PreparedSiteAttendance {
-  const PreparedSiteAttendance({
-    required this.team,
-    required this.date,
-    required this.summary,
-  });
-
-  final EntityOption team;
-  final String date;
-  final AttendanceSummary summary;
-}
+export 'package:radar_labor/features/operations/presentation/state/prepared_operations.dart';
 
 /// Coordinates daily operation rules while screens handle only presentation (BC-3).
 final class OperationsController {
   const OperationsController({
-    required this.store,
-    required this.clock,
-    required this.actorUserId,
-    required this.capabilities,
-    this.allowedHousingIds = const [],
-    this.allowedTeamIds = const [],
+    required this.store, required this.clock, required this.actorUserId,
+    required this.capabilities, this.allowedHousingIds = const [], this.allowedTeamIds = const [],
   });
 
   final OperationsStore store;
@@ -51,102 +27,63 @@ final class OperationsController {
 
   bool get canHousing => capabilities.canRecordHousing;
   bool get canSite => capabilities.canRecordSite;
-  bool _allowsHousing(String id) =>
-      canHousing && allowedHousingIds.contains(id);
+  bool _allowsHousing(String id) => canHousing && allowedHousingIds.contains(id);
   bool _allowsTeam(String id) => canSite && allowedTeamIds.contains(id);
 
   Stream<List<EntityOption>> watchHousings() => store.watchHousings().map(
-    (items) =>
-        items.where((item) => _allowsHousing(item.id)).toList(growable: false),
-  );
+        (items) => items.where((item) => _allowsHousing(item.id)).toList(growable: false),
+      );
 
   Stream<List<EntityOption>> watchTeams() => store.watchTeams().map(
-    (items) =>
-        items.where((item) => _allowsTeam(item.id)).toList(growable: false),
-  );
+        (items) => items.where((item) => _allowsTeam(item.id)).toList(growable: false),
+      );
 
   Stream<List<WorkerOption>> watchHousingWorkers(String housingId) =>
-      _allowsHousing(housingId)
-      ? store.watchHousingWorkers(housingId)
-      : const Stream.empty();
+      _allowsHousing(housingId) ? store.watchHousingWorkers(housingId) : const Stream.empty();
 
   Stream<List<WorkerOption>> watchTeamWorkers(String teamId) =>
-      _allowsTeam(teamId)
-      ? store.watchTeamWorkers(teamId)
-      : const Stream.empty();
+      _allowsTeam(teamId) ? store.watchTeamWorkers(teamId) : const Stream.empty();
 
   Future<PreparedHousingCheck> prepareHousingCheck({
-    required EntityOption housing,
-    required Set<String> absentIds,
-    required bool arabic,
+    required EntityOption housing, required Set<String> absentIds, required bool arabic,
   }) async {
     await _guard(canHousing && _allowsHousing(housing.id));
-    final workers = await watchHousingWorkers(housing.id).first;
-    final date = businessDateFor(clock.nowUtc());
-    return PreparedHousingCheck(
-      housing: housing,
-      date: date,
-      summary: AttendanceSummary.housingCheck(
-        housing: housing,
-        date: date,
-        workers: workers,
-        absentIds: absentIds,
-        arabic: arabic,
-        strings: AttendanceMessageStrings.fromLanguage(arabic: arabic),
-      ),
+    return OperationsHousingCoordinator.prepare(
+      store: store, clock: clock, housing: housing, absentIds: absentIds, arabic: arabic,
     );
   }
 
   Future<HousingCheckUndo> saveHousingCheck(PreparedHousingCheck check) =>
-      _guard(canHousing && _allowsHousing(check.housing.id)).then(
-        (_) => store.saveHousingCheck(
-          date: check.date,
-          housing: check.housing,
-          absentIds: check.summary.workerIds,
-          actorUserId: actorUserId,
-        ),
-      );
+      _guard(canHousing && _allowsHousing(check.housing.id)).then((_) => store.saveHousingCheck(
+            date: check.date, housing: check.housing, absentIds: check.summary.workerIds, actorUserId: actorUserId,
+          ));
 
   Future<void> undoHousingCheck(HousingCheckUndo undo) =>
       _guard(canHousing && _allowsHousing(undo.housingId))
           .then((_) => store.undoHousingCheck(undo, actorUserId: actorUserId));
 
   Future<PreparedSiteAttendance> prepareSiteAttendance({
-    required EntityOption team,
-    required Set<String> presentIds,
-    required bool arabic,
+    required EntityOption team, required Set<String> presentIds, required bool arabic,
   }) async {
     await _guard(canSite && _allowsTeam(team.id));
     final workers = await watchTeamWorkers(team.id).first;
     final date = businessDateFor(clock.nowUtc());
     return PreparedSiteAttendance(
-      team: team,
-      date: date,
+      team: team, date: date,
       summary: AttendanceSummary.siteAttendance(
-        team: team,
-        date: date,
-        workers: workers,
-        presentIds: presentIds,
-        arabic: arabic,
-        strings: AttendanceMessageStrings.fromLanguage(arabic: arabic),
+        team: team, date: date, workers: workers, presentIds: presentIds,
+        arabic: arabic, strings: AttendanceMessageStrings.fromLanguage(arabic: arabic),
       ),
     );
   }
 
-  Future<SiteAttendanceUndo> saveSiteAttendance(
-    PreparedSiteAttendance attendance,
-  ) => _guard(canSite && _allowsTeam(attendance.team.id)).then(
-    (_) => store.saveSiteAttendance(
-      date: attendance.date,
-      team: attendance.team,
-      presentIds: attendance.summary.workerIds,
-      actorUserId: actorUserId,
-    ),
-  );
+  Future<SiteAttendanceUndo> saveSiteAttendance(PreparedSiteAttendance attendance) =>
+      _guard(canSite && _allowsTeam(attendance.team.id)).then((_) => store.saveSiteAttendance(
+            date: attendance.date, team: attendance.team, presentIds: attendance.summary.workerIds, actorUserId: actorUserId,
+          ));
 
-  Future<void> undoSiteAttendance(SiteAttendanceUndo undo) => _guard(
-    canSite && _allowsTeam(undo.teamId),
-  ).then((_) => store.undoSiteAttendance(undo, actorUserId: actorUserId));
+  Future<void> undoSiteAttendance(SiteAttendanceUndo undo) =>
+      _guard(canSite && _allowsTeam(undo.teamId)).then((_) => store.undoSiteAttendance(undo, actorUserId: actorUserId));
 
   Future<void> _guard(bool allowed) async {
     if (!allowed) throw const OperationException(PermissionDenied());

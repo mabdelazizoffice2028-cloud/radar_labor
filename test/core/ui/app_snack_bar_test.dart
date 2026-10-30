@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/ui/app_snack_bar.dart';
+import 'package:radar_labor/core/ui/app_tokens.dart';
 
 void main() {
   testWidgets('AppSnackBar clears previous and uses floating behavior',
@@ -70,5 +71,54 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Dismissible Notice'), findsNothing);
+  });
+
+  testWidgets('AppSnackBar semantic methods use correct colors and icons',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => Column(
+              children: [
+                ElevatedButton(
+                  onPressed: () =>
+                      AppSnackBar.showSuccess(context, message: 'Success msg'),
+                  child: const Text('Success'),
+                ),
+                ElevatedButton(
+                  onPressed: () =>
+                      AppSnackBar.showError(context, message: 'Error msg'),
+                  child: const Text('Error'),
+                ),
+                ElevatedButton(
+                  onPressed: () =>
+                      AppSnackBar.showWarning(context, message: 'Warning msg'),
+                  child: const Text('Warning'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Success'));
+    await tester.pumpAndSettle();
+    var bar = tester.widget<SnackBar>(find.byType(SnackBar));
+    expect(bar.backgroundColor, equals(AppTokens.statusOnSite));
+    expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
+
+    await tester.tap(find.text('Error'));
+    await tester.pumpAndSettle();
+    bar = tester.widget<SnackBar>(find.byType(SnackBar));
+    expect(bar.backgroundColor, equals(AppTokens.statusUnknown));
+    expect(find.byIcon(Icons.error_outline), findsOneWidget);
+
+    await tester.tap(find.text('Warning'));
+    await tester.pumpAndSettle();
+    bar = tester.widget<SnackBar>(find.byType(SnackBar));
+    expect(bar.backgroundColor, equals(AppTokens.statusHousingOnly));
+    expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
   });
 }

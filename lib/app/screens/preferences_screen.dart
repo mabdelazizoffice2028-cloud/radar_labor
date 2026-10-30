@@ -6,6 +6,7 @@ import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
+import 'package:radar_labor/core/ui/app_tokens.dart';
 
 final class PreferencesScreen extends StatelessWidget {
   const PreferencesScreen({
@@ -14,19 +15,15 @@ final class PreferencesScreen extends StatelessWidget {
     required this.onChangePassword, super.key,
   });
 
-  final bool arabic;
-  final String locale;
-  final ValueChanged<String> onLocale;
-  final AppDatabase database;
-  final LocalAccount account;
-  final VoidCallback onLogout;
-  final VoidCallback onChangePassword;
+  final bool arabic; final String locale; final ValueChanged<String> onLocale;
+  final AppDatabase database; final LocalAccount account;
+  final VoidCallback onLogout, onChangePassword;
 
   bool get _canManage => account.role == AuthRole.projectManager || account.role == AuthRole.hr;
 
   @override
   Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.all(16),
+    padding: const EdgeInsets.all(AppTokens.space16),
     children: [
       Text(AppStrings.settingsTab(arabic), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
       SettingsSectionHeader(title: AppStrings.settingsGeneral(arabic)),
@@ -40,7 +37,7 @@ final class PreferencesScreen extends StatelessWidget {
               DropdownMenuItem(value: 'ar', child: Text(AppStrings.arabic(arabic))),
               DropdownMenuItem(value: 'en', child: Text(AppStrings.english(arabic))),
             ],
-            onChanged: (v) { if (v != null) onLocale(v); },
+            onChanged: (v) => {if (v != null) onLocale(v)},
           ),
         ),
       ),
@@ -53,10 +50,8 @@ final class PreferencesScreen extends StatelessWidget {
         child: ListTile(
           leading: const Icon(Icons.info_outline),
           title: Text(AppStrings.aboutApp(arabic)),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AboutAppScreen()),
-          ),
+          trailing: const Icon(Icons.arrow_forward_ios, size: AppTokens.space16),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AboutAppScreen())),
         ),
       ),
     ],

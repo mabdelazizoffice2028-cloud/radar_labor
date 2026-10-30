@@ -46,7 +46,7 @@ final class SupervisorTaskBadgeResolver {
     if (isHousing) {
       if (housingState.hasSavedRecordToday) {
         return TaskBadgeInfo(text: SupervisorTaskStrings.taskStatusSavedCompleted(arabic), icon: Icons.check_circle, color: AppTokens.statusOnSite, bg: AppTokens.statusOnSiteSoft);
-      } else if (housingState.hasDraftSaved || housingState.unreviewedCount < housingState.totalCount) {
+      } else if (housingState.hasDraftSaved || housingState.hasUnsavedChanges) {
         return TaskBadgeInfo(text: SupervisorTaskStrings.taskStatusDraftSaved(arabic), icon: Icons.edit_note, color: AppTokens.statusHousingOnly, bg: AppTokens.statusHousingOnlySoft);
       }
       return TaskBadgeInfo(text: SupervisorTaskStrings.taskStatusNotStarted(arabic), icon: Icons.pending_actions, color: AppTokens.statusNotRecorded, bg: AppTokens.statusNotRecordedSoft);

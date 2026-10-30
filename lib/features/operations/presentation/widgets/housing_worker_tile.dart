@@ -1,8 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/l10n/housing_review_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
+import 'package:radar_labor/core/ui/field_haptics.dart';
 import 'package:radar_labor/features/operations/presentation/state/housing_check_state.dart';
-import 'package:radar_labor/features/operations/presentation/widgets/search_highlight_text.dart';
+import 'package:radar_labor/features/operations/presentation/widgets/housing_worker_info.dart';
 
 final class HousingWorkerTile extends StatelessWidget {
   const HousingWorkerTile({
@@ -15,11 +16,8 @@ final class HousingWorkerTile extends StatelessWidget {
   final ValueChanged<HousingReviewState> onStateChanged;
   final String searchQuery;
 
-  static const _codeStyle = TextStyle(color: AppTokens.textSecondary, fontSize: 13);
-
   @override
   Widget build(BuildContext context) {
-    final worker = row.worker;
     final isAbsent = row.isAbsent;
     final bg = isAbsent ? AppTokens.statusUnknownSoft : AppTokens.surface;
     final border = isAbsent ? AppTokens.statusUnknown : AppTokens.outline;
@@ -35,35 +33,17 @@ final class HousingWorkerTile extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppTokens.radius12),
-        onTap: () => onStateChanged(
-          isAbsent ? HousingReviewState.reviewedPresent : HousingReviewState.absent,
-        ),
+        onTap: () {
+          FieldHaptics.selection();
+          onStateChanged(isAbsent ? HousingReviewState.reviewedPresent : HousingReviewState.absent);
+        },
         child: Padding(
           padding: const EdgeInsets.all(AppTokens.space12),
           child: Row(
             children: [
               Icon(checkIcon, color: iconColor, size: 26),
               const SizedBox(width: AppTokens.space12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SearchHighlightText(
-                      text: worker.displayName(arabic: arabic), query: searchQuery,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(arabic ? 'الإقامة: ' : 'Iqama: ', style: _codeStyle),
-                        SearchHighlightText(text: worker.code, query: searchQuery, style: _codeStyle),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+              Expanded(child: HousingWorkerInfo(worker: row.worker, arabic: arabic, searchQuery: searchQuery)),
               if (isAbsent)
                 Text(
                   HousingReviewStrings.reviewStateAbsent(arabic),

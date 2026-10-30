@@ -39,4 +39,6 @@ final class HousingReviewStrings {
   static String filterPresent(bool ar) => ar ? 'موجود' : 'Present';
 
   static String filterAbsent(bool ar) => ar ? 'غائب' : 'Absent';
+
+  static String iqamaLabel(bool ar) => ar ? 'الإقامة: ' : 'Iqama: ';
 }

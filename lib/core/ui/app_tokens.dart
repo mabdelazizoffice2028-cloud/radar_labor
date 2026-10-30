@@ -12,6 +12,7 @@ abstract final class AppTokens {
   static const textPrimary = Color(0xFF0F172A);
   static const textSecondary = Color(0xFF475569);
   static const onPrimary = Color(0xFFFFFFFF);
+  static const transparent = Color(0x00000000);
 
   // Semantic status colors
   static const statusOnSite = Color(0xFF15803D);
@@ -25,18 +26,39 @@ abstract final class AppTokens {
   static const statusNotRecorded = Color(0xFF64748B);
   static const statusNotRecordedSoft = Color(0xFFE2E8F0);
 
+  // Semantic aliases
+  static const successColor = statusOnSite;
+  static const successSoft = statusOnSiteSoft;
+  static const warningColor = statusHousingOnly;
+  static const warningSoft = statusHousingOnlySoft;
+  static const errorColor = statusUnknown;
+  static const errorSoft = statusUnknownSoft;
+  static const infoColor = statusJustified;
+  static const infoSoft = statusJustifiedSoft;
+  static const neutralColor = statusNotRecorded;
+  static const neutralSoft = statusNotRecordedSoft;
+
   // Translucent so row state colours (present/absent) remain visible.
   static const searchHighlight = Color(0x40F59E0B);
 
   // Spacing & Layout
+  static const double space2 = 2.0;
   static const double space4 = 4.0;
   static const double space8 = 8.0;
+  static const double space10 = 10.0;
   static const double space12 = 12.0;
   static const double space16 = 16.0;
+  static const double space20 = 20.0;
   static const double space24 = 24.0;
   static const double space32 = 32.0;
+  static const double space48 = 48.0;
+  static const double space64 = 64.0;
+  static const double space100 = 100.0;
+  static const double space200 = 200.0;
 
+  static const double radius8 = 8.0;
   static const double radius12 = 12.0;
+  static const double radius16 = 16.0;
   static const double radiusChip = 999.0;
 
   static const double minTouchTarget = 56.0;

@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/database/app_setting_keys.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
-import 'package:radar_labor/core/leaves/worker_leave.dart';
 import 'package:radar_labor/core/status/status_engine.dart';
 import 'package:radar_labor/core/status/status_models.dart' as model;
 import 'package:radar_labor/core/time/business_date.dart';
@@ -31,12 +29,13 @@ final class StatusSnapshotRepository {
     List<EmploymentPeriod>? periods;
     List<model.LocalEvent>? events;
     List<Setting>? settings;
+    var currentSubscribedDay = businessDate ?? businessDateFor(clock.nowUtc());
 
     void emit() {
       if (employees == null || periods == null || events == null) return;
       final now = clock.nowUtc();
       final targetDate = businessDate ?? businessDateFor(now);
-      final onLeave = _parseOnLeave(settings, targetDate);
+      final onLeave = StatusSnapshotWorkerBuilder.parseOnLeave(settings, targetDate);
       final workers = StatusSnapshotWorkerBuilder.buildProfiles(
         employees: employees!, periods: periods!, arabic: arabic, onLeaveIds: onLeave,
       );
@@ -47,13 +46,27 @@ final class StatusSnapshotRepository {
       ));
     }
 
+    void subscribeEvents(String day) {
+      subEvt?.cancel();
+      subEvt = this.events.watchBusinessDate(day).listen((v) { events = v; emit(); }, onError: controller.addError);
+    }
+
     controller = StreamController<model.StatusSnapshot>(
       onListen: () {
         subEmp = database.select(database.employees).watch().listen((v) { employees = v; emit(); }, onError: controller.addError);
         subPer = database.select(database.employmentPeriods).watch().listen((v) { periods = v; emit(); }, onError: controller.addError);
-        subEvt = this.events.watchAll().listen((v) { events = v; emit(); }, onError: controller.addError);
+        subscribeEvents(currentSubscribedDay);
         subSet = database.select(database.settings).watch().listen((v) { settings = v; emit(); }, onError: controller.addError);
-        refreshTimer = Timer.periodic(const Duration(minutes: 1), (_) => emit());
+        refreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+          if (businessDate == null) {
+            final nowDay = businessDateFor(clock.nowUtc());
+            if (nowDay != currentSubscribedDay) {
+              currentSubscribedDay = nowDay;
+              subscribeEvents(currentSubscribedDay);
+            }
+          }
+          emit();
+        });
       },
       onCancel: () async {
         refreshTimer?.cancel();
@@ -61,16 +74,5 @@ final class StatusSnapshotRepository {
       },
     );
     return controller.stream;
-  }
-
-  static Set<String> _parseOnLeave(List<Setting>? settings, String date) {
-    final raw = settings?.where((s) => s.key == AppSettingKeys.workerLeaves).firstOrNull?.value;
-    if (raw == null || raw.trim().isEmpty) return const {};
-    try {
-      final list = jsonDecode(raw) as List;
-      return list.map((e) => WorkerLeave.fromJson(e as Map<String, dynamic>)).where((l) => l.coversDate(date)).map((l) => l.employeeUid).toSet();
-    } on Exception {
-      return const {};
-    }
   }
 }

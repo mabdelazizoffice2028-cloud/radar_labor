@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/widgets/notifications_coverage_tile.dart';
+import 'package:radar_labor/core/l10n/notifications_strings.dart';
+import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/dashboard/domain/dashboard_coverage_models.dart';
 
 final class NotificationsCoverageSection extends StatelessWidget {
@@ -13,8 +15,11 @@ final class NotificationsCoverageSection extends StatelessWidget {
   final bool arabic;
 
   Widget _header(String text) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+    padding: const EdgeInsets.symmetric(vertical: AppTokens.space8),
+    child: Text(
+      text,
+      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+    ),
   );
 
   @override
@@ -27,7 +32,7 @@ final class NotificationsCoverageSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (teams.isNotEmpty) ...[
-          _header(arabic ? 'فرق لم ترصد اليوم (${teams.length})' : 'Unrecorded Teams Today (${teams.length})'),
+          _header(NotificationsStrings.unrecordedTeams(arabic, teams.length)),
           for (final t in teams)
             NotificationsCoverageTile(
               icon: Icons.groups_outlined,
@@ -37,7 +42,9 @@ final class NotificationsCoverageSection extends StatelessWidget {
             ),
         ],
         if (housings.isNotEmpty) ...[
-          _header(arabic ? 'سكنات لم ترصد اليوم (${housings.length})' : 'Unrecorded Housing Today (${housings.length})'),
+          _header(
+            NotificationsStrings.unrecordedHousings(arabic, housings.length),
+          ),
           for (final h in housings)
             NotificationsCoverageTile(
               icon: Icons.apartment_outlined,

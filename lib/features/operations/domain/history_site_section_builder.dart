@@ -35,7 +35,13 @@ final class HistorySiteSectionBuilder {
 
       final msg = WhatsappTemplateEngine.format(
         kind: WhatsappMessageKind.site, date: date, entityName: team.displayName(arabic: arabic),
-        workers: [for (final w in workers) WhatsappWorkerItem(code: w.code, name: w.displayName(arabic: arabic))],
+        workers: [
+          for (final w in workers)
+            WhatsappWorkerItem(
+              code: w.code, name: w.displayName(arabic: arabic),
+              employmentType: w.employmentType, jobCategory: w.jobCategory,
+            ),
+        ],
         arabic: arabic, strings: strings,
       );
 

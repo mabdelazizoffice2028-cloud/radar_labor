@@ -7,6 +7,7 @@ import 'package:radar_labor/core/constants/operations_constants.dart';
 import 'package:radar_labor/core/l10n/operations_strings.dart';
 import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/core/ui/app_snack_bar.dart';
+import 'package:radar_labor/core/ui/field_haptics.dart';
 import 'package:radar_labor/features/operations/domain/conflict_detector.dart';
 import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 import 'package:radar_labor/features/operations/presentation/state/site_attendance_notifier.dart';
@@ -24,7 +25,6 @@ final class SiteAttendanceSaveHandler {
     try {
       final prepared = await notifier.prepareSave();
       if (prepared == null || !context.mounted) return;
-
       var resolutions = <String, ConflictResolutionChoice>{};
       if (prepared.conflicts.isNotEmpty) {
         final res = await AttendanceConflictDialog.show(
@@ -35,14 +35,12 @@ final class SiteAttendanceSaveHandler {
         if (res == null || !context.mounted) return;
         resolutions = res;
       }
-
       final isFriday = isFridayBusinessDate(prepared.date);
       final countSummary = isFriday
           ? OperationsStrings.fridaySaveConfirm(arabic, state.presentCount)
           : OperationsStrings.presentCountLabel(arabic, state.presentCount);
       final diffLine = prepared.diff.hasChanges ? prepared.diff.totalLine(arabic) : null;
       final presentWorkers = state.rows.where((r) => r.isPresent).map((r) => r.worker).toList();
-
       final confirmed = await OperationConfirmSyncDialog.show(
         context: context, title: OperationsStrings.confirmSiteAttendanceTitle(arabic),
         entityName: prepared.team.displayName(arabic: arabic), date: prepared.date,
@@ -51,15 +49,13 @@ final class SiteAttendanceSaveHandler {
         arabic: arabic, diffLine: diffLine,
       );
       if (confirmed != true || !context.mounted) return;
-
       final result = await notifier.confirmSave(prepared: prepared, resolutions: resolutions);
       if (result == null || !context.mounted) return;
-
       await Clipboard.setData(ClipboardData(text: result.summary.messageText));
       triggerBackgroundSync(ref, actor: actor, scope: scope);
-
+      await FieldHaptics.success();
       if (!context.mounted) return;
-      AppSnackBar.show(
+      AppSnackBar.showSuccess(
         context, message: OperationsStrings.teamSavedLocally(arabic),
         duration: OperationsConstants.undoWindow,
         action: SnackBarAction(
@@ -69,10 +65,12 @@ final class SiteAttendanceSaveHandler {
       );
       if (context.mounted && Navigator.of(context).canPop()) Navigator.of(context).pop();
     } on OperationException catch (e) {
-      if (context.mounted) AppSnackBar.show(context, message: OperationFailureMessage.of(e.failure, arabic));
+      await FieldHaptics.error();
+      if (context.mounted) AppSnackBar.showError(context, message: OperationFailureMessage.of(e.failure, arabic));
     } on Object catch (e) {
+      await FieldHaptics.error();
       debugPrint('Site attendance save error: $e');
-      if (context.mounted) AppSnackBar.show(context, message: OperationsStrings.errSaveFailed(arabic));
+      if (context.mounted) AppSnackBar.showError(context, message: OperationsStrings.errSaveFailed(arabic));
     }
   }
 }

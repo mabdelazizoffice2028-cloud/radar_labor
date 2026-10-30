@@ -63,5 +63,6 @@ abstract final class SiteAttendanceRowBuilder {
 
   static WorkerOption toWorker(Employee row) => WorkerOption(
     id: row.employeeUid, code: row.employeeCode, nameAr: row.fullNameAr, nameEn: row.fullNameEn,
+    employmentType: row.employmentType, jobCategory: row.jobCategory,
   );
 }

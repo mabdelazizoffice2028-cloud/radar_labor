@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/constants/operations_constants.dart';
 import 'package:radar_labor/core/l10n/operations_strings.dart';
+import 'package:radar_labor/core/l10n/reports_and_alerts_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 
 /// Step 1 of Team Setup Wizard: Single English team name.
@@ -39,7 +40,7 @@ final class TeamWizardNameStep extends StatelessWidget {
             initialValue: currentName,
             maxLength: OperationsConstants.teamNameMaxLength,
             decoration: InputDecoration(
-              labelText: arabic ? 'اسم الفريق (بالإنجليزية)' : 'Team name (English)',
+              labelText: ReportsAndAlertsStrings.teamNameEnLabel(arabic),
               border: const OutlineInputBorder(),
             ),
             onChanged: (val) {

@@ -2,7 +2,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/accounts/accounts_admin_controller.dart';
 import 'package:radar_labor/app/accounts/local_accounts_ops.dart';
 import 'package:radar_labor/core/database/app_database.dart';
+import 'package:radar_labor/core/l10n/dev_tools_strings.dart';
 import 'package:radar_labor/core/ui/app_snack_bar.dart';
+import 'package:radar_labor/core/ui/field_haptics.dart';
 
 final class PreferencesImportCard extends StatelessWidget {
   const PreferencesImportCard({
@@ -21,15 +23,19 @@ final class PreferencesImportCard extends StatelessWidget {
         controller: AccountsAdminController(database),
         arabic: arabic,
         toast: (msg) {
-          if (context.mounted) AppSnackBar.show(context, message: msg);
+          if (context.mounted) {
+            FieldHaptics.success();
+            AppSnackBar.showSuccess(context, message: msg);
+          }
         },
       );
     } on Exception catch (e) {
+      await FieldHaptics.error();
       debugPrint('Import workforce error: $e');
       if (context.mounted) {
-        AppSnackBar.show(
+        AppSnackBar.showError(
           context,
-          message: arabic ? 'تعذر استيراد الملف' : 'Could not import the file',
+          message: DevToolsStrings.importFailed(arabic),
         );
       }
     }
@@ -39,16 +45,8 @@ final class PreferencesImportCard extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     child: ListTile(
       leading: const Icon(Icons.upload_file_outlined),
-      title: Text(
-        arabic
-            ? 'استيراد ملف العمال (Excel / CSV)'
-            : 'Import Workforce (Excel / CSV)',
-      ),
-      subtitle: Text(
-        arabic
-            ? 'تحديث بيانات العمال وتفعيل المشرفين'
-            : 'Update workers and activate supervisors',
-      ),
+      title: Text(DevToolsStrings.importCardTitle(arabic)),
+      subtitle: Text(DevToolsStrings.importCardSubtitle(arabic)),
       onTap: () => _handleTap(context),
     ),
   );

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/app_providers.dart';
+import 'package:radar_labor/core/l10n/app_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 
 final class AuthLanguageButton extends ConsumerWidget {
@@ -13,11 +14,15 @@ final class AuthLanguageButton extends ConsumerWidget {
     return TextButton.icon(
       style: TextButton.styleFrom(
         foregroundColor: AppTokens.surface,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: AppTokens.space12),
       ),
-      icon: const Icon(Icons.language, size: 20, color: AppTokens.surface),
+      icon: const Icon(
+        Icons.language,
+        size: AppTokens.space20,
+        color: AppTokens.surface,
+      ),
       label: Text(
-        isAr ? 'English' : 'عربي',
+        AppStrings.languageSwitcherTarget(isAr),
         style: const TextStyle(
           color: AppTokens.surface,
           fontWeight: FontWeight.w900,

@@ -4,6 +4,39 @@ Append one dated handoff entry for each model/session. Keep prior entries so the
 next model can understand decisions and recoveries. The newest handoff is at the
 top of the log.
 
+## 2026-10-30 — Surgical Deep Audit Fixes (10 Critical Vulnerabilities Resolved)
+
+- **Status & Verification:**
+  - lutter analyze --no-pub: No issues found! (0 errors, 0 warnings, 0 infos).
+  - lutter test --no-pub: 234 / 234 tests passed (100% success rate, +8 new tests in 	est/features/operations/surgical_audit_fixes_test.dart).
+  - Micro-modularization: Every touched / created .dart file in lib/ strictly <= 80 lines.
+  - Zero external network dependencies, 100% offline-first.
+
+- **Resolved Vulnerabilities & Architectural Refactoring:**
+  1. **Rental Workers & Equipment Operators WhatsApp Report Fix:**
+     - In operations_housing_workers_loader.dart, operations_repository.dart, site_attendance_row_builder.dart, and history_repository.dart, explicitly passed employmentType & jobCategory to WorkerOption.
+     - In history_site_section_builder.dart & history_housing_section_builder.dart, passed both fields to WhatsappWorkerItem.
+     - In operations_controller.dart & operations_housing_coordinator.dart, updated prepareHousingCheck to call store.getHousingWorkers(housing.id, date: date) to filter on-leave workers.
+  2. **Housing 'No Absences Today' Safety & Completeness:**
+     - Refactored housing_check_no_absences_handler.dart: prepares check via controller.prepareHousingCheck, prompts via OperationConfirmSyncDialog, copies WhatsApp summary to Clipboard, triggers background sync, displays AppSnackBar.showSuccess with undo action, and pops view safely.
+  3. **Supervisor Task Badge Resolver:**
+     - Fixed draft condition in supervisor_task_badge_resolver.dart for housing supervisor to only trigger on housingState.hasDraftSaved || housingState.hasUnsavedChanges, removing false positive trigger unreviewedCount < totalCount.
+  4. **Sync Gateway, Outbox Repository, & Batch Uploader:**
+     - SupabaseSyncGateway.uploadBatch: Restricted accepted IDs to ccepted when 
+es is List, fallback to all only when 
+es == null. Modularized SupabaseSnapshotFetcher.fetch to throw OperationException(DatabaseBusy()) on server failure instead of resetting 
+osterEpoch.
+     - SyncBatchUploader.upload: Replaced single-batch limit with while (true) loop uploading 500 items per batch until outbox is empty with progress safeguard.
+     - OutboxRepository: Optimized 
+eadPendingCount() with fast Drift count() queries on events and uditLogs. Merged reactive streams in watchPendingCount(). Modularized into OutboxSyncMarker and OutboxPendingReader.
+  5. **StatusSnapshotRepository Performance Optimization:**
+     - Refactored StatusSnapshotRepository.watch to subscribe to events.watchBusinessDate(targetDate) instead of database-wide watchAll(), re-subscribing on day change during 1-minute ticker. Modularized parseOnLeave into StatusSnapshotWorkerBuilder.
+  6. **Audit Trail & Memory Leak Closures:**
+     - worker_add_dialog.dart: Validates 10-digit iqama (RegExp(r'^\d{10}$')), disposes controllers in inally, records to workerHistory and AuditLogRepository, and catches errors with AppStrings.workerSaveFailed.
+     - dashboard_resolution_sheet.dart & dashboard_justification_sheet.dart: Controllers now internal with automatic dispose(). Removed memory leaks and direct SystemClock calls in dashboard_screen.dart.
+     - worker_leave_dialog.dart: Added _noteController.dispose() and injected clock support.
+     - ccounts_admin_controller.dart: Audits account creation ('account_created'), update ('account_updated'), password reset ('password_reset'), and deactivation ('account_deactivated').
+
 ## 2026-10-30 — Surgical V2.7 Upgrade: Bottom Nav User Manager, Frictionless VIP Viewer, High-Visibility Contrast & Professional Localization
 
 - **Release Artifact:** `outputs/Radar Labour.apk`
@@ -1187,4 +1220,37 @@ ental_company, iqama_expiry, rchived_at (كبديل لـ isActive).
 - **بناء الإصدار والتثبيت:**
   - `flutter build apk --release --no-pub`: نجح البناء.
   - مسار ملف الـ APK: `outputs/Radar Labour.apk` (الحجم: 69,685,371 بايت، بصمة SHA-256: `F8AACF64333554749B5FA78C682E7B91AD23F716903FA1923D2D2DEF2C78DBED`).
-  - التثبيت: تم تثبيت النسخة بنجاح على الهاتف المتصل عبر adb (الجهاز `RZGL118HQ6X`).
+  - التثبيت: تم تثبيت النسخة بنجاح على الهاتف المتصل عبر adb (الجهاز `RZGL118HQ6X`).## 2026-10-30 — Surgical Deep Audit Fixes (10 Critical Vulnerabilities Resolved)
+
+- **Status & Verification:**
+  - lutter analyze --no-pub: No issues found! (0 errors, 0 warnings, 0 infos).
+  - lutter test --no-pub: 234 / 234 tests passed (100% success rate, +8 new tests in 	est/features/operations/surgical_audit_fixes_test.dart).
+  - Micro-modularization: Every touched / created .dart file in lib/ strictly <= 80 lines.
+  - Zero external network dependencies, 100% offline-first.
+
+- **Resolved Vulnerabilities & Architectural Refactoring:**
+  1. **Rental Workers & Equipment Operators WhatsApp Report Fix:**
+     - In operations_housing_workers_loader.dart, operations_repository.dart, site_attendance_row_builder.dart, and history_repository.dart, explicitly passed employmentType & jobCategory to WorkerOption.
+     - In history_site_section_builder.dart & history_housing_section_builder.dart, passed both fields to WhatsappWorkerItem.
+     - In operations_controller.dart & operations_housing_coordinator.dart, updated prepareHousingCheck to call store.getHousingWorkers(housing.id, date: date) to filter on-leave workers.
+  2. **Housing 'No Absences Today' Safety & Completeness:**
+     - Refactored housing_check_no_absences_handler.dart: prepares check via controller.prepareHousingCheck, prompts via OperationConfirmSyncDialog, copies WhatsApp summary to Clipboard, triggers background sync, displays AppSnackBar.showSuccess with undo action, and pops view safely.
+  3. **Supervisor Task Badge Resolver:**
+     - Fixed draft condition in supervisor_task_badge_resolver.dart for housing supervisor to only trigger on housingState.hasDraftSaved || housingState.hasUnsavedChanges, removing false positive trigger unreviewedCount < totalCount.
+  4. **Sync Gateway, Outbox Repository, & Batch Uploader:**
+     - SupabaseSyncGateway.uploadBatch: Restricted accepted IDs to ccepted when 
+es is List, fallback to all only when 
+es == null. Modularized SupabaseSnapshotFetcher.fetch to throw OperationException(DatabaseBusy()) on server failure instead of resetting 
+osterEpoch.
+     - SyncBatchUploader.upload: Replaced single-batch limit with while (true) loop uploading 500 items per batch until outbox is empty with progress safeguard.
+     - OutboxRepository: Optimized 
+eadPendingCount() with fast Drift count() queries on events and uditLogs. Merged reactive streams in watchPendingCount(). Modularized into OutboxSyncMarker and OutboxPendingReader.
+  5. **StatusSnapshotRepository Performance Optimization:**
+     - Refactored StatusSnapshotRepository.watch to subscribe to events.watchBusinessDate(targetDate) instead of database-wide watchAll(), re-subscribing on day change during 1-minute ticker. Modularized parseOnLeave into StatusSnapshotWorkerBuilder.
+  6. **Audit Trail & Memory Leak Closures:**
+     - worker_add_dialog.dart: Validates 10-digit iqama (RegExp(r'^\d{10}$')), disposes controllers in inally, records to workerHistory and AuditLogRepository, and catches errors with AppStrings.workerSaveFailed.
+     - dashboard_resolution_sheet.dart & dashboard_justification_sheet.dart: Controllers now internal with automatic dispose(). Removed memory leaks and direct SystemClock calls in dashboard_screen.dart.
+     - worker_leave_dialog.dart: Added _noteController.dispose() and injected clock support.
+     - ccounts_admin_controller.dart: Audits account creation ('account_created'), update ('account_updated'), password reset ('password_reset'), and deactivation ('account_deactivated').
+
+

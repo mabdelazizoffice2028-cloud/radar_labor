@@ -40,6 +40,7 @@ final class AccountFormResult {
     this.employeeUid,
     this.teamIds = const [],
     this.housingIds = const [],
+    this.password,
   });
 
   final String? employeeUid;
@@ -47,6 +48,7 @@ final class AccountFormResult {
   final AuthRole role;
   final List<String> teamIds;
   final List<String> housingIds;
+  final String? password;
 }
 
 /// Thrown when removing the only active project manager account.

@@ -6,6 +6,8 @@ import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/database/local_settings_repository.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
+import 'package:radar_labor/core/ui/app_snack_bar.dart';
+import 'package:radar_labor/core/ui/field_haptics.dart';
 
 final class HomePasswordChanger {
   static Future<void> changePassword({
@@ -15,36 +17,37 @@ final class HomePasswordChanger {
     required bool ar,
   }) async {
     final values = await showDialog<(String, String, String)>(
-      context: context,
-      builder: (_) => UserPasswordChangeDialog(arabic: ar),
+      context: context, builder: (_) => UserPasswordChangeDialog(arabic: ar),
     );
     if (values == null || !context.mounted) return;
     final invalidLen = values.$2.length < AuthConstants.minPasswordLength ||
         values.$2.length > AuthConstants.maxPasswordLength;
     if (invalidLen || values.$2 != values.$3) {
-      _toast(context, AppStrings.passwordMismatch(ar));
+      await FieldHaptics.error();
+      if (context.mounted) AppSnackBar.showWarning(context, message: AppStrings.passwordMismatch(ar));
       return;
     }
     try {
       final auth = LocalAuthRepository(LocalSettingsRepository(database));
       final verified = await auth.signIn(role: account.role, accountId: account.id, password: values.$1);
       if (verified == null) {
-        if (context.mounted) _toast(context, AppStrings.passwordIncorrect(ar));
+        await FieldHaptics.error();
+        if (context.mounted) AppSnackBar.showError(context, message: AppStrings.passwordIncorrect(ar));
         return;
       }
       await auth.changePassword(verified, values.$2);
-      if (context.mounted) _toast(context, AppStrings.passwordChanged(ar));
+      await FieldHaptics.success();
+      if (context.mounted) AppSnackBar.showSuccess(context, message: AppStrings.passwordChanged(ar));
     } on AccountLockedException {
-      if (context.mounted) _toast(context, AppStrings.accountLocked(ar));
+      await FieldHaptics.error();
+      if (context.mounted) AppSnackBar.showError(context, message: AppStrings.accountLocked(ar));
     } on AccountDeactivatedException {
-      if (context.mounted) _toast(context, AppStrings.accountDisabled(ar));
+      await FieldHaptics.error();
+      if (context.mounted) AppSnackBar.showError(context, message: AppStrings.accountDisabled(ar));
     } on Exception catch (e) {
+      await FieldHaptics.error();
       debugPrint('Password change failed: $e');
-      if (context.mounted) _toast(context, AppStrings.passwordChangeFailed(ar));
+      if (context.mounted) AppSnackBar.showError(context, message: AppStrings.passwordChangeFailed(ar));
     }
-  }
-
-  static void _toast(BuildContext ctx, String msg) {
-    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(msg)));
   }
 }

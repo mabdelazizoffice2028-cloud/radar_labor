@@ -1,27 +1,14 @@
-import 'dart:io';
-import 'dart:math';
-import 'dart:typed_data';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import 'package:radar_labor/app/app_initializer.dart';
 import 'package:radar_labor/app/app_providers.dart';
 import 'package:radar_labor/app/auth_gate.dart';
 import 'package:radar_labor/app/home_scaffold.dart';
-import 'package:radar_labor/core/constants/app_constants.dart';
-import 'package:radar_labor/core/constants/supabase_config.dart';
+import 'package:radar_labor/app/widgets/startup_error_view.dart';
 import 'package:radar_labor/core/database/app_database.dart';
-import 'package:radar_labor/core/database/database_opener.dart';
-import 'package:radar_labor/core/database/local_settings_repository.dart';
-import 'package:radar_labor/core/events/event_repository.dart';
-import 'package:radar_labor/core/l10n/app_strings.dart';
-import 'package:radar_labor/core/time/clock.dart';
+import 'package:radar_labor/core/ui/app_theme.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Root widget of the application, managing lifecycle, providers, and unified theme.
 final class RadarLaborApp extends StatefulWidget {
   const RadarLaborApp({super.key});
 
@@ -30,13 +17,19 @@ final class RadarLaborApp extends StatefulWidget {
 }
 
 final class _RadarLaborAppState extends State<RadarLaborApp> {
-  late Future<_AppStartupState> _startup;
+  late Future<AppStartupState> _startup;
   AppDatabase? _database;
 
   @override
   void initState() {
     super.initState();
-    _startup = _open();
+    _startup = _init();
+  }
+
+  Future<AppStartupState> _init() async {
+    final state = await AppInitializer.initialize();
+    _database = state.database;
+    return state;
   }
 
   @override
@@ -45,108 +38,19 @@ final class _RadarLaborAppState extends State<RadarLaborApp> {
     super.dispose();
   }
 
-  Future<_AppStartupState> _open() async {
-    const secure = FlutterSecureStorage();
-    var key = await secure.read(key: DatabaseConstants.keyStorageName);
-    if (key == null) {
-      final bytes = Uint8List.fromList(
-        List.generate(32, (_) => Random.secure().nextInt(256)),
-      );
-      key = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-      await secure.write(key: DatabaseConstants.keyStorageName, value: key);
-    }
-    final directory = await getApplicationSupportDirectory();
-    final database = await openEncryptedDatabase(
-      File(p.join(directory.path, DatabaseConstants.fileName)),
-      key,
-    );
-    _database = database;
-    final settings = LocalSettingsRepository(database);
-    await settings.seedDefaults(locale: 'en');
-    final deviceId = await settings.ensureDeviceId();
-    final events = EventRepository(
-      database: database,
-      deviceId: deviceId,
-      clock: const SystemClock(),
-    );
-    await _initializeOptionalSupabase();
-    return _AppStartupState(database, events);
-  }
-
-  Future<void> _initializeOptionalSupabase() async {
-    if (SupabaseConfig.projectUrl.isEmpty ||
-        SupabaseConfig.publishableKey.isEmpty ||
-        SupabaseConfig.publishableKey.contains('YOUR_')) {
-      return;
-    }
-    try {
-      await Supabase.initialize(
-        url: SupabaseConfig.projectUrl,
-        publishableKey: SupabaseConfig.publishableKey,
-      );
-    } on Exception catch (error) {
-      // Supabase is optional; preserve local startup if client setup fails.
-      debugPrint('Optional Supabase setup failed (${error.runtimeType}).');
-    }
-  }
-
   @override
-  Widget build(BuildContext context) => FutureBuilder<_AppStartupState>(
+  Widget build(BuildContext context) => FutureBuilder<AppStartupState>(
     future: _startup,
     builder: (context, snapshot) {
       if (snapshot.hasError) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          home: Scaffold(
-            backgroundColor: AppTokens.background,
-            body: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppTokens.space24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      color: AppTokens.statusUnknown,
-                      size: 48,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      AppStrings.couldNotStart(false),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      snapshot.error.toString(),
-                      maxLines: 4,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: () => setState(() => _startup = _open()),
-                      child: Text(AppStrings.retry(false)),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
+        return StartupErrorView(error: snapshot.error, onRetry: () => setState(() => _startup = _init()));
       }
-
       if (!snapshot.hasData) {
         return const MaterialApp(
           debugShowCheckedModeBanner: false,
-          home: Scaffold(
-            backgroundColor: AppTokens.background,
-            body: Center(child: CircularProgressIndicator()),
-          ),
+          home: Scaffold(backgroundColor: AppTokens.background, body: Center(child: CircularProgressIndicator())),
         );
       }
-
       final startup = snapshot.data!;
       return ProviderScope(
         overrides: [
@@ -154,51 +58,22 @@ final class _RadarLaborAppState extends State<RadarLaborApp> {
           eventRepositoryProvider.overrideWithValue(startup.events),
         ],
         child: Consumer(
-          builder: (context, ref, _) {
-            final locale = ref.watch(appLocaleProvider);
-
-            return MaterialApp(
-              debugShowCheckedModeBanner: false,
-              locale: Locale(locale),
-              supportedLocales: const [Locale('en'), Locale('ar')],
-              localizationsDelegates: GlobalMaterialLocalizations.delegates,
-              theme: ThemeData(
-                useMaterial3: true,
-                fontFamily: 'Cairo',
-                colorScheme: ColorScheme.fromSeed(seedColor: AppTokens.primary),
-                scaffoldBackgroundColor: AppTokens.background,
-                appBarTheme: const AppBarTheme(
-                  backgroundColor: AppTokens.primary,
-                  foregroundColor: AppTokens.onPrimary,
-                ),
-                snackBarTheme: SnackBarThemeData(
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: AppTokens.textPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTokens.space8),
-                  ),
-                  dismissDirection: DismissDirection.horizontal,
-                ),
+          builder: (context, ref, _) => MaterialApp(
+            debugShowCheckedModeBanner: false,
+            locale: Locale(ref.watch(appLocaleProvider)),
+            supportedLocales: const [Locale('en'), Locale('ar')],
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            theme: AppTheme.light,
+            home: AuthGate(
+              database: startup.database,
+              builder: (account, onLogout) => HomeScaffold(
+                database: startup.database, events: startup.events,
+                account: account, onLogout: onLogout,
               ),
-              home: AuthGate(
-                database: startup.database,
-                builder: (account, onLogout) => HomeScaffold(
-                  database: startup.database,
-                  events: startup.events,
-                  account: account,
-                  onLogout: onLogout,
-                ),
-              ),
-            );
-          },
+            ),
+          ),
         ),
       );
     },
   );
-}
-
-final class _AppStartupState {
-  const _AppStartupState(this.database, this.events);
-  final AppDatabase database;
-  final EventRepository events;
 }

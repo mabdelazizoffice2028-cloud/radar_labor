@@ -201,10 +201,11 @@ void main() {
         throwsA(isA<OperationException>()),
       );
 
-      // fetchSnapshot returns fallback empty snapshot
-      final snapshot = await gateway.fetchSnapshot(actorUserId: 'user-1');
-      expect(snapshot.rosterEpoch, 1);
-      expect(snapshot.employees, isEmpty);
+      // fetchSnapshot throws OperationException(DatabaseBusy) on network/server failure
+      expect(
+        () => gateway.fetchSnapshot(actorUserId: 'user-1'),
+        throwsA(isA<OperationException>()),
+      );
     });
   });
 }

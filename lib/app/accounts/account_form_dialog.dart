@@ -27,6 +27,7 @@ final class AccountFormDialog extends StatefulWidget {
 
 final class _AccountFormDialogState extends State<AccountFormDialog> {
   late final _name = TextEditingController(text: widget.initial?.displayName ?? widget.employees.firstOrNull?.$2);
+  late final _password = TextEditingController();
   late String? _employeeUid = widget.employees.firstOrNull?.$1;
   late AuthRole _role = widget.initial?.role ?? AuthRole.siteSupervisor;
   late final Set<String> _teams = {...?widget.initial?.teamIds};
@@ -35,6 +36,7 @@ final class _AccountFormDialogState extends State<AccountFormDialog> {
   @override
   void dispose() {
     _name.dispose();
+    _password.dispose();
     super.dispose();
   }
 
@@ -49,6 +51,7 @@ final class _AccountFormDialogState extends State<AccountFormDialog> {
       employeeUid: _role == AuthRole.viewer ? null : _employeeUid,
       initialEmployeeUid: widget.initial?.employeeUid, displayName: name,
       role: _role, teams: _teams,
+      password: _password.text.trim().isEmpty ? null : _password.text.trim(),
     ));
   }
 
@@ -57,7 +60,8 @@ final class _AccountFormDialogState extends State<AccountFormDialog> {
     title: Text(widget.initial == null ? AdminStrings.addUser(widget.arabic) : AdminStrings.editUser(widget.arabic)),
     content: AccountFormFields(
       arabic: widget.arabic, isAdding: widget.initial == null,
-      employees: widget.employees, nameController: _name, selectedRole: _role,
+      employees: widget.employees, nameController: _name,
+      passwordController: _password, selectedRole: _role,
       teams: widget.teams, selectedTeams: _teams, errorMessage: _error,
       onSelectEmployee: (uid, name) => setState(() { _employeeUid = uid; _name.text = name; }),
       onRoleChanged: (r) => setState(() => _role = r),

@@ -13,6 +13,7 @@ abstract final class AppStrings {
   static String language(bool ar) => ar ? 'اللغة' : 'Language';
   static String arabic(bool ar) => ar ? 'العربية' : 'Arabic';
   static String english(bool ar) => ar ? 'الإنجليزية' : 'English';
+  static String languageSwitcherTarget(bool isAr) => isAr ? 'English' : 'عربي';
   static String signOut(bool ar) => ar ? 'تسجيل الخروج' : 'Sign out';
   static String changePassword(bool ar) => ar ? 'تغيير كلمة المرور' : 'Change password';
   static String currentPassword(bool ar) => ar ? 'كلمة المرور الحالية' : 'Current password';
@@ -65,6 +66,7 @@ abstract final class AppStrings {
   static String markAbsent(bool ar) => AppEntitiesStrings.markAbsent(ar);
   static String assignTeamHousingFirst(bool ar) => AppEntitiesStrings.assignTeamHousingFirst(ar);
   static String workerCodeExists(bool ar) => AppEntitiesStrings.workerCodeExists(ar);
+  static String invalidIqama(bool ar) => AppEntitiesStrings.invalidIqama(ar);
   static String workerSaveFailed(bool ar) => AppEntitiesStrings.workerSaveFailed(ar);
   static String addTeam(bool ar) => AppEntitiesStrings.addTeam(ar);
   static String addHousing(bool ar) => AppEntitiesStrings.addHousing(ar);

@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/widgets/notification_providers.dart';
 import 'package:radar_labor/app/widgets/notifications_sheet.dart';
+import 'package:radar_labor/core/l10n/notifications_strings.dart';
+import 'package:radar_labor/core/ui/app_tokens.dart';
 
 final class NotificationBadge extends ConsumerWidget {
   const NotificationBadge({required this.arabic, super.key});
@@ -12,16 +14,16 @@ final class NotificationBadge extends ConsumerWidget {
     final hasAlerts = ref.watch(hasUnrecordedOrPendingProvider);
 
     return Semantics(
-      label: arabic ? 'التنبيهات' : 'Notifications',
+      label: NotificationsStrings.centerLabel(arabic),
       button: true,
       child: IconButton(
         icon: Badge(
           isLabelVisible: hasAlerts,
-          backgroundColor: Colors.red.shade600,
-          smallSize: 8,
+          backgroundColor: AppTokens.statusUnknown,
+          smallSize: AppTokens.space8,
           child: const Icon(Icons.notifications_outlined),
         ),
-        tooltip: arabic ? 'مركز التنبيهات' : 'Notification Center',
+        tooltip: NotificationsStrings.centerTitle(arabic),
         onPressed: () => NotificationsSheet.show(context, arabic: arabic),
       ),
     );

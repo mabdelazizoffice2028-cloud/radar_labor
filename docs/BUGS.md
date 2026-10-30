@@ -34,6 +34,36 @@
 
 ## محلولة
 
+### B-012 — اختفاء عمال الإيجار ومشغلي المعدات من تقارير الواتساب
+- **العَرَض:** ظهور تصنيف عمال الإيجار دائماً بـ 0 في تقارير الواتساب لسكن العمال والسجل التاريخي.
+- **السبب:** إغفال تمرير employmentType و jobCategory عند إنشاء WorkerOption في OperationsHousingWorkersLoader و OperationsRepository و SiteAttendanceRowBuilder و HistoryRepository.
+- **الحل:** تمرير الحقلين بدقة إلى WorkerOption و WhatsappWorkerItem.
+- **التحقق:** اختبار surgical_audit_fixes_test.dart نجح 100%.
+
+### B-013 — خلل مسار زر 'لا يوجد غياب اليوم' في السكن
+- **العَرَض:** الحفظ المباشر دون تأكيد، عدم نسخ رسالة الواتساب، عدم إطلاق المزامنة، وعدم إتاحة التراجع.
+- **الحل:** إعادة بناء housing_check_no_absences_handler.dart ليمر بحوار التأكيد، الحفظ، نسخ الواتساب، إطلاق المزامنة، وعرض زر التراجع.
+- **التحقق:** فحص ساكن واختبارات العمليات نجحت 100%.
+
+### B-014 — ظهور شارة 'مسودة محفوظة' خطأً لمشرف السكن
+- **العَرَض:** تحقق شرط unreviewedCount < totalCount خطأً عند بدء التطبيق لأن العمال يأخذون حالة 
+eviewedPresent افتراضياً.
+- **الحل:** قصر الشرط على housingState.hasDraftSaved || housingState.hasUnsavedChanges.
+- **التحقق:** اختبار surgical_audit_fixes_test.dart نجح 100%.
+
+### B-015 — ضياع الأحداث المرفوضة في SupabaseSyncGateway وتوقف الرفع عند 500 حدث
+- **العَرَض:** تعليم كل الأحداث كـ synced حتى لو رفضها السيرفر، وتوقف SyncBatchUploader عند أول 500 حدث.
+- **الحل:** اعتماد معرفات ccepted فعلياً من الـ RPC، وتوسيع SyncBatchUploader بحلقة while (true) حتى تفريغ الصندوق، وتحسين 
+eadPendingCount باستعلام count().
+- **التحقق:** اختبار surgical_audit_fixes_test.dart اختبر رفع 600 حدث عبر دفعتين ونجح 100%.
+
+### B-016 — تسريب TextEditingController واستدعاء SystemClock المباشر
+- **العَرَض:** عدم عمل dispose() لحقول الإدخال في نوافذ الحل والتبرير والإجازات واستخدام ساعة النظام مباشرة.
+- **الحل:** جعل الحقول داخلية مع dispose() تلقائي في State وحقن الساعة Clock.
+- **التحقق:** فحص الكود الساكن واختبارات البنية نجحت بالكامل.
+
+
+
 ### B-011 — Windows Smart App Control يمنع تشغيل gen_snapshot أثناء بناء armeabi-v7a
 
 - **العَرَض:** ظهور خطأ ProcessException: An Application Control policy has blocked this file عند محاولة تشغيل lutter build apk مباشرة في PowerShell؛ يمنع Windows سياسة التطبيقات (Smart App Control / WDAC) من تنفيذ gen_snapshot.exe في مجلد engine\\android-arm-release.

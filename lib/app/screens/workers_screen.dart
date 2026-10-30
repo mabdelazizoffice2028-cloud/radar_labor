@@ -3,9 +3,16 @@ import 'package:radar_labor/app/screens/worker_add_dialog.dart';
 import 'package:radar_labor/app/screens/worker_list_view.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
+import 'package:radar_labor/core/ui/app_snack_bar.dart';
+import 'package:radar_labor/core/ui/app_tokens.dart';
 
 final class WorkersScreen extends StatefulWidget {
-  const WorkersScreen({required this.database, required this.arabic, this.events, super.key});
+  const WorkersScreen({
+    required this.database,
+    required this.arabic,
+    this.events,
+    super.key,
+  });
 
   final AppDatabase database;
   final bool arabic;
@@ -20,13 +27,13 @@ final class _WorkersScreenState extends State<WorkersScreen> {
 
   void _showMessage(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppSnackBar.showWarning(context, message: msg);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppTokens.transparent,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => showAddWorkerDialog(
           context: context,
@@ -40,7 +47,7 @@ final class _WorkersScreenState extends State<WorkersScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTokens.space12),
             child: TextField(
               onChanged: (v) => setState(() => _query = v),
               decoration: InputDecoration(

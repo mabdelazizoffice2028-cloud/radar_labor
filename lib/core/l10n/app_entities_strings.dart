@@ -20,6 +20,8 @@ abstract final class AppEntitiesStrings {
       : 'Assign the worker to a team and CAMPOS first';
   static String workerCodeExists(bool ar) =>
       ar ? 'رقم العامل مستخدم بالفعل' : 'Worker code already exists';
+  static String invalidIqama(bool ar) =>
+      ar ? 'رقم الإقامة يجب أن يتكون من 10 أرقام' : 'Iqama number must be 10 digits';
   static String workerSaveFailed(bool ar) => ar
       ? 'تعذر حفظ العامل. حاول مرة أخرى.'
       : 'Could not save the worker. Please try again.';

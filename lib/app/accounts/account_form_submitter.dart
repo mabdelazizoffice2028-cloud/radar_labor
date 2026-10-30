@@ -12,16 +12,20 @@ final class AccountFormSubmitter {
     required String displayName,
     required AuthRole role,
     required Set<String> teams,
+    String? password,
   }) {
     final effectiveHousings = role == AuthRole.housingSupervisor
         ? const [HousingConstants.defaultHousingId]
         : const <String>[];
     return AccountFormResult(
-      employeeUid: role == AuthRole.viewer ? null : (isAdding ? employeeUid : initialEmployeeUid),
+      employeeUid: role == AuthRole.viewer
+          ? null
+          : (isAdding ? employeeUid : initialEmployeeUid),
       displayName: displayName.trim(),
       role: role,
       teamIds: role == AuthRole.siteSupervisor ? teams.toList() : const [],
       housingIds: effectiveHousings,
+      password: password,
     );
   }
 }

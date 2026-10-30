@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/l10n/dashboard_strings.dart';
 import 'package:radar_labor/core/status/status_models.dart';
 import 'package:radar_labor/core/time/business_date.dart';
+import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/dashboard/presentation/dashboard_status_card_item.dart';
 
 final class DashboardStatusCards extends StatelessWidget {
@@ -23,11 +24,11 @@ final class DashboardStatusCards extends StatelessWidget {
         children: [
           DashboardStatusCardItem(
             count: ot, label: DashboardStrings.fridayOvertimeCard(arabic),
-            icon: Icons.more_time, color: const Color(0xff15803d),
+            icon: Icons.more_time, color: AppTokens.statusOnSite,
           ),
           DashboardStatusCardItem(
             count: rest < 0 ? 0 : rest, label: DashboardStrings.fridayRestCard(arabic),
-            icon: Icons.beach_access_outlined, color: Colors.blueGrey,
+            icon: Icons.beach_access_outlined, color: AppTokens.statusNotRecorded,
           ),
         ],
       );
@@ -39,19 +40,19 @@ final class DashboardStatusCards extends StatelessWidget {
       children: [
         DashboardStatusCardItem(
           count: snapshot.count(WorkerStatus.onSite), label: DashboardStrings.presentOnSiteCard(arabic),
-          icon: Icons.check_circle_outline, color: const Color(0xff15803d),
+          icon: Icons.check_circle_outline, color: AppTokens.statusOnSite,
         ),
         DashboardStatusCardItem(
           count: absent, label: DashboardStrings.absentCard(arabic),
-          icon: Icons.warning_amber_rounded, color: const Color(0xffb91c1c),
+          icon: Icons.warning_amber_rounded, color: AppTokens.statusUnknown,
         ),
         DashboardStatusCardItem(
           count: snapshot.count(WorkerStatus.justified), label: DashboardStrings.justifiedCard(arabic),
-          icon: Icons.verified_outlined, color: const Color(0xff0e7490),
+          icon: Icons.verified_outlined, color: AppTokens.statusJustified,
         ),
         DashboardStatusCardItem(
           count: snapshot.count(WorkerStatus.notRecorded), label: DashboardStrings.notRecordedCard(arabic),
-          icon: Icons.schedule_outlined, color: Colors.blueGrey,
+          icon: Icons.schedule_outlined, color: AppTokens.statusNotRecorded,
         ),
       ],
     );

@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/auth/role_capabilities.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
 import 'package:radar_labor/core/l10n/history_strings.dart';
+import 'package:radar_labor/core/l10n/reports_and_alerts_strings.dart';
 
 final class HomeScaffoldSectionMeta {
   static IconData iconForSection(AppSection section) => switch (section) {
@@ -13,12 +14,13 @@ final class HomeScaffoldSectionMeta {
     AppSection.settings => Icons.settings_outlined,
   };
 
-  static String labelForSection(AppSection section, bool ar) => switch (section) {
-    AppSection.dashboard => ar ? 'لوحة المتابعة' : 'Dashboard',
-    AppSection.workers => ar ? 'العمال' : 'Workers',
-    AppSection.users => ar ? 'المستخدمين' : 'Users',
-    AppSection.checkIn => ar ? 'التسجيل اليومي' : 'Daily Check',
-    AppSection.history => HistoryStrings.historyTab(ar),
-    AppSection.settings => AppStrings.settingsTab(ar),
-  };
+  static String labelForSection(AppSection section, bool ar) =>
+      switch (section) {
+        AppSection.dashboard => ReportsAndAlertsStrings.dashboardTab(ar),
+        AppSection.workers => AppStrings.workersTab(ar),
+        AppSection.users => ReportsAndAlertsStrings.usersTab(ar),
+        AppSection.checkIn => AppStrings.checkInTab(ar),
+        AppSection.history => HistoryStrings.historyTab(ar),
+        AppSection.settings => AppStrings.settingsTab(ar),
+      };
 }

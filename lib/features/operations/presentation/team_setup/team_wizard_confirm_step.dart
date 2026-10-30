@@ -11,13 +11,10 @@ final class TeamWizardConfirmStep extends StatelessWidget {
     required this.onBack, required this.onConfirm, super.key,
   });
 
-  final bool arabic;
-  final String teamNameAr;
-  final String teamNameEn;
+  final bool arabic, isSaving;
+  final String teamNameAr, teamNameEn;
   final List<SelectableWorker> selectedWorkers;
-  final bool isSaving;
-  final VoidCallback onBack;
-  final VoidCallback onConfirm;
+  final VoidCallback onBack, onConfirm;
 
   @override
   Widget build(BuildContext context) {
@@ -39,25 +36,18 @@ final class TeamWizardConfirmStep extends StatelessWidget {
           const SizedBox(height: AppTokens.space12),
           Text(OperationsStrings.confirmWorkersTitle(arabic), style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: AppTokens.space8),
-          Expanded(
-            child: TeamWizardConfirmWorkersList(selectedWorkers: selectedWorkers, arabic: arabic),
-          ),
+          Expanded(child: TeamWizardConfirmWorkersList(selectedWorkers: selectedWorkers, arabic: arabic)),
           SafeArea(
             top: false,
             child: Row(
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: isSaving ? null : onBack,
-                    child: Text(OperationsStrings.wizardBack(arabic)),
-                  ),
-                ),
+                Expanded(child: OutlinedButton(onPressed: isSaving ? null : onBack, child: Text(OperationsStrings.wizardBack(arabic)))),
                 const SizedBox(width: AppTokens.space12),
                 Expanded(
                   child: FilledButton(
                     onPressed: isSaving ? null : onConfirm,
                     child: isSaving
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        ? const SizedBox(width: AppTokens.space20, height: AppTokens.space20, child: CircularProgressIndicator(strokeWidth: 2))
                         : Text(OperationsStrings.confirmAndSave(arabic)),
                   ),
                 ),

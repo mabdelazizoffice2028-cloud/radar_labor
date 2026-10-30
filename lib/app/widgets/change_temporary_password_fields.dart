@@ -31,7 +31,7 @@ final class ChangeTemporaryPasswordFields extends StatelessWidget {
           AuthFlowStrings.changeTemporaryPasswordDescription(arabic),
           style: const TextStyle(fontSize: 13, color: AppTokens.textSecondary),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTokens.space16),
         TextField(
           controller: passwordCtrl,
           obscureText: obscure,
@@ -48,7 +48,7 @@ final class ChangeTemporaryPasswordFields extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTokens.space12),
         TextField(
           controller: confirmCtrl,
           obscureText: obscure,
@@ -58,10 +58,13 @@ final class ChangeTemporaryPasswordFields extends StatelessWidget {
           ),
         ),
         if (errorMessage != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTokens.space12),
           Text(
             errorMessage!,
-            style: const TextStyle(color: AppTokens.statusUnknown, fontSize: 13),
+            style: const TextStyle(
+              color: AppTokens.statusUnknown,
+              fontSize: 13,
+            ),
           ),
         ],
       ],

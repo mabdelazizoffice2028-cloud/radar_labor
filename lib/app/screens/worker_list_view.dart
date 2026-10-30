@@ -2,6 +2,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/screens/worker_list_tile.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
+import 'package:radar_labor/core/ui/app_tokens.dart';
+import 'package:radar_labor/core/ui/components/app_empty_state.dart';
 
 class WorkerListView extends StatelessWidget {
   const WorkerListView({
@@ -28,15 +30,16 @@ class WorkerListView extends StatelessWidget {
               (w.fullNameEn ?? '').toLowerCase().contains(q);
         }).toList();
         if (list.isEmpty) {
-          return Center(child: Text(AppStrings.noWorkersYet(arabic)));
+          return AppEmptyState(
+            icon: Icons.people_outline,
+            message: AppStrings.noWorkersYet(arabic),
+          );
         }
         return ListView.builder(
-          padding: const EdgeInsets.only(bottom: 100),
+          padding: const EdgeInsets.only(bottom: AppTokens.space100),
           itemCount: list.length,
-          itemBuilder: (context, i) => WorkerListTile(
-            worker: list[i],
-            arabic: arabic,
-          ),
+          itemBuilder: (context, i) =>
+              WorkerListTile(worker: list[i], arabic: arabic),
         );
       },
     );

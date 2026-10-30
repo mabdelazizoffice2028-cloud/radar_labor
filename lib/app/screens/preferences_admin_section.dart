@@ -7,26 +7,22 @@ import 'package:radar_labor/core/database/local_settings_repository.dart';
 import 'package:radar_labor/core/database/lockout_settings_extension.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
 import 'package:radar_labor/core/l10n/lockout_strings.dart';
+import 'package:radar_labor/core/ui/app_tokens.dart';
 
 final class PreferencesAdminSection extends StatefulWidget {
   const PreferencesAdminSection({required this.database, required this.arabic, super.key});
-  final AppDatabase database;
-  final bool arabic;
+  final AppDatabase database; final bool arabic;
 
   @override
   State<PreferencesAdminSection> createState() => _PreferencesAdminSectionState();
 }
 
 final class _PreferencesAdminSectionState extends State<PreferencesAdminSection> {
-  int _housingHour = 20;
-  int _siteHour = 23;
+  int _housingHour = 20; int _siteHour = 23;
   LocalSettingsRepository get _settings => LocalSettingsRepository(widget.database);
 
   @override
-  void initState() {
-    super.initState();
-    _load();
-  }
+  void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
     final h = await _settings.readHousingLockoutHour();
@@ -40,8 +36,11 @@ final class _PreferencesAdminSectionState extends State<PreferencesAdminSection>
       title: Text(title),
       trailing: DropdownButton<int>(
         value: val,
-        items: [for (var i = 0; i < 24; i++) DropdownMenuItem(value: i, child: Text(LockoutStrings.hourFormat(i, widget.arabic)))],
-        onChanged: (v) { if (v != null) onChanged(v); },
+        items: [
+          for (var i = 0; i < 24; i++)
+            DropdownMenuItem(value: i, child: Text(LockoutStrings.hourFormat(i, widget.arabic))),
+        ],
+        onChanged: (v) => {if (v != null) onChanged(v)},
       ),
     ),
   );
@@ -53,14 +52,12 @@ final class _PreferencesAdminSectionState extends State<PreferencesAdminSection>
       SettingsSectionHeader(title: AppStrings.settingsAdministration(widget.arabic)),
       PreferencesImportCard(database: widget.database, arabic: widget.arabic),
       _tile(LockoutStrings.housingLockout(widget.arabic), _housingHour, (v) async {
-        setState(() => _housingHour = v);
-        await _settings.writeHousingLockoutHour(v);
+        setState(() => _housingHour = v); await _settings.writeHousingLockoutHour(v);
       }),
       _tile(LockoutStrings.siteLockout(widget.arabic), _siteHour, (v) async {
-        setState(() => _siteHour = v);
-        await _settings.writeSiteLockoutHour(v);
+        setState(() => _siteHour = v); await _settings.writeSiteLockoutHour(v);
       }),
-      const SizedBox(height: 8),
+      const SizedBox(height: AppTokens.space8),
       PreferencesDevToolCard(database: widget.database, arabic: widget.arabic),
     ],
   );

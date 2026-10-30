@@ -71,6 +71,9 @@ final class OperationsRepository implements OperationsStore {
       OperationsUndoExecutor.execute(events, plan, actorUserId: actorUserId);
 
   List<WorkerOption> _toWorkers(List<Employee> rows) => List.unmodifiable(
-    rows.map((r) => WorkerOption(id: r.employeeUid, code: r.employeeCode, nameAr: r.fullNameAr, nameEn: r.fullNameEn)),
+    rows.map((r) => WorkerOption(
+      id: r.employeeUid, code: r.employeeCode, nameAr: r.fullNameAr,
+      nameEn: r.fullNameEn, employmentType: r.employmentType, jobCategory: r.jobCategory,
+    )),
   );
 }

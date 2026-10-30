@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/accounts/account_form_dialog.dart';
+import 'package:radar_labor/app/accounts/account_password_field.dart';
 import 'package:radar_labor/app/accounts/account_team_scope_tile.dart';
 import 'package:radar_labor/app/accounts/account_worker_search_field.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
@@ -12,6 +13,7 @@ final class AccountFormFields extends StatelessWidget {
     required this.isAdding,
     required this.employees,
     required this.nameController,
+    required this.passwordController,
     required this.selectedRole,
     required this.teams,
     required this.selectedTeams,
@@ -24,7 +26,7 @@ final class AccountFormFields extends StatelessWidget {
 
   final bool arabic, isAdding;
   final List<ScopeOption> employees;
-  final TextEditingController nameController;
+  final TextEditingController nameController, passwordController;
   final AuthRole selectedRole;
   final List<ScopeOption> teams;
   final Set<String> selectedTeams;
@@ -41,15 +43,9 @@ final class AccountFormFields extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (isAdding && selectedRole != AuthRole.viewer)
-            AccountWorkerSearchField(
-              arabic: arabic,
-              employees: employees,
-              onSelectEmployee: onSelectEmployee,
-            ),
-          TextField(
-            controller: nameController,
-            decoration: InputDecoration(labelText: AdminStrings.displayNameLabel(arabic)),
-          ),
+            AccountWorkerSearchField(arabic: arabic, employees: employees, onSelectEmployee: onSelectEmployee),
+          TextField(controller: nameController, decoration: InputDecoration(labelText: AdminStrings.displayNameLabel(arabic))),
+          if (isAdding) AccountPasswordField(arabic: arabic, controller: passwordController),
           DropdownButtonFormField<AuthRole>(
             isExpanded: true,
             initialValue: selectedRole,
@@ -61,12 +57,7 @@ final class AccountFormFields extends StatelessWidget {
             onChanged: (r) => {if (r != null) onRoleChanged(r)},
           ),
           if (selectedRole == AuthRole.siteSupervisor)
-            AccountTeamScopeTile(
-              arabic: arabic,
-              teams: teams,
-              selectedTeams: selectedTeams,
-              onToggleTeam: onToggleTeam,
-            ),
+            AccountTeamScopeTile(arabic: arabic, teams: teams, selectedTeams: selectedTeams, onToggleTeam: onToggleTeam),
           if (errorMessage != null)
             Padding(
               padding: const EdgeInsets.only(top: 12),

@@ -6,43 +6,58 @@ import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:uuid/uuid.dart';
 
 class WorkerLeaveDialog extends StatefulWidget {
-  const WorkerLeaveDialog({required this.employeeUid, required this.actorUserId, required this.arabic, super.key});
-  final String employeeUid;
-  final String? actorUserId;
-  final bool arabic;
+  const WorkerLeaveDialog({
+    required this.employeeUid, required this.actorUserId, required this.arabic,
+    this.clock = const SystemClock(), super.key,
+  });
+  final String employeeUid; final String? actorUserId;
+  final bool arabic; final Clock clock;
 
-  static Future<WorkerLeave?> show(BuildContext context, {required String employeeUid, required String? actorUserId, required bool arabic}) =>
-      showDialog<WorkerLeave>(context: context, builder: (_) => WorkerLeaveDialog(employeeUid: employeeUid, actorUserId: actorUserId, arabic: arabic));
+  static Future<WorkerLeave?> show(
+    BuildContext context, {
+    required String employeeUid, required String? actorUserId, required bool arabic,
+    Clock clock = const SystemClock(),
+  }) => showDialog<WorkerLeave>(
+    context: context,
+    builder: (_) => WorkerLeaveDialog(employeeUid: employeeUid, actorUserId: actorUserId, arabic: arabic, clock: clock),
+  );
 
   @override
   State<WorkerLeaveDialog> createState() => _WorkerLeaveDialogState();
 }
 
 class _WorkerLeaveDialogState extends State<WorkerLeaveDialog> {
-  late DateTime _start;
-  late DateTime _end;
+  late DateTime _start, _end;
   final _noteController = TextEditingController();
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    final now = const SystemClock().nowUtc();
+    final now = widget.clock.nowUtc();
     _start = DateTime.utc(now.year, now.month, now.day);
     _end = DateTime.utc(now.year, now.month, now.day);
   }
 
-  String _fmt(DateTime dt) => '${dt.year.toString().padLeft(4, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  String _fmt(DateTime dt) =>
+      '${dt.year.toString().padLeft(4, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
 
   Future<void> _pick(bool isStart) async {
     final cur = isStart ? _start : _end;
-    final picked = await showDatePicker(context: context, initialDate: cur, firstDate: DateTime(2020), lastDate: DateTime(2035));
+    final picked = await showDatePicker(
+      context: context, initialDate: cur, firstDate: DateTime(2020), lastDate: DateTime(2035),
+    );
     if (picked != null) setState(() => isStart ? _start = picked : _end = picked);
   }
 
   void _submit() {
-    final s = _fmt(_start);
-    final e = _fmt(_end);
+    final s = _fmt(_start); final e = _fmt(_end);
     if (e.compareTo(s) < 0) {
       setState(() => _error = WorkerSummaryStrings.invalidDateRange(widget.arabic));
       return;

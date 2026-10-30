@@ -47,7 +47,10 @@ final class HistoryRepository implements HistoryStore {
     };
     final workersById = {
       for (final e in allEmployees)
-        e.employeeUid: WorkerOption(id: e.employeeUid, code: e.employeeCode, nameAr: e.fullNameAr, nameEn: e.fullNameEn),
+        e.employeeUid: WorkerOption(
+          id: e.employeeUid, code: e.employeeCode, nameAr: e.fullNameAr, nameEn: e.fullNameEn,
+          employmentType: e.employmentType, jobCategory: e.jobCategory,
+        ),
     };
     final userNamesById = {for (final u in allUsers) u.id: u.displayName};
 

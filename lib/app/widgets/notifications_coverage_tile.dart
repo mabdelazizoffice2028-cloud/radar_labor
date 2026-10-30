@@ -1,4 +1,6 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:radar_labor/core/l10n/notifications_strings.dart';
+import 'package:radar_labor/core/ui/app_tokens.dart';
 
 final class NotificationsCoverageTile extends StatelessWidget {
   const NotificationsCoverageTile({
@@ -16,28 +18,34 @@ final class NotificationsCoverageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
-    margin: const EdgeInsets.only(bottom: 6),
+    margin: const EdgeInsets.only(bottom: AppTokens.space8),
     child: ListTile(
       dense: true,
-      leading: Icon(icon, color: Colors.amber.shade800),
+      leading: Icon(icon, color: AppTokens.statusHousingOnly),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
       subtitle: supervisors.isNotEmpty
           ? Text(
-              '${arabic ? 'المشرف:' : 'Supervisor:'} $supervisors',
-              style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+              '${NotificationsStrings.supervisorPrefix(arabic)}$supervisors',
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppTokens.textSecondary,
+              ),
             )
           : null,
       trailing: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTokens.space8,
+          vertical: AppTokens.space4,
+        ),
         decoration: BoxDecoration(
-          color: Colors.amber.shade100,
-          borderRadius: BorderRadius.circular(8),
+          color: AppTokens.statusHousingOnlySoft,
+          borderRadius: BorderRadius.circular(AppTokens.radius8),
         ),
         child: Text(
-          arabic ? 'لم يُرصد' : 'Missing',
-          style: TextStyle(
+          NotificationsStrings.missingBadge(arabic),
+          style: const TextStyle(
             fontSize: 11,
-            color: Colors.amber.shade900,
+            color: AppTokens.statusHousingOnly,
             fontWeight: FontWeight.bold,
           ),
         ),

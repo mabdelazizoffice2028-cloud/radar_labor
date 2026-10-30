@@ -43,6 +43,8 @@ abstract final class OperationsHousingWorkersLoader {
       code: r.employeeCode,
       nameAr: r.fullNameAr,
       nameEn: r.fullNameEn,
+      employmentType: r.employmentType,
+      jobCategory: r.jobCategory,
     )),
   );
 }

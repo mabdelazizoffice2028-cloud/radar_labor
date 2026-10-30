@@ -179,4 +179,21 @@ void main() {
     expect(updated.teamIds, containsAll(['team-alpha', 'team-beta']));
     expect(updated.housingIds, contains('housing-1'));
   });
+  test('createAccount_withCustomPassword sets and verifies custom password', () async {
+    final id = await auth.createAccount(
+      displayName: 'Viewer Custom',
+      role: AuthRole.viewer,
+      customPassword: 'myCustomPassword123',
+    );
+    final account = (await auth.accounts()).firstWhere((a) => a.id == id);
+    expect(account.mustChangePassword, isFalse);
+    expect(
+      await auth.signIn(role: AuthRole.viewer, accountId: id, password: 'myCustomPassword123'),
+      isNotNull,
+    );
+    expect(
+      await auth.signIn(role: AuthRole.viewer, accountId: id, password: '123456'),
+      isNull,
+    );
+  });
 }

@@ -67,8 +67,10 @@ final class LocalAuthRepository {
   Future<String> createAccount({
     String? employeeUid, required String displayName, required AuthRole role,
     List<String> teamIds = const [], List<String> housingIds = const [],
+    String? customPassword,
   }) => _mutator.createAccount(
         employeeUid: employeeUid, displayName: displayName, role: role,
         teamIds: teamIds, housingIds: housingIds,
+        customPassword: customPassword,
       );
 }

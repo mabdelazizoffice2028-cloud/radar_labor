@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:radar_labor/core/ui/app_tokens.dart';
 
 final class DashboardStatusCardItem extends StatelessWidget {
   const DashboardStatusCardItem({
@@ -17,7 +18,7 @@ final class DashboardStatusCardItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Card(
     child: Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTokens.space12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -33,7 +34,7 @@ final class DashboardStatusCardItem extends StatelessWidget {
                   color: color,
                 ),
               ),
-              Icon(icon, color: color, size: 24),
+              Icon(icon, color: color, size: AppTokens.space24),
             ],
           ),
           Text(

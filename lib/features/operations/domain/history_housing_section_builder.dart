@@ -8,29 +8,17 @@ import 'package:radar_labor/features/operations/domain/whatsapp_template_engine.
 
 final class HistoryHousingSectionBuilder {
   static void buildCards({
-    required String date,
-    required AttendanceLedger ledger,
-    required ActorContext actor,
-    required ScopeSnapshot scope,
-    required Map<String, EntityOption> housingsById,
-    required Map<String, WorkerOption> workersById,
-    required Map<String, String> userNamesById,
-    required String todayBusinessDate,
-    required bool arabic,
-    required AttendanceMessageStrings strings,
-    required List<HistoryDayCard> cards,
+    required String date, required AttendanceLedger ledger, required ActorContext actor,
+    required ScopeSnapshot scope, required Map<String, EntityOption> housingsById,
+    required Map<String, WorkerOption> workersById, required Map<String, String> userNamesById,
+    required String todayBusinessDate, required bool arabic,
+    required AttendanceMessageStrings strings, required List<HistoryDayCard> cards,
     required List<WorkerOption> Function(Set<String> ids) sortWorkers,
   }) {
     final viewAll = actor.capabilities.canViewAllHistory;
-    final housingIds = viewAll
-        ? housingsById.keys.toList()
-        : scope.housingIds.where(housingsById.containsKey).toList();
-    housingIds.sort((a, b) {
-      final ha = housingsById[a]!;
-      final hb = housingsById[b]!;
-      return NameCollation.sortKey(ha.displayName(arabic: arabic))
-          .compareTo(NameCollation.sortKey(hb.displayName(arabic: arabic)));
-    });
+    final housingIds = viewAll ? housingsById.keys.toList() : scope.housingIds.where(housingsById.containsKey).toList();
+    housingIds.sort((a, b) => NameCollation.sortKey(housingsById[a]!.displayName(arabic: arabic))
+        .compareTo(NameCollation.sortKey(housingsById[b]!.displayName(arabic: arabic))));
 
     for (final housingId in housingIds) {
       if (!ledger.isHousingChecked(housingId)) continue;
@@ -49,7 +37,10 @@ final class HistoryHousingSectionBuilder {
         entityName: housing.displayName(arabic: arabic),
         workers: [
           for (final w in workers)
-            WhatsappWorkerItem(code: w.code, name: w.displayName(arabic: arabic)),
+            WhatsappWorkerItem(
+              code: w.code, name: w.displayName(arabic: arabic),
+              employmentType: w.employmentType, jobCategory: w.jobCategory,
+            ),
         ],
         arabic: arabic,
         strings: strings,

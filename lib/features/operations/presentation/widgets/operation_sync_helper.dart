@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/app_providers.dart';
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
-import 'package:radar_labor/core/ui/app_tokens.dart';
+import 'package:radar_labor/core/ui/app_snack_bar.dart';
 import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 import 'package:radar_labor/features/operations/domain/operation_sync_outcome.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/operation_sync_message.dart';
@@ -63,16 +63,10 @@ void showOperationSyncSnackBar(
   required bool arabic,
   String? messageOverride,
 }) {
-  final confirmed = outcome.isConfirmedSuccess;
-  final messenger = ScaffoldMessenger.of(context);
-  messenger.clearSnackBars();
-  messenger.showSnackBar(
-    SnackBar(
-      behavior: SnackBarBehavior.floating,
-      duration: const Duration(seconds: 3),
-      backgroundColor:
-          confirmed ? AppTokens.statusOnSite : AppTokens.statusHousingOnly,
-      content: Text(messageOverride ?? operationSyncMessage(outcome, arabic)),
-    ),
-  );
+  final msg = messageOverride ?? operationSyncMessage(outcome, arabic);
+  if (outcome.isConfirmedSuccess) {
+    AppSnackBar.showSuccess(context, message: msg);
+  } else {
+    AppSnackBar.showWarning(context, message: msg);
+  }
 }

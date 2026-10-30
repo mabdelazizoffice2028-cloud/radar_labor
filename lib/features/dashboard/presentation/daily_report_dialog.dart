@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/l10n/operations_strings.dart';
+import 'package:radar_labor/core/l10n/reports_and_alerts_strings.dart';
 
 final class DailyReportDialog {
   static Future<void> show({
@@ -10,7 +11,7 @@ final class DailyReportDialog {
   }) => showDialog<void>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text(arabic ? 'تقرير العمليات اليومي' : 'Daily Operations Report'),
+      title: Text(ReportsAndAlertsStrings.dailyReportDialogTitle(arabic)),
       content: SelectableText(reportText),
       actions: [
         TextButton(
@@ -20,7 +21,10 @@ final class DailyReportDialog {
           },
           child: Text(OperationsStrings.copyTextAction(arabic)),
         ),
-        TextButton(onPressed: () => Navigator.pop(ctx), child: Text(OperationsStrings.closeAction(arabic))),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text(OperationsStrings.closeAction(arabic)),
+        ),
       ],
     ),
   );

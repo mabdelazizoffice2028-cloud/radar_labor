@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:radar_labor/core/l10n/reports_and_alerts_strings.dart';
 import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 
@@ -19,9 +20,7 @@ final class OperationConfirmDialogHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isFriday = isFridayBusinessDate(date);
-    final subStyle = Theme.of(context)
-        .textTheme
-        .bodySmall
+    final subStyle = Theme.of(context).textTheme.bodySmall
         ?.copyWith(color: AppTokens.textSecondary);
 
     return Column(
@@ -29,26 +28,31 @@ final class OperationConfirmDialogHeader extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(child: Text(title, style: Theme.of(context).textTheme.titleLarge)),
+            Expanded(
+              child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+            ),
             if (isFriday)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTokens.space8,
+                  vertical: AppTokens.space2,
+                ),
                 decoration: BoxDecoration(
                   color: AppTokens.statusOnSiteSoft,
                   borderRadius: BorderRadius.circular(AppTokens.radius12),
                 ),
                 child: Text(
-                  arabic ? 'إضافي الجمعة' : 'Friday Overtime',
+                  ReportsAndAlertsStrings.fridayOvertimeLabel(arabic),
                   style: const TextStyle(
                     color: AppTokens.statusOnSite,
-                    fontSize: 12,
+                    fontSize: AppTokens.space12,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTokens.space4),
         Text('$entityName • $date', style: subStyle),
       ],
     );
