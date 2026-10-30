@@ -225,4 +225,18 @@ void main() {
     team = await (db.select(db.teams)..where((t) => t.teamId.equals(teamId))).getSingle();
     expect(team.supervisorUserId, isNull);
   });
+
+  test('Viewer role is frictionless: no employeeUid required and mustChangePassword is false', () async {
+    final viewerId = await auth.createAccount(
+      employeeUid: null,
+      displayName: 'VIP Auditor',
+      role: AuthRole.viewer,
+    );
+    final accounts = await auth.accounts();
+    final viewer = accounts.firstWhere((a) => a.id == viewerId);
+    expect(viewer.employeeUid, isNull);
+    expect(viewer.displayName, 'VIP Auditor');
+    expect(viewer.role, AuthRole.viewer);
+    expect(viewer.mustChangePassword, isFalse);
+  });
 }

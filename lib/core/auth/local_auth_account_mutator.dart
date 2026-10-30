@@ -44,8 +44,7 @@ final class LocalAuthAccountMutator {
   }
 
   Future<void> deactivateAccount(String id) => _database.transaction(() async {
-    await (_database.update(_database.appUsers)..where((u) => u.id.equals(id)))
-        .write(const AppUsersCompanion(active: Value(false)));
+    await (_database.update(_database.appUsers)..where((u) => u.id.equals(id))).write(const AppUsersCompanion(active: Value(false)));
     await TeamScopeSync(_database).clearSupervisor(id);
   });
 
@@ -71,7 +70,7 @@ final class LocalAuthAccountMutator {
       await _database.into(_database.appUsers).insert(AppUsersCompanion.insert(
         id: id, employeeUid: Value(empUid), displayName: name, role: role.name,
         pwHash: hash, pwSalt: salt, kdfParams: AuthConstants.kdfParamsJson,
-        mustChange: const Value(true), createdAt: _clock.nowUtc(),
+        mustChange: Value(role != AuthRole.viewer), createdAt: _clock.nowUtc(),
       ));
       await TeamScopeSync(_database).syncScopes(userId: id, teamIds: tIds, housingIds: hIds);
     });

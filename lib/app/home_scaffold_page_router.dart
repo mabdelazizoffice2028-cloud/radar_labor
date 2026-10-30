@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/app_providers.dart';
-import 'package:radar_labor/app/screens/entities_screen.dart';
+import 'package:radar_labor/app/local_accounts_screen.dart';
 import 'package:radar_labor/app/screens/preferences_screen.dart';
 import 'package:radar_labor/app/screens/workers_screen.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
@@ -32,7 +32,7 @@ final class HomeScaffoldPageRouter {
       canEdit: capabilities.canResolveConflicts || capabilities.canJustifyAbsence,
     ),
     AppSection.workers => WorkersScreen(database: database, events: events, arabic: ar),
-    AppSection.teams => EntitiesScreen(database: database, arabic: ar, teams: true),
+    AppSection.users => LocalAccountsScreen(database: database, arabic: ar),
     AppSection.checkIn => OperationsScreen(
       controller: controller, arabic: ar, role: account.role,
       teamSetupStore: ref.watch(teamSetupStoreProvider), actor: actor, scope: scope,

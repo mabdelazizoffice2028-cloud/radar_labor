@@ -7,7 +7,7 @@ final class HomeScaffoldSectionMeta {
   static IconData iconForSection(AppSection section) => switch (section) {
     AppSection.dashboard => Icons.dashboard_outlined,
     AppSection.workers => Icons.people_outline,
-    AppSection.teams => Icons.groups_outlined,
+    AppSection.users => Icons.manage_accounts_outlined,
     AppSection.checkIn => Icons.fact_check_outlined,
     AppSection.history => Icons.history_outlined,
     AppSection.settings => Icons.settings_outlined,
@@ -16,7 +16,7 @@ final class HomeScaffoldSectionMeta {
   static String labelForSection(AppSection section, bool ar) => switch (section) {
     AppSection.dashboard => ar ? 'لوحة المتابعة' : 'Dashboard',
     AppSection.workers => ar ? 'العمال' : 'Workers',
-    AppSection.teams => ar ? 'الفرق' : 'Teams',
+    AppSection.users => ar ? 'المستخدمين' : 'Users',
     AppSection.checkIn => ar ? 'التسجيل اليومي' : 'Daily Check',
     AppSection.history => HistoryStrings.historyTab(ar),
     AppSection.settings => AppStrings.settingsTab(ar),

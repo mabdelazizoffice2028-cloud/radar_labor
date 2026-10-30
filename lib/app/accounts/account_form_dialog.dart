@@ -45,7 +45,8 @@ final class _AccountFormDialogState extends State<AccountFormDialog> {
       return setState(() => _error = AdminStrings.assignTeamRequired(widget.arabic));
     }
     Navigator.pop(context, AccountFormSubmitter.buildResult(
-      isAdding: widget.initial == null, employeeUid: _employeeUid,
+      isAdding: widget.initial == null,
+      employeeUid: _role == AuthRole.viewer ? null : _employeeUid,
       initialEmployeeUid: widget.initial?.employeeUid, displayName: name,
       role: _role, teams: _teams,
     ));

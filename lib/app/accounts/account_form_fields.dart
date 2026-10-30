@@ -22,8 +22,7 @@ final class AccountFormFields extends StatelessWidget {
     super.key,
   });
 
-  final bool arabic;
-  final bool isAdding;
+  final bool arabic, isAdding;
   final List<ScopeOption> employees;
   final TextEditingController nameController;
   final AuthRole selectedRole;
@@ -41,7 +40,7 @@ final class AccountFormFields extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (isAdding)
+          if (isAdding && selectedRole != AuthRole.viewer)
             AccountWorkerSearchField(
               arabic: arabic,
               employees: employees,

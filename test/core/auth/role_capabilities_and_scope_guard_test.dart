@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:radar_labor/app/home_scaffold_section_meta.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/role_capabilities.dart';
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
@@ -29,7 +31,7 @@ void main() {
         expect(cap.sections, const [
           AppSection.dashboard,
           AppSection.workers,
-          AppSection.teams,
+          AppSection.users,
           AppSection.history,
           AppSection.settings,
         ]);
@@ -102,6 +104,12 @@ void main() {
         AppSection.dashboard,
         AppSection.settings,
       ]);
+    });
+
+    test('homeScaffoldSectionMeta maps users section correctly', () {
+      expect(HomeScaffoldSectionMeta.iconForSection(AppSection.users), Icons.manage_accounts_outlined);
+      expect(HomeScaffoldSectionMeta.labelForSection(AppSection.users, true), 'المستخدمين');
+      expect(HomeScaffoldSectionMeta.labelForSection(AppSection.users, false), 'Users');
     });
   });
 

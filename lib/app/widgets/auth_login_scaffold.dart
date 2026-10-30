@@ -21,6 +21,7 @@ final class AuthLoginScaffold extends StatelessWidget {
       appBar: AppBar(
         title: Text(AppStrings.appTitle(arabic)),
         centerTitle: true,
+        foregroundColor: AppTokens.surface,
         actions: const [AuthLanguageButton()],
       ),
       resizeToAvoidBottomInset: false,

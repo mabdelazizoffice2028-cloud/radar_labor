@@ -20,7 +20,7 @@ const RoleCapabilities adminRoleCapabilities = RoleCapabilities(
   sections: [
     AppSection.dashboard,
     AppSection.workers,
-    AppSection.teams,
+    AppSection.users,
     AppSection.history,
     AppSection.settings,
   ],

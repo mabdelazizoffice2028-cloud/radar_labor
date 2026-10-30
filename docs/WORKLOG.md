@@ -4,6 +4,34 @@ Append one dated handoff entry for each model/session. Keep prior entries so the
 next model can understand decisions and recoveries. The newest handoff is at the
 top of the log.
 
+## 2026-10-30 — Surgical V2.7 Upgrade: Bottom Nav User Manager, Frictionless VIP Viewer, High-Visibility Contrast & Professional Localization
+
+- **Release Artifact:** `outputs/Radar Labour.apk`
+- **File Size:** 25,079,776 bytes (23.92 MB)
+- **SHA-256:** `1F44B1F6265C6BF6FFC2D1350E8741B1A71659331EAA2DE535146511BF93CA5F`
+- **Architectural Verification:**
+  - Micro-modularization: Every touched `.dart` file in `lib/` strictly `<= 80` lines (range: 24 to 79 lines).
+  - Dumb UI & Layer Isolation: Zero direct Flutter Material imports (`material_ui/material_ui.dart` only). Zero external network calls.
+  - Static Analysis (`flutter analyze --no-pub`): `No issues found!`.
+  - Full Test Suite (`flutter test --no-pub`): 221 / 221 tests passed (100% success rate).
+
+- **Key Upgrades Executed:**
+  1. **Phase 1: Bottom Navigation Bar Overhaul (User Manager for Admins):**
+     - Replaced `AppSection.teams` with `AppSection.users` in `RoleCapabilities` and `adminRoleCapabilities.sections`.
+     - Mapped `AppSection.users` to `Icons.manage_accounts_outlined` and localized labels (`'المستخدمين'` / `'Users'`).
+     - Routed `AppSection.users` directly to `LocalAccountsScreen(database: database, arabic: ar)` in `HomeScaffoldPageRouter`.
+     - Removed redundant "Manage Users" ListTile from `PreferencesAdminSection`.
+  2. **Phase 2: Frictionless "View Only" Account (VIP Access):**
+     - Updated `AccountFormFields` to hide worker autocomplete search field (`AccountWorkerSearchField`) when role is `AuthRole.viewer`, enabling manual display name entry without tying to an employee in the database.
+     - Updated `AccountFormSubmitter` and `AccountFormDialog` to pass `employeeUid: null` for viewers.
+     - Updated `LocalAuthAccountMutator.insertUser`: set `mustChange: Value(role != AuthRole.viewer)` so Viewers log in seamlessly without being forced to change their password.
+  3. **Phase 3: Color Contrast & High-Visibility UI (Pure White & Bold):**
+     - Updated `AuthLanguageButton`: explicitly styled text and icon with `AppTokens.surface` (Pure White) and `FontWeight.w900` for high contrast against the blue AppBar.
+     - Updated `AuthLoginScaffold`: guaranteed pure white AppBar foreground (`foregroundColor: AppTokens.surface`).
+  4. **Phase 4: Professional Localization Rewrite ("About App"):**
+     - Replaced literal translation "الكامبوس" in `AboutAppContentData` (`ar`) with professional standard Arabic ("سكن العمال" / "المجمعات السكنية").
+     - Updated overview, supervisor roles, and daily lockout descriptions in corporate Arabic.
+
 ## 2026-10-30 — Surgical V2.6 Upgrade: Roster Import Decoupling, Batch Supervisor Activation, Atomic Dual-Write & Multi-Team Wizard Support
 
 - **Release Artifact:** `outputs/Radar Labour.apk`

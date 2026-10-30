@@ -7,7 +7,7 @@ export 'package:radar_labor/core/auth/auth_role_capabilities.dart';
 enum AppSection {
   dashboard,
   workers,
-  teams,
+  users,
   checkIn,
   history,
   settings,

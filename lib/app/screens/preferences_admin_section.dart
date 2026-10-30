@@ -1,5 +1,4 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:radar_labor/app/local_accounts_screen.dart';
 import 'package:radar_labor/app/screens/preferences_dev_tool_card.dart';
 import 'package:radar_labor/app/screens/preferences_import_card.dart';
 import 'package:radar_labor/app/widgets/settings_section_header.dart';
@@ -53,13 +52,6 @@ final class _PreferencesAdminSectionState extends State<PreferencesAdminSection>
     children: [
       SettingsSectionHeader(title: AppStrings.settingsAdministration(widget.arabic)),
       PreferencesImportCard(database: widget.database, arabic: widget.arabic),
-      Card(
-        child: ListTile(
-          leading: const Icon(Icons.manage_accounts_outlined),
-          title: Text(AppStrings.manageUsers(widget.arabic)),
-          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => LocalAccountsScreen(database: widget.database, arabic: widget.arabic))),
-        ),
-      ),
       _tile(LockoutStrings.housingLockout(widget.arabic), _housingHour, (v) async {
         setState(() => _housingHour = v);
         await _settings.writeHousingLockoutHour(v);

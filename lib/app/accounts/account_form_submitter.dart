@@ -17,7 +17,7 @@ final class AccountFormSubmitter {
         ? const [HousingConstants.defaultHousingId]
         : const <String>[];
     return AccountFormResult(
-      employeeUid: isAdding ? employeeUid : initialEmployeeUid,
+      employeeUid: role == AuthRole.viewer ? null : (isAdding ? employeeUid : initialEmployeeUid),
       displayName: displayName.trim(),
       role: role,
       teamIds: role == AuthRole.siteSupervisor ? teams.toList() : const [],
