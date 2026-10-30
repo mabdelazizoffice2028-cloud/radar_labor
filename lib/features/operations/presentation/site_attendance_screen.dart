@@ -9,6 +9,7 @@ import 'package:radar_labor/features/operations/presentation/site_attendance_sav
 import 'package:radar_labor/features/operations/presentation/state/operations_controller.dart';
 import 'package:radar_labor/features/operations/presentation/state/site_attendance_notifier.dart';
 import 'package:radar_labor/features/operations/presentation/team_setup/team_edit_screen.dart';
+import 'package:radar_labor/features/operations/presentation/team_setup/team_wizard_screen.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/site_attendance_body.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/unsaved_changes_guard.dart';
 
@@ -18,11 +19,8 @@ final class SiteAttendanceScreen extends ConsumerStatefulWidget {
     this.teamSetupStore, this.actor, this.scope, super.key,
   });
 
-  final OperationsController controller;
-  final bool arabic;
-  final TeamSetupStore? teamSetupStore;
-  final ActorContext? actor;
-  final ScopeSnapshot? scope;
+  final OperationsController controller; final bool arabic;
+  final TeamSetupStore? teamSetupStore; final ActorContext? actor; final ScopeSnapshot? scope;
 
   @override
   ConsumerState<SiteAttendanceScreen> createState() => _SiteAttendanceScreenState();
@@ -36,6 +34,15 @@ final class _SiteAttendanceScreenState extends ConsumerState<SiteAttendanceScree
       builder: (_) => TeamEditScreen(store: s, actor: a, scope: sc, team: team, arabic: widget.arabic),
     ));
     if (updated == true && mounted) await ref.read(siteAttendanceNotifierProvider.notifier).reload();
+  }
+
+  Future<void> _openCreateTeam() async {
+    final s = widget.teamSetupStore; final a = widget.actor;
+    if (s == null || a == null) return;
+    await Navigator.push(context, MaterialPageRoute(
+      builder: (_) => TeamWizardScreen(store: s, actor: a, arabic: widget.arabic),
+    ));
+    if (mounted) await ref.read(siteAttendanceNotifierProvider.notifier).reload();
   }
 
   @override
@@ -54,22 +61,23 @@ final class _SiteAttendanceScreenState extends ConsumerState<SiteAttendanceScree
           if (mounted) unawaited(notifier.ensureInitialTeam(teams));
         });
         final selected = state.selectedTeam ?? teams.firstOrNull;
-        final canEdit = widget.teamSetupStore != null && (widget.actor?.capabilities.canEditOwnTeamMembers ?? false) && selected != null;
+        final caps = widget.actor?.capabilities;
+        final canEdit = widget.teamSetupStore != null && (caps?.canEditOwnTeamMembers ?? caps?.canSetupTeam ?? false) && selected != null;
 
         return SiteAttendanceBody(
           teams: teams, selected: selected, state: state, arabic: ar, canEditTeam: canEdit,
           notifier: notifier, onOpenEditTeam: () => _openEditTeam(selected!),
+          onOpenCreateTeam: _openCreateTeam,
           onSave: () => SiteAttendanceSaveHandler.handleSave(context: context, ref: ref, arabic: ar, actor: widget.actor, scope: widget.scope),
         );
       },
     );
 
-    if (Navigator.of(context).canPop()) {
-      return Scaffold(
-        appBar: AppBar(title: Text(OperationsStrings.startSiteAttendanceAction(ar))),
-        body: UnsavedChangesGuard(hasUnsavedChanges: state.hasUnsavedChanges, persistDraft: notifier.flushDraft, arabic: ar, child: content),
-      );
-    }
-    return content;
+    return Navigator.of(context).canPop()
+        ? Scaffold(
+            appBar: AppBar(title: Text(OperationsStrings.startSiteAttendanceAction(ar))),
+            body: UnsavedChangesGuard(hasUnsavedChanges: state.hasUnsavedChanges, persistDraft: notifier.flushDraft, arabic: ar, child: content),
+          )
+        : content;
   }
 }

@@ -29,7 +29,7 @@ final class LocalAccountsOps {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(AdminStrings.importReviewTitle(arabic)),
-        content: Text(AdminStrings.importReviewBody(arabic, preview.rows.length, preview.supervisorCount)),
+        content: Text(AdminStrings.importReviewBody(arabic, preview.rows.length)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppStrings.cancel(arabic))),
           FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(AdminStrings.importConfirm(arabic))),
@@ -39,7 +39,7 @@ final class LocalAccountsOps {
     if (accepted != true) return;
     final r = await controller.commitImport(preview);
     if (context.mounted) {
-      toast(AdminStrings.importDone(arabic, r.added, r.updated, r.accountsCreated));
+      toast(AdminStrings.importDone(arabic, r.added, r.updated));
     }
   }
 }

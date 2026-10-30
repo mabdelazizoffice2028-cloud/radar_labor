@@ -21,18 +21,19 @@ final class AccountProvisioningRepository {
   final SupervisorAccountProvisioner _provisioner;
 
   Future<void> ensureAdminAccounts() async {
-    await _auth.ensureAccountForRole(
-      AuthRole.projectManager,
-      AuthConstants.defaultProjectManagerName,
-    );
+    await _auth.ensureAccountForRole(AuthRole.projectManager, AuthConstants.defaultProjectManagerName);
     await _auth.ensureAccountForRole(AuthRole.hr, AuthConstants.defaultHrName);
     await (_database.update(_database.appUsers)
           ..where((u) => u.role.equals(AuthRole.hr.name) & u.displayName.equals('HR')))
         .write(const AppUsersCompanion(displayName: Value(AuthConstants.defaultHrName)));
   }
 
-  Future<int> provisionSupervisors(List<SupervisorSeed> seeds) =>
-      _provisioner.provision(seeds);
+  Future<int> provisionSupervisors(List<SupervisorSeed> seeds) => _provisioner.provision(seeds);
+
+  Future<int> batchActivateSupervisors({
+    required List<Employee> selectedEmployees,
+    required AuthRole role,
+  }) => _provisioner.batchActivate(employees: selectedEmployees, role: role);
 
   Future<void> updateAccount({
     required String accountId,
@@ -47,11 +48,8 @@ final class AccountProvisioningRepository {
         ? (housingIds.isEmpty ? [HousingConstants.defaultHousingId] : housingIds)
         : const <String>[];
     return _database.transaction(() async {
-      await (_database.update(_database.appUsers)
-            ..where((u) => u.id.equals(accountId)))
-          .write(
-            AppUsersCompanion(displayName: Value(name), role: Value(role.name)),
-          );
+      await (_database.update(_database.appUsers)..where((u) => u.id.equals(accountId)))
+          .write(AppUsersCompanion(displayName: Value(name), role: Value(role.name)));
       await _auth.updateScopes(
         accountId,
         teamIds: role == AuthRole.siteSupervisor ? teamIds : const [],

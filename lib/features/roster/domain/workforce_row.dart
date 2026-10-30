@@ -4,6 +4,7 @@ final class WorkforceRow {
     required this.name,
     required this.designation,
     required this.supplier,
+    this.employmentType = 'company',
     this.role = '',
     this.team = '',
     this.campus = '',
@@ -13,6 +14,7 @@ final class WorkforceRow {
   final String name;
   final String designation;
   final String supplier;
+  final String employmentType;
 
   /// Optional app role cell (e.g. "Site Supervisor", "Campus Supervisor").
   final String role;

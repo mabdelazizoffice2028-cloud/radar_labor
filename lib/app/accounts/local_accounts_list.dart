@@ -1,7 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/accounts/accounts_admin_controller.dart';
+import 'package:radar_labor/app/accounts/batch_activation_bar.dart';
 import 'package:radar_labor/app/accounts/local_account_card.dart';
+import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_account.dart';
+import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/l10n/admin_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 
@@ -12,6 +15,7 @@ final class LocalAccountsList extends StatelessWidget {
     required this.busy,
     required this.error,
     required this.onAction,
+    this.onBatchActivate,
     super.key,
   });
 
@@ -20,6 +24,7 @@ final class LocalAccountsList extends StatelessWidget {
   final bool busy;
   final String? error;
   final void Function(LocalAccount a, String action) onAction;
+  final Future<void> Function(List<Employee> selected, AuthRole role)? onBatchActivate;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +36,13 @@ final class LocalAccountsList extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: AppTokens.space8),
             child: Text(error!, style: const TextStyle(color: AppTokens.statusUnknown)),
+          ),
+        if (onBatchActivate != null)
+          BatchActivationBar(
+            employees: data.employees,
+            arabic: arabic,
+            busy: busy,
+            onActivate: onBatchActivate!,
           ),
         if (!data.hasSupervisors)
           Card(

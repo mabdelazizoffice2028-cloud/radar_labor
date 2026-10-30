@@ -57,14 +57,14 @@ void main() {
 
     tearDown(() => db.close());
 
-    testWidgets('EntitiesScreen shows FAB for teams', (tester) async {
+    testWidgets('EntitiesScreen displays teams list without FAB', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: EntitiesScreen(database: db, arabic: false, teams: true),
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsNothing);
       await tester.pumpWidget(const SizedBox());
       await tester.pumpAndSettle();
     });

@@ -4,6 +4,44 @@ Append one dated handoff entry for each model/session. Keep prior entries so the
 next model can understand decisions and recoveries. The newest handoff is at the
 top of the log.
 
+## 2026-10-30 — Surgical V2.6 Upgrade: Roster Import Decoupling, Batch Supervisor Activation, Atomic Dual-Write & Multi-Team Wizard Support
+
+- **Release Artifact:** `outputs/Radar Labour.apk`
+- **File Size:** 25,145,360 bytes (24.0 MB)
+- **SHA-256:** `685812DD32E4EFF7F6E36E9C36D7BE91700D21A8BC8385A69B47EAFE3419463E`
+- **Architectural Verification:**
+  - Micro-modularization: All 28 created/modified `.dart` files inside `lib/` are strictly `<= 80` lines.
+  - Dumb UI & Layer Isolation: Zero direct Flutter Material imports (`material_ui/material_ui.dart` only). Zero database/drift/supabase imports in presentation/UI. Pure DateTime inside `lib/core/time/`.
+  - Static Analysis (`flutter analyze --no-pub`): `No issues found!`.
+  - Full Test Suite (`flutter test --no-pub`): 215 / 215 tests passed (100% success rate).
+
+- **Key Upgrades Executed:**
+  1. **Phase 1: Decouple CSV/Excel Import from Supervisor/Team Creation + Decouple Employment Type from Supplier:**
+     - Updated `WorkforceRow` with `employmentType` defaulting to `'company'`.
+     - Extracted `WorkforceTabularReader` (`lib/features/roster/domain/workforce_tabular_reader.dart`, 53 lines) to read raw CSV and XLSX rows.
+     - Refactored `WorkforceImportParser` (`lib/features/roster/domain/workforce_import_parser.dart`, 48 lines) to parse normalized headers for `'employmenttype'`, `'type'`, `'affiliation'`, `'نوعالتبعية'`, `'التبعية'`, supporting explicit `'company'`/`'شركة'` and `'rental'`/`'ايجار'`/`'إيجار'` independently of supplier presence.
+     - Updated `WorkforceImportRepository` (`lib/features/roster/data/workforce_import_repository.dart`, 56 lines): removed `AccountProvisioningRepository` and `_seeds(...)` entirely. Roster import only populates and updates `employees` and `worker_history`, returning `accountsCreated: 0`.
+     - Updated `AdminUserStrings` and `AdminStrings`: localized `importReviewBody`, `importDone`, `noNamesHint`, and added `assignTeamRequired`, `selectSiteSupervisors`, `selectCampusSupervisors`, and `batchActivated`.
+     - Documented unequivocally that Iqama number (10 digits, `employees.iqama_no`) is the primary local key for matching and uniqueness in the encrypted SQLite store, but is never disclosed in public WhatsApp reports.
+
+  2. **Phase 2: One-Tap Batch Supervisor Activation:**
+     - Added `batchActivateSupervisors({required List<Employee> selectedEmployees, required AuthRole role})` in `AccountsAdminController` and `AccountProvisioningRepository`.
+     - Created `BatchSupervisorDialog` (`lib/app/accounts/batch_supervisor_dialog.dart`, 69 lines) enabling Project Managers to search active workers by name/Iqama, view job title/category, and multi-select workers to activate as supervisors in bulk.
+     - Created `BatchActivationBar` (`lib/app/accounts/batch_activation_bar.dart`, 49 lines) with quick-action buttons "Select Site Supervisors" and "Select CAMPOS Supervisor", integrated into `LocalAccountsList`.
+     - Activating CAMPOS supervisor automatically binds `main_campus` (`HousingConstants.defaultHousingId`).
+
+  3. **Phase 3: Atomic Dual-Write Synchronization for Supervisor and Team Scopes:**
+     - Created `TeamScopeSync` (`lib/core/auth/team_scope_sync.dart`, 35 lines) executing atomic transactions to clear `supervisorUserId` on previously assigned teams, claim `teams.supervisorUserId` on newly assigned teams, clear conflicting assignments from other supervisors in `user_scopes`, and insert new scopes.
+     - Updated `LocalAuthAccountMutator` (`lib/core/auth/local_auth_account_mutator.dart`, 73 lines): integrated `TeamScopeSync` into `updateScopes`, `insertUser`, and `deactivateAccount` (clearing `teams.supervisorUserId` when a user account is deactivated).
+     - Refactored `SupervisorAccountProvisioner` (`lib/core/auth/supervisor_account_provisioner.dart`, 46 lines): removed string-based team creation (`_findOrCreateTeam`). Supervisor provisioning creates accounts without generating arbitrary teams.
+
+  4. **Phase 4: Clean up Admin UI & Permissions + Multi-Team Wizard Support for Site Supervisors:**
+     - Removed empty `AppSection.housing` from `RoleCapabilities`, `HomeScaffoldPageRouter`, and `HomeScaffoldSectionMeta`.
+     - Removed manual team creation FAB and dialog from Project Manager `EntitiesScreen`, converting it to a read-only list for monitoring active teams. Deleted unused `lib/app/screens/entities_add_dialog.dart`.
+     - Enforced mandatory team assignment in `AccountFormDialog` when saving a site supervisor if teams exist (`widget.teams.isNotEmpty && _teams.isEmpty`).
+     - Added `createNewTeam` action in `SiteAttendanceMoreMenu` when `canEditTeam`/`canSetupTeam` is available, wired through `SiteAttendanceTeamRow`, `SiteAttendanceHeader`, `SiteAttendanceBody`, and `SiteAttendanceScreen` allowing site supervisors to launch `TeamWizardScreen` to create additional teams anytime.
+     - Extracted `SiteWorkerSearchBar` (`lib/features/operations/presentation/widgets/site_worker_search_bar.dart`, 41 lines) to keep `SiteAttendanceBody` strictly under 80 lines (57 lines).
+
 ## 2026-10-30 — Field & Admin Refinements: Admin Unification, CAMPOS Terminology, 4-8 Password Policy, Direct Workforce Import & Supervisor Activation
 
 - **Tasks executed:**

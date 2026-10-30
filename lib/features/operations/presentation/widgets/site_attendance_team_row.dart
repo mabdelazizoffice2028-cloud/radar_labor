@@ -5,15 +5,9 @@ import 'package:radar_labor/features/operations/presentation/widgets/site_attend
 
 class SiteAttendanceTeamRow extends StatelessWidget {
   const SiteAttendanceTeamRow({
-    required this.teams,
-    required this.selected,
-    required this.arabic,
-    required this.canEditTeam,
-    required this.onTeamChanged,
-    required this.onEditTeam,
-    required this.onClearAll,
-    required this.onAddGuest,
-    super.key,
+    required this.teams, required this.selected, required this.arabic,
+    required this.canEditTeam, required this.onTeamChanged, required this.onEditTeam,
+    required this.onClearAll, required this.onAddGuest, this.onCreateTeam, super.key,
   });
 
   final List<EntityOption> teams;
@@ -22,6 +16,7 @@ class SiteAttendanceTeamRow extends StatelessWidget {
   final bool canEditTeam;
   final ValueChanged<String?> onTeamChanged;
   final VoidCallback? onEditTeam;
+  final VoidCallback? onCreateTeam;
   final VoidCallback onClearAll;
   final VoidCallback onAddGuest;
 
@@ -29,6 +24,7 @@ class SiteAttendanceTeamRow extends StatelessWidget {
     SiteAttendanceMenuAction.clearAll => onClearAll(),
     SiteAttendanceMenuAction.addFromAnotherTeam => onAddGuest(),
     SiteAttendanceMenuAction.editTeam => onEditTeam?.call(),
+    SiteAttendanceMenuAction.createNewTeam => onCreateTeam?.call(),
   };
 
   @override
@@ -38,32 +34,20 @@ class SiteAttendanceTeamRow extends StatelessWidget {
       children: [
         Expanded(
           child: singleTeam != null
-              ? Text(
-                  singleTeam.displayName(arabic: arabic),
-                  style: Theme.of(context).textTheme.titleLarge,
-                )
+              ? Text(singleTeam.displayName(arabic: arabic), style: Theme.of(context).textTheme.titleLarge)
               : DropdownButtonFormField<String>(
                   initialValue: selected?.id,
                   decoration: InputDecoration(
                     labelText: OperationsStrings.selectTeam(arabic),
                     border: const OutlineInputBorder(),
                   ),
-                  items: teams
-                      .map(
-                        (row) => DropdownMenuItem(
-                          value: row.id,
-                          child: Text(row.displayName(arabic: arabic)),
-                        ),
-                      )
-                      .toList(),
+                  items: teams.map((row) => DropdownMenuItem(
+                    value: row.id, child: Text(row.displayName(arabic: arabic)),
+                  )).toList(),
                   onChanged: onTeamChanged,
                 ),
         ),
-        SiteAttendanceMoreMenu(
-          arabic: arabic,
-          canEditTeam: canEditTeam,
-          onSelected: _onMenuAction,
-        ),
+        SiteAttendanceMoreMenu(arabic: arabic, canEditTeam: canEditTeam, onSelected: _onMenuAction),
       ],
     );
   }

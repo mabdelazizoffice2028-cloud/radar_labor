@@ -11,18 +11,11 @@ typedef ScopeOption = (String, String);
 
 final class AccountFormDialog extends StatefulWidget {
   const AccountFormDialog({
-    required this.arabic,
-    required this.employees,
-    required this.teams,
-    required this.housings,
-    this.initial,
-    super.key,
+    required this.arabic, required this.employees, required this.teams,
+    required this.housings, this.initial, super.key,
   });
 
-  final bool arabic;
-  final List<ScopeOption> employees;
-  final List<ScopeOption> teams;
-  final List<ScopeOption> housings;
+  final bool arabic; final List<ScopeOption> employees, teams, housings;
   final LocalAccount? initial;
 
   static Future<AccountFormResult?> show(BuildContext context, AccountFormDialog dialog) =>
@@ -47,35 +40,24 @@ final class _AccountFormDialogState extends State<AccountFormDialog> {
 
   void _submit() {
     final name = _name.text.trim();
-    if (name.isEmpty) {
-      setState(() => _error = AdminStrings.nameRequired(widget.arabic));
-      return;
+    if (name.isEmpty) return setState(() => _error = AdminStrings.nameRequired(widget.arabic));
+    if (_role == AuthRole.siteSupervisor && widget.teams.isNotEmpty && _teams.isEmpty) {
+      return setState(() => _error = AdminStrings.assignTeamRequired(widget.arabic));
     }
-    Navigator.pop(
-      context,
-      AccountFormSubmitter.buildResult(
-        isAdding: widget.initial == null,
-        employeeUid: _employeeUid,
-        initialEmployeeUid: widget.initial?.employeeUid,
-        displayName: name,
-        role: _role,
-        teams: _teams,
-      ),
-    );
+    Navigator.pop(context, AccountFormSubmitter.buildResult(
+      isAdding: widget.initial == null, employeeUid: _employeeUid,
+      initialEmployeeUid: widget.initial?.employeeUid, displayName: name,
+      role: _role, teams: _teams,
+    ));
   }
 
   @override
   Widget build(BuildContext context) => AlertDialog(
     title: Text(widget.initial == null ? AdminStrings.addUser(widget.arabic) : AdminStrings.editUser(widget.arabic)),
     content: AccountFormFields(
-      arabic: widget.arabic,
-      isAdding: widget.initial == null,
-      employees: widget.employees,
-      nameController: _name,
-      selectedRole: _role,
-      teams: widget.teams,
-      selectedTeams: _teams,
-      errorMessage: _error,
+      arabic: widget.arabic, isAdding: widget.initial == null,
+      employees: widget.employees, nameController: _name, selectedRole: _role,
+      teams: widget.teams, selectedTeams: _teams, errorMessage: _error,
       onSelectEmployee: (uid, name) => setState(() { _employeeUid = uid; _name.text = name; }),
       onRoleChanged: (r) => setState(() => _role = r),
       onToggleTeam: (id, sel) => setState(() => sel ? _teams.add(id) : _teams.remove(id)),

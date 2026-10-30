@@ -8,7 +8,6 @@ enum AppSection {
   dashboard,
   workers,
   teams,
-  housing,
   checkIn,
   history,
   settings,

@@ -15,7 +15,7 @@ class SiteAttendanceHeader extends StatelessWidget {
     required this.arabic, required this.canEditTeam, required this.onTeamChanged,
     required this.onDateSelected, required this.onSelectAll,
     required this.onSelectDefaultCrew, required this.onAddGuest,
-    this.onEditTeam, super.key,
+    this.onEditTeam, this.onCreateTeam, super.key,
   });
 
   final List<EntityOption> teams;
@@ -26,6 +26,7 @@ class SiteAttendanceHeader extends StatelessWidget {
   final ValueChanged<String?> onTeamChanged;
   final ValueChanged<String> onDateSelected;
   final VoidCallback? onEditTeam;
+  final VoidCallback? onCreateTeam;
   final ValueChanged<bool> onSelectAll;
   final VoidCallback onSelectDefaultCrew;
   final VoidCallback onAddGuest;
@@ -34,24 +35,21 @@ class SiteAttendanceHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final isFriday = FridayResolver.isFriday(state.selectedDate);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppTokens.space16, AppTokens.space12, AppTokens.space16, AppTokens.space8,
-      ),
+      padding: const EdgeInsets.fromLTRB(AppTokens.space16, AppTokens.space12, AppTokens.space16, AppTokens.space8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SiteAttendanceTeamRow(
             teams: teams, selected: selected, arabic: arabic,
-            canEditTeam: canEditTeam && onEditTeam != null,
-            onTeamChanged: onTeamChanged, onEditTeam: onEditTeam,
+            canEditTeam: canEditTeam && (onEditTeam != null || onCreateTeam != null),
+            onTeamChanged: onTeamChanged, onEditTeam: onEditTeam, onCreateTeam: onCreateTeam,
             onClearAll: () => onSelectAll(false), onAddGuest: onAddGuest,
           ),
           const SizedBox(height: AppTokens.space8),
           AttendanceDateBar(
             selectedDate: state.selectedDate, todayDate: state.todayDate,
             isPastDate: state.isPastDate, initialSource: state.initialSource,
-            initialSourceDate: state.initialSourceDate,
-            skippedDraftCount: state.skippedDraftCount,
+            initialSourceDate: state.initialSourceDate, skippedDraftCount: state.skippedDraftCount,
             arabic: arabic, onDateSelected: onDateSelected,
           ),
           if (isFriday) ...[
@@ -59,11 +57,7 @@ class SiteAttendanceHeader extends StatelessWidget {
             SiteFridayBanner(arabic: arabic),
           ],
           const SizedBox(height: AppTokens.space8),
-          SiteAttendanceActionRow(
-            arabic: arabic,
-            onSelectAll: onSelectAll,
-            onSelectDefaultCrew: onSelectDefaultCrew,
-          ),
+          SiteAttendanceActionRow(arabic: arabic, onSelectAll: onSelectAll, onSelectDefaultCrew: onSelectDefaultCrew),
         ],
       ),
     );

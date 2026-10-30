@@ -118,7 +118,7 @@ void main() {
     );
   });
 
-  test('WorkforceImportRepository automatically creates supervisor accounts and scopes', () async {
+  test('WorkforceImportRepository adds workers only without auto-creating supervisor accounts', () async {
     final importer = WorkforceImportRepository(db);
 
     final res = await importer.commit([
@@ -145,22 +145,84 @@ void main() {
     ]);
 
     expect(res.added, 3);
-    expect(res.accountsCreated, 2);
+    expect(res.accountsCreated, 0);
 
+    // No accounts created automatically from import
     final accounts = await auth.accounts();
-    final siteSup = accounts.firstWhere(
-      (a) => a.role == AuthRole.siteSupervisor,
+    expect(accounts, isEmpty);
+
+    // Activating supervisors is done explicitly via AccountProvisioningRepository
+    final employees = await (db.select(db.employees)).get();
+    final siteEmp = employees.where((e) => e.iqamaNo == '1000000001').toList();
+    final housingEmp = employees.where((e) => e.iqamaNo == '1000000002').toList();
+
+    final siteCount = await provisioning.batchActivateSupervisors(
+      selectedEmployees: siteEmp,
+      role: AuthRole.siteSupervisor,
     );
-    final housingSup = accounts.firstWhere(
-      (a) => a.role == AuthRole.housingSupervisor,
+    final housingCount = await provisioning.batchActivateSupervisors(
+      selectedEmployees: housingEmp,
+      role: AuthRole.housingSupervisor,
     );
+
+    expect(siteCount, 1);
+    expect(housingCount, 1);
+
+    final updatedAccounts = await auth.accounts();
+    final siteSup = updatedAccounts.firstWhere((a) => a.role == AuthRole.siteSupervisor);
+    final housingSup = updatedAccounts.firstWhere((a) => a.role == AuthRole.housingSupervisor);
 
     expect(siteSup.displayName, 'أحمد مشرف موقع');
-    expect(siteSup.teamIds.length, 1);
     expect(siteSup.mustChangePassword, isTrue);
 
     expect(housingSup.displayName, 'خالد مشرف سكن');
-    expect(housingSup.housingIds.length, 1);
+    expect(housingSup.housingIds, contains('main_campus'));
     expect(housingSup.mustChangePassword, isTrue);
+  });
+
+  test('Atomic dual-write: transferring team clears previous supervisor and updates scopes', () async {
+    final sup1Id = await auth.createAccount(
+      employeeUid: '1001',
+      displayName: 'Supervisor 1',
+      role: AuthRole.siteSupervisor,
+    );
+    final sup2Id = await auth.createAccount(
+      employeeUid: '1002',
+      displayName: 'Supervisor 2',
+      role: AuthRole.siteSupervisor,
+    );
+
+    const teamId = 'team-alpha';
+    await db.into(db.teams).insert(
+      TeamsCompanion.insert(
+        teamId: teamId,
+        nameAr: 'فريق ألفا',
+        nameEn: const Value('Team Alpha'),
+        supervisorUserId: Value(sup1Id),
+      ),
+    );
+    await auth.updateScopes(sup1Id, teamIds: [teamId], housingIds: const []);
+
+    var team = await (db.select(db.teams)..where((t) => t.teamId.equals(teamId))).getSingle();
+    expect(team.supervisorUserId, sup1Id);
+    var sup1Acc = (await auth.accounts()).firstWhere((a) => a.id == sup1Id);
+    expect(sup1Acc.teamIds, contains(teamId));
+
+    // Transfer team to sup2
+    await auth.updateScopes(sup2Id, teamIds: [teamId], housingIds: const []);
+
+    team = await (db.select(db.teams)..where((t) => t.teamId.equals(teamId))).getSingle();
+    expect(team.supervisorUserId, sup2Id);
+
+    sup1Acc = (await auth.accounts()).firstWhere((a) => a.id == sup1Id);
+    expect(sup1Acc.teamIds, isNot(contains(teamId)));
+
+    final sup2Acc = (await auth.accounts()).firstWhere((a) => a.id == sup2Id);
+    expect(sup2Acc.teamIds, contains(teamId));
+
+    // Deactivating sup2 clears supervisorUserId from team
+    await auth.deactivateAccount(sup2Id);
+    team = await (db.select(db.teams)..where((t) => t.teamId.equals(teamId))).getSingle();
+    expect(team.supervisorUserId, isNull);
   });
 }

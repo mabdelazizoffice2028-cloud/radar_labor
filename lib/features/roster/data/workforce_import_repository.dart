@@ -1,8 +1,6 @@
 import 'package:drift/drift.dart';
-import 'package:radar_labor/core/auth/account_provisioning_repository.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/time/clock.dart';
-import 'package:radar_labor/features/roster/domain/supervisor_role_resolver.dart';
 import 'package:radar_labor/features/roster/domain/workforce_import_result.dart';
 import 'package:radar_labor/features/roster/domain/workforce_import_validator.dart';
 import 'package:radar_labor/features/roster/domain/workforce_row.dart';
@@ -28,14 +26,14 @@ final class WorkforceImportRepository {
         final iqama = row.code.trim();
         final existing = byCode[iqama];
         final cat = row.designation.isEmpty ? 'direct_labor' : row.designation;
-        final isRental = row.supplier.isNotEmpty;
+        final empType = row.employmentType == 'rental' ? 'rental' : 'company';
+        final rentalComp = row.supplier.trim().isEmpty ? null : row.supplier.trim();
 
         if (existing == null) {
           await _database.into(_database.employees).insert(EmployeesCompanion.insert(
             iqamaNo: iqama, fullNameAr: row.name, fullNameEn: Value(row.name),
             jobTitle: Value(cat), jobCategory: Value(cat),
-            employmentType: Value(isRental ? 'rental' : 'company'),
-            rentalCompany: Value(isRental ? row.supplier : null),
+            employmentType: Value(empType), rentalCompany: Value(rentalComp),
           ));
           await _database.into(_database.workerHistory).insert(WorkerHistoryCompanion.insert(
             historyId: uuid.v4(), iqamaNo: iqama, action: 'imported_create',
@@ -46,8 +44,7 @@ final class WorkforceImportRepository {
           await (_database.update(_database.employees)..where((e) => e.iqamaNo.equals(iqama))).write(
             EmployeesCompanion(
               fullNameAr: Value(row.name), fullNameEn: Value(row.name), jobTitle: Value(cat),
-              rentalCompany: Value(isRental ? row.supplier : null),
-              employmentType: Value(isRental ? 'rental' : 'company'),
+              rentalCompany: Value(rentalComp), employmentType: Value(empType),
               archivedAt: const Value(null), rowVersion: Value(existing.rowVersion + 1),
             ),
           );
@@ -58,21 +55,7 @@ final class WorkforceImportRepository {
           updated++;
         }
       }
-
-      final refreshed = await _database.select(_database.employees).get();
-      final refreshedByCode = {for (final e in refreshed) e.iqamaNo: e};
-      final accountsCreated = await AccountProvisioningRepository(_database)
-          .provisionSupervisors(_seeds(rows, refreshedByCode));
-      return WorkforceImportResult(added: added, updated: updated, accountsCreated: accountsCreated);
+      return WorkforceImportResult(added: added, updated: updated);
     });
-  }
-
-  List<SupervisorSeed> _seeds(List<WorkforceRow> rows, Map<String, Employee> byCode) {
-    const res = SupervisorRoleResolver();
-    return [
-      for (final r in rows)
-        if ((res.resolve(r), byCode[r.code.trim()]) case (final role?, final emp?))
-          SupervisorSeed(employeeUid: emp.iqamaNo, displayName: r.name, role: role, teamName: r.team, campusName: r.campus),
-    ];
   }
 }

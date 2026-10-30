@@ -33,7 +33,6 @@ final class HomeScaffoldPageRouter {
     ),
     AppSection.workers => WorkersScreen(database: database, events: events, arabic: ar),
     AppSection.teams => EntitiesScreen(database: database, arabic: ar, teams: true),
-    AppSection.housing => const SizedBox.shrink(),
     AppSection.checkIn => OperationsScreen(
       controller: controller, arabic: ar, role: account.role,
       teamSetupStore: ref.watch(teamSetupStoreProvider), actor: actor, scope: scope,

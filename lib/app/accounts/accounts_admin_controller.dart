@@ -21,27 +21,26 @@ final class AccountsAdminController {
   final WorkforceImportRepository _importer;
 
   Future<AccountsAdminData> load() => AccountsAdminLoader(_database, _auth).load();
-
   Future<ImportPreview?> pickImport() => const AccountsAdminImportPicker().pick();
-
   Future<WorkforceImportResult> commitImport(ImportPreview p) => _importer.commit(p.rows);
 
   Future<void> create(AccountFormResult form) => _auth.createAccount(
-        employeeUid: form.employeeUid,
-        displayName: form.displayName,
-        role: form.role,
+        employeeUid: form.employeeUid, displayName: form.displayName, role: form.role,
         teamIds: form.teamIds,
         housingIds: form.housingIds.isEmpty ? [HousingConstants.defaultHousingId] : form.housingIds,
       );
 
+  Future<int> batchActivateSupervisors({
+    required List<Employee> selectedEmployees,
+    required AuthRole role,
+  }) => AccountProvisioningRepository(_database, _auth)
+      .batchActivateSupervisors(selectedEmployees: selectedEmployees, role: role);
+
   Future<void> update(LocalAccount account, AccountFormResult form) async {
     if (form.role != AuthRole.projectManager) await _guardLastManager(account);
     await AccountProvisioningRepository(_database, _auth).updateAccount(
-      accountId: account.id,
-      displayName: form.displayName,
-      role: form.role,
-      teamIds: form.teamIds,
-      housingIds: form.housingIds,
+      accountId: account.id, displayName: form.displayName, role: form.role,
+      teamIds: form.teamIds, housingIds: form.housingIds,
     );
   }
 

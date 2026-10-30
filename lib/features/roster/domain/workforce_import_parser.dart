@@ -1,139 +1,52 @@
-import 'dart:convert';
-
-import 'package:excel/excel.dart';
 import 'package:radar_labor/features/roster/domain/workforce_row.dart';
+import 'package:radar_labor/features/roster/domain/workforce_tabular_reader.dart';
 
-/// Reads only the non-sensitive workforce columns needed for local operations.
+/// Reads non-sensitive workforce columns needed for local operations.
 final class WorkforceImportParser {
-  const WorkforceImportParser();
+  const WorkforceImportParser({this.reader = const WorkforceTabularReader()});
+  final WorkforceTabularReader reader;
 
-  List<WorkforceRow> parse({
-    required String filename,
-    required List<int> bytes,
-  }) {
-    final lowerName = filename.toLowerCase();
-    final rows = lowerName.endsWith('.csv') ? _csv(bytes) : _xlsx(bytes);
+  List<WorkforceRow> parse({required String filename, required List<int> bytes}) {
+    final rows = reader.read(filename, bytes);
     if (rows.isEmpty) throw const FormatException('No tabular data found');
     final headerIndex = rows.indexWhere(_isHeader);
-    if (headerIndex < 0) {
-      throw const FormatException('Required S/O and Name columns are missing');
-    }
+    if (headerIndex < 0) throw const FormatException('Required S/O and Name columns are missing');
     final headers = rows[headerIndex].map(_normalizeHeader).toList();
-    final codeIndex = headers.indexOf('so');
-    final nameIndex = headers.indexOf('name');
-    final designationIndex = headers.indexOf('designation');
-    final supplierIndex = headers.indexOf('supplier');
-    final roleIndex = _firstIndex(headers, const [
-      'role',
-      'approle',
-      'systemrole',
-    ]);
-    final teamIndex = _firstIndex(headers, const ['team', 'teamname']);
-    final campusIndex = _firstIndex(headers, const [
-      'campus',
-      'campusname',
-      'housing',
-      'camp',
-    ]);
+    final cIdx = headers.indexOf('so'), nIdx = headers.indexOf('name');
+    final dIdx = headers.indexOf('designation'), sIdx = headers.indexOf('supplier');
+    final rIdx = _firstIndex(headers, const ['role', 'approle', 'systemrole']);
+    final tIdx = _firstIndex(headers, const ['team', 'teamname']);
+    final cpIdx = _firstIndex(headers, const ['campus', 'campusname', 'housing', 'camp']);
+    final etIdx = _firstIndex(headers, const ['employmenttype', 'type', 'affiliation', 'نوعالتبعية', 'التبعية']);
     final result = <WorkforceRow>[];
     for (final row in rows.skip(headerIndex + 1)) {
-      final code = _cell(row, codeIndex);
-      final name = _cell(row, nameIndex);
+      final code = _cell(row, cIdx), name = _cell(row, nIdx);
       if (code.isEmpty && name.isEmpty) continue;
-      if (code.isEmpty || name.isEmpty) {
-        throw const FormatException('A worker row has a missing code or name');
-      }
-      result.add(
-        WorkforceRow(
-          code: code,
-          name: name,
-          designation: _cell(row, designationIndex),
-          supplier: _cell(row, supplierIndex),
-          role: _cell(row, roleIndex),
-          team: _cell(row, teamIndex),
-          campus: _cell(row, campusIndex),
-        ),
-      );
+      if (code.isEmpty || name.isEmpty) throw const FormatException('A worker row has a missing code or name');
+      final supp = _cell(row, sIdx);
+      result.add(WorkforceRow(
+        code: code, name: name, designation: _cell(row, dIdx), supplier: supp,
+        employmentType: _resolveType(_cell(row, etIdx), supp),
+        role: _cell(row, rIdx), team: _cell(row, tIdx), campus: _cell(row, cpIdx),
+      ));
     }
     if (result.isEmpty) throw const FormatException('No workers found');
     final codes = <String>{};
-    for (final worker in result) {
-      if (!codes.add(worker.code.toLowerCase())) {
-        throw const FormatException(
-          'Duplicate worker codes must be fixed first',
-        );
-      }
+    for (final w in result) {
+      if (!codes.add(w.code.toLowerCase())) throw const FormatException('Duplicate worker codes must be fixed first');
     }
     return List.unmodifiable(result);
   }
 
-  bool _isHeader(List<String> row) {
-    final headers = row.map(_normalizeHeader).toSet();
-    return headers.contains('so') && headers.contains('name');
-  }
+  bool _isHeader(List<String> r) => r.map(_normalizeHeader).toSet().containsAll(const {'so', 'name'});
+  String _normalizeHeader(String v) => v.toLowerCase().replaceAll(RegExp(r'[^a-z0-9\u0600-\u06FF]'), '');
+  int _firstIndex(List<String> h, List<String> c) => c.map(h.indexOf).firstWhere((i) => i >= 0, orElse: () => -1);
+  String _cell(List<String> r, int idx) => idx < 0 || idx >= r.length ? '' : r[idx].trim();
 
-  String _normalizeHeader(String value) =>
-      value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-
-  /// Index of the first optional header present, or -1 when absent.
-  int _firstIndex(List<String> headers, List<String> candidates) {
-    for (final name in candidates) {
-      final index = headers.indexOf(name);
-      if (index >= 0) return index;
-    }
-    return -1;
-  }
-
-  String _cell(List<String> row, int index) =>
-      index < 0 || index >= row.length ? '' : row[index].trim();
-
-  List<List<String>> _xlsx(List<int> bytes) {
-    final excel = Excel.decodeBytes(bytes);
-    final sheet =
-        excel.tables['All Labour Active'] ?? excel.tables.values.firstOrNull;
-    if (sheet == null) return const [];
-    return sheet.rows
-        .map((row) => row.map((cell) => cell?.value?.toString() ?? '').toList())
-        .toList();
-  }
-
-  List<List<String>> _csv(List<int> bytes) {
-    final text = utf8.decode(bytes, allowMalformed: false);
-    final result = <List<String>>[];
-    var row = <String>[];
-    final field = StringBuffer();
-    var quoted = false;
-    for (var index = 0; index < text.length; index++) {
-      final char = text[index];
-      if (char == '"') {
-        if (quoted && index + 1 < text.length && text[index + 1] == '"') {
-          field.write('"');
-          index++;
-        } else {
-          quoted = !quoted;
-        }
-      } else if (!quoted && char == ',') {
-        row.add(field.toString());
-        field.clear();
-      } else if (!quoted && (char == '\n' || char == '\r')) {
-        if (char == '\r' &&
-            index + 1 < text.length &&
-            text[index + 1] == '\n') {
-          index++;
-        }
-        row.add(field.toString());
-        field.clear();
-        result.add(row);
-        row = <String>[];
-      } else {
-        field.write(char);
-      }
-    }
-    if (quoted) throw const FormatException('CSV contains an unclosed quote');
-    if (field.isNotEmpty || row.isNotEmpty) {
-      row.add(field.toString());
-      result.add(row);
-    }
-    return result;
+  static String _resolveType(String raw, String supplier) {
+    final lower = raw.trim().toLowerCase();
+    if (lower.contains('rental') || lower.contains('ايجار') || lower.contains('إيجار')) return 'rental';
+    if (lower.contains('company') || lower.contains('شركة')) return 'company';
+    return supplier.trim().isNotEmpty ? 'rental' : 'company';
   }
 }

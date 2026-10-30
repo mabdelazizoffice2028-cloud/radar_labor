@@ -3,7 +3,7 @@ import 'package:radar_labor/core/auth/auth_exceptions.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/local_auth_account_reader.dart';
 import 'package:radar_labor/core/auth/local_auth_password_service.dart';
-import 'package:radar_labor/core/auth/user_scope_storage.dart';
+import 'package:radar_labor/core/auth/team_scope_sync.dart';
 import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/time/clock.dart';
@@ -43,9 +43,11 @@ final class LocalAuthAccountMutator {
     return insertUser(employeeUid, displayName.trim(), role, teamIds, housingIds);
   }
 
-  Future<void> deactivateAccount(String id) =>
-      (_database.update(_database.appUsers)..where((u) => u.id.equals(id)))
-          .write(const AppUsersCompanion(active: Value(false)));
+  Future<void> deactivateAccount(String id) => _database.transaction(() async {
+    await (_database.update(_database.appUsers)..where((u) => u.id.equals(id)))
+        .write(const AppUsersCompanion(active: Value(false)));
+    await TeamScopeSync(_database).clearSupervisor(id);
+  });
 
   Future<bool> ensureAccountForRole(AuthRole role, String displayName) =>
       _database.transaction(() async {
@@ -56,10 +58,9 @@ final class LocalAuthAccountMutator {
       });
 
   Future<void> updateScopes(String id, {required List<String> teamIds, required List<String> housingIds}) =>
-      _database.transaction(() async {
-        await (_database.delete(_database.userScopes)..where((s) => s.userId.equals(id))).go();
-        await insertUserScopes(_database, id, teamIds, housingIds);
-      });
+      _database.transaction(() => TeamScopeSync(_database).syncScopes(
+        userId: id, teamIds: teamIds, housingIds: housingIds,
+      ));
 
   Future<String> insertUser(
     String? empUid, String name, AuthRole role, [List<String> tIds = const [], List<String> hIds = const []]
@@ -72,7 +73,7 @@ final class LocalAuthAccountMutator {
         pwHash: hash, pwSalt: salt, kdfParams: AuthConstants.kdfParamsJson,
         mustChange: const Value(true), createdAt: _clock.nowUtc(),
       ));
-      await insertUserScopes(_database, id, tIds, hIds);
+      await TeamScopeSync(_database).syncScopes(userId: id, teamIds: tIds, housingIds: hIds);
     });
     return id;
   }

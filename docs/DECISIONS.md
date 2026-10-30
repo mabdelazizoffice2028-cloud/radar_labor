@@ -1,6 +1,10 @@
 # DECISIONS — Radar Labor V1
 
 ## Locked product decisions
+- 2026-10-30 (V2.6) — Primary Worker Key & Iqama Privacy: The 10-digit Iqama number (`employees.iqama_no`) is the primary unique identifier stored locally in the encrypted SQLite database for worker deduplication, matching across roster re-imports, and validity tracking. It is STRICTLY confidential and never disclosed in public WhatsApp reports or exports.
+- 2026-10-30 (V2.6) — Roster Import Decoupling from Account Provisioning: CSV/Excel workforce import only populates and updates the `employees` table and `worker_history` ledger. It NEVER creates supervisor accounts or teams automatically. Supervisor activation is an explicit administrative decision performed via one-tap batch activation buttons in User Accounts (`LocalAccountsScreen`).
+- 2026-10-30 (V2.6) — Atomic Dual-Write for Teams and Scopes: Supervisor assignment is dual-written atomically across `teams.supervisor_user_id` and `user_scopes`. Reassigning or updating a supervisor's scopes clears previous supervisor references immediately with zero orphaned scopes.
+- 2026-10-30 (V2.6) — Site Supervisor Multi-Team Creation: Site supervisors can create multiple teams on the fly using the 3-step `TeamWizardScreen` launched directly from the site attendance menu (`SiteAttendanceMoreMenu`), enabling flexible operations across multiple active crews.
 - 2026-10-23 — Owner explicitly changed the cloud decision and requested
   Supabase project configuration and RBAC. The client may initialize Supabase
   optionally after the encrypted local store opens; local workflows must still
