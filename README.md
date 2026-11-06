@@ -24,7 +24,7 @@
 In harsh remote environments, cellular coverage is notoriously unstable or unavailable. Traditional cloud-dependent HR timeclocks or biometric systems often falter in the field, leading to operational blind spots, unaccounted personnel, compliance exposure, and untracked subcontracted labor costs.
 
 Radar Labour resolves these field challenges through a **local-first, offline-resilient architecture**:
-* **Autonomous Field Execution:** All records, validations, and roster inquiries run completely offline against an on-device encrypted SQLite database.
+* **Autonomous Field Execution:** All records, validations, and roster inquiries run completely offline against an on-device high-performance SQLite database.
 * **Append-Only Event Ledger:** Daily worker movements, attendance checkpoints, and housing verifications are stored as immutable event streams with cryptographic idempotency—preventing data tampering and phantom sync states.
 * **Immediate Executive Transparency:** Automated conflict resolution, SLA breach warnings, and instant bilingual WhatsApp reports keep project managers, HR, and site supervisors aligned in real time without human data entry errors.
 
@@ -33,7 +33,7 @@ Radar Labour resolves these field challenges through a **local-first, offline-re
 ## 🚀 What's New (Latest Release Highlights)
 
 * **🌙 Friday Overtime Exception & Zero-Absence Rule:** Guarantees zero absences on Fridays across the entire app; present workers are recorded as overtime with high-contrast amber banner, dedicated dashboard cards, and customized WhatsApp reports.
-* **🧪 213 Automated Tests & Stress Benchmarks:** 100% test pass rate across 213 unit, integration, and stress tests, proving draft resilience against crashes, atomic rollback, and rapid processing (1,500 profiles in 40ms).
+* **🧪 272 Automated Tests & Stress Benchmarks:** 100% test pass rate across 272 unit, integration, and stress tests, proving draft resilience against crashes, atomic rollback, and rapid processing (1,500 profiles in 40ms).
 * **👥 "Default Crew" One-Tap Button:** Site supervisors can auto-select all regular crew members with a single tap, only unchecking absent workers for lightning-fast site attendance.
 * **⚡ Auto-Attendance for Non-Labor Staff:** Engineers, safety officers, HR, PMs, and foremen are automatically treated as "Present on Site" every regular day, with quick absence toggling by Admin/HR.
 * **🏖️ Flexible Leave Management (Retroactive & Future):** Assign past or future vacation leaves to any worker; workers on leave are immediately excluded from site check-ins, campus checks, and dashboard absences (Absent = 0).
@@ -75,7 +75,7 @@ Radar Labour resolves these field challenges through a **local-first, offline-re
 
 ### 🔒 5. Role-Based Security & Governance
 * **Multi-Role Scoping (RBAC):** Strict operational boundaries for Project Manager, HR, Campus Supervisor, Site Supervisor, and Read-Only Viewer.
-* **Cryptographic Local Security:** AES-256 database encryption with runtime key isolation via Android KeyStore / Secure Storage.
+* **Cryptographic Local Security:** High-performance local SQLite database (Schema V6) with secure Argon2id password hashing and hardware-backed KeyStore protection.
 * **Password Policy:** Argon2id PIN hashing with mandatory first-login password rotation and brute-force attempt lockout.
 * **Riyadh Business Hours Lockout:** Automated operational lockouts preventing retroactive editing after cutoff hours (20:00 for Housing, 23:00 for Site Attendance).
 
@@ -92,7 +92,7 @@ Radar Labour resolves these field challenges through a **local-first, offline-re
 | **Framework** | **Flutter 3.47.x / Dart 3.13.5** | High-performance cross-platform mobile engine |
 | **State Management** | **Flutter Riverpod 3.4.3** | Declarative, reactive, compile-safe dependency injection & state |
 | **Local Database & ORM** | **Drift 2.35.2 + SQLite3 3.7.1** | Strongly-typed, transactional SQLite abstraction with reactive streams |
-| **Data Encryption** | **Cryptography 2.9.0 + Flutter Secure Storage 11.2.0** | Hardware-backed KeyStore key management and AES encryption |
+| **Authentication & Cryptography** | **Cryptography 2.9.0 + Flutter Secure Storage 11.2.0** | Argon2id password hashing and secure token storage |
 | **Navigation & Routing** | **GoRouter 18.1.1** | Declarative route orchestration with role-based auth guards |
 | **Cloud Gateway** | **Supabase Flutter 2.18.3** | Optional upstream cloud backup and multi-tenant synchronization |
 | **Connectivity** | **Connectivity Plus 7.3.2** | Real-time network transition detection for auto-sync |
@@ -116,7 +116,7 @@ lib/
 │   ├── audit/                        # System audit logging & hardware device resolution
 │   ├── auth/                         # Authentication repositories, RBAC & scope snapshots
 │   ├── constants/                    # Application tokens, SLAs & timeout configurations
-│   ├── database/                     # Drift database schema, migrations & encryption openers
+│   ├── database/                     # Drift database schema, migrations & openers
 │   │   ├── models/                   # Database data transfer objects
 │   │   └── tables/                   # Schema definitions (Employees, Events, Teams, Scopes)
 │   ├── l10n/                         # Bilingual localization strings (Arabic/English)

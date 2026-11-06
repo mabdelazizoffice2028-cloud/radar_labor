@@ -63,3 +63,6 @@ app.*.map.json
 
 # Local handoff APKs (keep out of source history)
 /outputs/*.apk
+
+# Visual Studio
+.vs/
