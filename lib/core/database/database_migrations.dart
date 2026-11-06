@@ -34,3 +34,26 @@ Future<void> handleDatabaseUpgrade({
     await migrateToSchemaV6(migrator: migrator, database: database);
   }
 }
+
+/// Ensures performance indexes exist on present tables without failing partial test schemas.
+Future<void> ensureDatabaseIndexes(AppDatabase database) async {
+  final tables = (await database.customSelect(
+    "SELECT name FROM sqlite_master WHERE type = 'table'",
+  ).get()).map((r) => r.read<String>('name')).toSet();
+
+  if (tables.contains('events')) {
+    await database.customStatement('CREATE INDEX IF NOT EXISTS idx_events_date_seq ON events(business_date, device_seq)');
+    await database.customStatement('CREATE INDEX IF NOT EXISTS idx_events_sync_seq ON events(sync_status, device_seq)');
+    await database.customStatement('CREATE INDEX IF NOT EXISTS idx_events_emp_uid ON events(employee_uid)');
+  }
+  if (tables.contains('employees')) {
+    await database.customStatement('CREATE INDEX IF NOT EXISTS idx_employees_team ON employees(current_team_id)');
+    await database.customStatement('CREATE INDEX IF NOT EXISTS idx_employees_archived ON employees(archived_at)');
+  }
+  if (tables.contains('user_scopes')) {
+    await database.customStatement('CREATE INDEX IF NOT EXISTS idx_user_scopes_user ON user_scopes(user_id)');
+  }
+  if (tables.contains('audit_log')) {
+    await database.customStatement('CREATE INDEX IF NOT EXISTS idx_audit_sync_time ON audit_log(sync_status, device_time)');
+  }
+}

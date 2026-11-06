@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/auth_gate_service.dart';
 import 'package:radar_labor/app/auth_sign_in_handler.dart';
@@ -8,10 +9,12 @@ import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/l10n/auth_flow_strings.dart';
 
 final class AuthGateController extends ChangeNotifier {
-  AuthGateController(AppDatabase database) : _service = AuthGateService(database);
+  AuthGateController(this._database) : _service = AuthGateService(_database);
 
+  final AppDatabase _database;
   final AuthGateService _service;
   final flowNotifier = LoginFlowNotifier();
+  StreamSubscription<AppUser?>? _accountSub;
   LocalAccount? activeAccount;
   String? error;
   bool loading = true, busy = false;
@@ -42,7 +45,22 @@ final class AuthGateController extends ChangeNotifier {
     busy = false;
     activeAccount = acc;
     error = err;
+    _watchActiveAccount(acc, isAr);
     notifyListeners();
+  }
+
+  void _watchActiveAccount(LocalAccount? acc, bool isAr) {
+    _accountSub?.cancel();
+    _accountSub = null;
+    if (acc == null) return;
+    _accountSub = (_database.select(_database.appUsers)
+          ..where((u) => u.id.equals(acc.id)))
+        .watchSingleOrNull()
+        .listen((user) {
+      if (activeAccount != null && (user == null || !user.active)) {
+        logout(isAr);
+      }
+    });
   }
 
   void switchAccount() {
@@ -53,6 +71,8 @@ final class AuthGateController extends ChangeNotifier {
   }
 
   void logout(bool isAr) {
+    _accountSub?.cancel();
+    _accountSub = null;
     flowNotifier.clearRole();
     activeAccount = null;
     load(isAr);
@@ -60,6 +80,7 @@ final class AuthGateController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _accountSub?.cancel();
     flowNotifier.dispose();
     super.dispose();
   }

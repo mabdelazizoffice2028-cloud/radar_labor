@@ -38,6 +38,8 @@ final class HousingCheckUndo {
     required this.previousAbsences,
     required this.currentAbsences,
     required this.wasChecked,
+    this.workerEmploymentTypes = const {},
+    this.workerJobCategories = const {},
   });
 
   final String date;
@@ -45,6 +47,8 @@ final class HousingCheckUndo {
   final Set<String> previousAbsences;
   final Set<String> currentAbsences;
   final bool wasChecked;
+  final Map<String, String> workerEmploymentTypes;
+  final Map<String, String> workerJobCategories;
 }
 
 final class SiteAttendanceUndo {
@@ -54,6 +58,8 @@ final class SiteAttendanceUndo {
     required this.previousPresent,
     required this.currentPresent,
     required this.wasSubmitted,
+    this.workerEmploymentTypes = const {},
+    this.workerJobCategories = const {},
   });
 
   final String date;
@@ -61,4 +67,6 @@ final class SiteAttendanceUndo {
   final Set<String> previousPresent;
   final Set<String> currentPresent;
   final bool wasSubmitted;
+  final Map<String, String> workerEmploymentTypes;
+  final Map<String, String> workerJobCategories;
 }

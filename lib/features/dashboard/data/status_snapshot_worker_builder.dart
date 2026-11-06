@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/database/app_setting_keys.dart';
 import 'package:radar_labor/core/leaves/worker_leave.dart';
@@ -11,7 +12,8 @@ final class StatusSnapshotWorkerBuilder {
     try {
       final list = jsonDecode(raw) as List;
       return list.map((e) => WorkerLeave.fromJson(e as Map<String, dynamic>)).where((l) => l.coversDate(date)).map((l) => l.employeeUid).toSet();
-    } on Exception {
+    } on Exception catch (e) {
+      debugPrint('StatusSnapshotWorkerBuilder.parseOnLeave error: ${e.runtimeType}');
       return const {};
     }
   }

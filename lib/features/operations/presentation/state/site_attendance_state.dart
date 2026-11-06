@@ -11,7 +11,7 @@ final class SiteAttendanceState {
   const SiteAttendanceState({
     required this.selectedDate, required this.todayDate, this.selectedTeam,
     this.isPastDate = false, this.isLoading = false, this.isSaving = false,
-    this.searchQuery = '', this.rows = const <AttendanceRow>[],
+    this.hasLoadedDay = false, this.searchQuery = '', this.rows = const <AttendanceRow>[],
     this.baseline = const AttendanceBaseline(kind: BaselineKind.none),
     this.initialSource = AttendanceInitialSource.empty, this.initialSourceDate,
     this.skippedDraftCount = 0, this.lastUndoPlan, this.lastSummary,
@@ -24,6 +24,7 @@ final class SiteAttendanceState {
   final bool isPastDate;
   final bool isLoading;
   final bool isSaving;
+  final bool hasLoadedDay;
   final String searchQuery;
   final List<AttendanceRow> rows;
   final AttendanceBaseline baseline;
@@ -48,14 +49,15 @@ final class SiteAttendanceState {
 
   SiteAttendanceState withLoadedDay(LoadedSiteAttendanceDay d, String today) => copyWith(
     selectedTeam: d.team, selectedDate: d.date, todayDate: today, isPastDate: d.isPastDate,
-    isLoading: false, rows: d.rows, baseline: d.baseline, initialSource: d.initialSource,
-    initialSourceDate: d.initialSourceDate, clearInitialSourceDate: d.initialSourceDate == null,
+    isLoading: false, hasLoadedDay: true, rows: d.rows, baseline: d.baseline,
+    initialSource: d.initialSource, initialSourceDate: d.initialSourceDate,
+    clearInitialSourceDate: d.initialSourceDate == null,
     skippedDraftCount: d.skippedDraftCount, clearError: true, hasUnsavedChanges: false,
   );
 
   SiteAttendanceState copyWith({
     EntityOption? selectedTeam, bool clearSelectedTeam = false, String? selectedDate,
-    String? todayDate, bool? isPastDate, bool? isLoading, bool? isSaving,
+    String? todayDate, bool? isPastDate, bool? isLoading, bool? isSaving, bool? hasLoadedDay,
     String? searchQuery, List<AttendanceRow>? rows, AttendanceBaseline? baseline,
     AttendanceInitialSource? initialSource, String? initialSourceDate,
     bool clearInitialSourceDate = false, int? skippedDraftCount,
@@ -66,9 +68,9 @@ final class SiteAttendanceState {
     selectedTeam: clearSelectedTeam ? null : (selectedTeam ?? this.selectedTeam),
     selectedDate: selectedDate ?? this.selectedDate, todayDate: todayDate ?? this.todayDate,
     isPastDate: isPastDate ?? this.isPastDate, isLoading: isLoading ?? this.isLoading,
-    isSaving: isSaving ?? this.isSaving, searchQuery: searchQuery ?? this.searchQuery,
-    rows: rows ?? this.rows, baseline: baseline ?? this.baseline,
-    initialSource: initialSource ?? this.initialSource,
+    isSaving: isSaving ?? this.isSaving, hasLoadedDay: hasLoadedDay ?? this.hasLoadedDay,
+    searchQuery: searchQuery ?? this.searchQuery, rows: rows ?? this.rows,
+    baseline: baseline ?? this.baseline, initialSource: initialSource ?? this.initialSource,
     initialSourceDate: clearInitialSourceDate ? null : (initialSourceDate ?? this.initialSourceDate),
     skippedDraftCount: skippedDraftCount ?? this.skippedDraftCount,
     lastUndoPlan: clearUndoPlan ? null : (lastUndoPlan ?? this.lastUndoPlan),

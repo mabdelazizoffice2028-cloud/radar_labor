@@ -18,8 +18,13 @@ abstract final class ScopeGuard {
     required String date, required String todayBusinessDate, DateTime? nowUtc,
     int lockoutHour = 23, int maxBackdateDays = OperationsConstants.maxBackdateDays,
   }) {
-    requireCapability(actor.capabilities.canRecordSite);
-    if (!scope.allowsTeam(teamId)) throw const OperationException(PermissionDenied());
+    final isPastAdminEdit = date != todayBusinessDate && actor.capabilities.canEditPastDays;
+    if (!isPastAdminEdit) {
+      requireCapability(actor.capabilities.canRecordSite);
+      if (!scope.allowsTeam(teamId)) throw const OperationException(PermissionDenied());
+    } else if (!actor.capabilities.canViewAllHistory && !scope.allowsTeam(teamId)) {
+      throw const OperationException(PermissionDenied());
+    }
     ScopeDateGuard.guardLockout(
       role: actor.role, date: date, todayBusinessDate: todayBusinessDate,
       nowUtc: nowUtc, lockoutHour: lockoutHour,
@@ -35,8 +40,14 @@ abstract final class ScopeGuard {
     String? date, String? todayBusinessDate, DateTime? nowUtc,
     int lockoutHour = 20, int maxBackdateDays = OperationsConstants.maxBackdateDays,
   }) {
-    requireCapability(actor.capabilities.canRecordHousing);
-    if (!scope.allowsHousing(housingId)) throw const OperationException(PermissionDenied());
+    final isPastAdminEdit = date != null && todayBusinessDate != null &&
+        date != todayBusinessDate && actor.capabilities.canEditPastDays;
+    if (!isPastAdminEdit) {
+      requireCapability(actor.capabilities.canRecordHousing);
+      if (!scope.allowsHousing(housingId)) throw const OperationException(PermissionDenied());
+    } else if (!actor.capabilities.canViewAllHistory && !scope.allowsHousing(housingId)) {
+      throw const OperationException(PermissionDenied());
+    }
     if (date != null && isFridayBusinessDate(date)) {
       throw const OperationException(FridayAbsenceNotAllowed());
     }

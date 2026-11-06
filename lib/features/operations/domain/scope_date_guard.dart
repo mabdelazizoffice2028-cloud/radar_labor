@@ -1,7 +1,7 @@
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/auth/role_capabilities.dart';
 import 'package:radar_labor/core/constants/operations_constants.dart';
-import 'package:radar_labor/core/time/clock.dart';
+import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 
 abstract final class ScopeDateGuard {
@@ -14,7 +14,7 @@ abstract final class ScopeDateGuard {
   }) {
     if (role == AuthRole.projectManager || role == AuthRole.hr) return;
     if (date != todayBusinessDate || nowUtc == null) return;
-    if (nowUtc.toRiyadh().hour >= lockoutHour) {
+    if (isPastLockoutHour(nowUtc, lockoutHour)) {
       throw const OperationException(DayLockedOut());
     }
   }

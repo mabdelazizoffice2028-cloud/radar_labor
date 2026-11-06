@@ -24,11 +24,13 @@ final class RosterAdminWorkerUpdater {
     _guard(actor);
     await database.transaction(() async {
       final ex = await _requireEmp(uid);
+      final trimmedCat = category?.trim();
       await (database.update(database.employees)..where((r) => r.iqamaNo.equals(uid)))
           .write(EmployeesCompanion(
         fullNameAr: nameAr != null ? Value(nameAr.trim()) : const Value.absent(),
         fullNameEn: nameEn != null ? Value(nameEn.trim()) : const Value.absent(),
-        jobTitle: category != null ? Value(category.trim()) : const Value.absent(),
+        jobTitle: trimmedCat != null ? Value(trimmedCat) : const Value.absent(),
+        jobCategory: trimmedCat != null ? Value(trimmedCat) : const Value.absent(),
         currentTeamId: teamId,
         employmentType: employmentType != null ? Value(EmploymentConstants.normalize(employmentType)) : const Value.absent(),
         rentalCompany: rentalCompany != null ? Value(rentalCompany.trim().isEmpty ? null : rentalCompany.trim()) : const Value.absent(),

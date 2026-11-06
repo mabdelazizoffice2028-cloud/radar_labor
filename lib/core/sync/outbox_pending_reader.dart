@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:radar_labor/core/audit/audit_entry.dart';
 import 'package:radar_labor/core/database/app_database.dart';
+import 'package:radar_labor/core/events/event_domain_mapper.dart';
 import 'package:radar_labor/core/status/status_models.dart';
 
 abstract final class OutboxPendingReader {
@@ -11,15 +12,7 @@ abstract final class OutboxPendingReader {
           ..limit(limit))
         .get();
     return List.unmodifiable([
-      for (final row in rows)
-        LocalEvent(
-          eventId: row.eventId, deviceSeq: row.deviceSeq,
-          type: EventType.values.byName(row.type), action: EventAction.values.byName(row.action),
-          businessDate: row.businessDate, employeeUid: row.employeeUid,
-          teamId: row.teamId, housingId: row.housingId, userId: row.userId,
-          receivedAtUtc: row.receivedAt?.toUtc(), deviceTimeUtc: row.deviceTime.toUtc(),
-          delivery: EventDelivery.values.byName(row.syncStatus), isLate: row.late,
-        ),
+      for (final row in rows) EventDomainMapper.toDomain(row),
     ]);
   }
 

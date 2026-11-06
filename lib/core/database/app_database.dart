@@ -40,12 +40,18 @@ class AppDatabase extends _$AppDatabase {
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
-    onCreate: (migrator) => migrator.createAll(),
-    onUpgrade: (migrator, from, to) => handleDatabaseUpgrade(
-      migrator: migrator,
-      from: from,
-      to: to,
-      database: this,
-    ),
+    onCreate: (migrator) async {
+      await migrator.createAll();
+      await ensureDatabaseIndexes(this);
+    },
+    onUpgrade: (migrator, from, to) async {
+      await handleDatabaseUpgrade(
+        migrator: migrator,
+        from: from,
+        to: to,
+        database: this,
+      );
+      await ensureDatabaseIndexes(this);
+    },
   );
 }

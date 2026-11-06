@@ -45,7 +45,9 @@ final class OperationsDevTools {
     await database.transaction(() async {
       await database.customStatement('DELETE FROM events');
       await database.customStatement(
-        "DELETE FROM settings WHERE key LIKE '${AppSettingKeys.draftSiteAttendancePrefix}%' OR key LIKE '${AppSettingKeys.draftHousingCheckPrefix}%'",
+        "DELETE FROM settings WHERE key LIKE '${AppSettingKeys.draftSiteAttendancePrefix}%' "
+        "OR key LIKE '${AppSettingKeys.draftHousingCheckPrefix}%' "
+        "OR key = '${AppSettingKeys.lastSyncedServerSeq}'",
       );
     });
 

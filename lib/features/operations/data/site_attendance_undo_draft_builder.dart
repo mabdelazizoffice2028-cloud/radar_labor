@@ -20,6 +20,12 @@ abstract final class SiteAttendanceUndoDraftBuilder {
           if (entry.key.type == EventType.resolution &&
               entry.resolutionKind != null)
             'kind': entry.resolutionKind!.key,
+          if (entry.restoreAction == EventAction.set &&
+              entry.employmentType != null)
+            'employmentType': entry.employmentType,
+          if (entry.restoreAction == EventAction.set &&
+              entry.jobCategory != null)
+            'jobCategory': entry.jobCategory,
         },
       ),
   ];

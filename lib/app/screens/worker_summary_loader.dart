@@ -15,7 +15,7 @@ final class WorkerSummaryLoader {
     required String jobCategory,
     required Clock clock,
   }) async {
-    final allEvents = await events.watchAll().first;
+    final workerEvents = await events.readForWorkerSummary(employeeUid);
     final allLeaves = await leaves.readAll();
     final teams = await database.select(database.teams).get();
     final teamNames = {
@@ -25,7 +25,7 @@ final class WorkerSummaryLoader {
     final summary = WorkerSummaryCalculator.calculate(
       employeeUid: employeeUid,
       jobCategory: jobCategory,
-      allEvents: allEvents,
+      allEvents: workerEvents,
       leaves: allLeaves,
       teamNamesById: teamNames,
     );

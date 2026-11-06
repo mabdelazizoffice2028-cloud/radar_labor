@@ -20,37 +20,41 @@ final class OperationsSiteOperations {
     final prevPresent = ledger.presentWorkerIdsForTeam(team.id);
     final wasSubmitted = ledger.isSiteSubmitted(team.id);
     final ids = {...prevPresent, ...presentIds};
+    final empTypes = <String, String>{...?workerEmploymentTypes};
+    final jobCats = <String, String>{...?workerJobCategories};
+    for (final id in prevPresent) {
+      final ev = ledger.activeEventFor(LedgerKey(
+        type: EventType.sitePresent, teamId: team.id, employeeUid: id,
+      ));
+      if (ev?.employmentType != null) empTypes.putIfAbsent(id, () => ev!.employmentType!);
+      if (ev?.jobCategory != null) jobCats.putIfAbsent(id, () => ev!.jobCategory!);
+    }
     await events.appendBatch([
       for (final id in ids)
         EventDraft(
           type: EventType.sitePresent,
           action: presentIds.contains(id) ? EventAction.set : EventAction.clear,
-          businessDate: date,
-          employeeUid: id,
-          teamId: team.id,
-          userId: actorUserId,
+          businessDate: date, employeeUid: id, teamId: team.id, userId: actorUserId,
           payload: {
             if (presentIds.contains(id)) ...{
-              'employmentType': workerEmploymentTypes?[id] ?? 'company',
-              'jobCategory': workerJobCategories?[id] ?? 'direct_labor',
+              'employmentType': empTypes[id] ?? 'company',
+              'jobCategory': jobCats[id] ?? 'direct_labor',
             },
           },
         ),
       EventDraft(
-        type: EventType.siteSubmitted,
-        action: EventAction.set,
-        businessDate: date,
-        teamId: team.id,
-        userId: actorUserId,
+        type: EventType.siteSubmitted, action: EventAction.set,
+        businessDate: date, teamId: team.id, userId: actorUserId,
         payload: {'presentCount': presentIds.length},
       ),
     ]);
     return SiteAttendanceUndo(
-      date: date,
-      teamId: team.id,
+      date: date, teamId: team.id,
       previousPresent: Set.unmodifiable(prevPresent),
       currentPresent: Set.unmodifiable(presentIds),
       wasSubmitted: wasSubmitted,
+      workerEmploymentTypes: Map.unmodifiable(empTypes),
+      workerJobCategories: Map.unmodifiable(jobCats),
     );
   }
 
@@ -60,17 +64,18 @@ final class OperationsSiteOperations {
           EventDraft(
             type: EventType.sitePresent,
             action: undo.previousPresent.contains(id) ? EventAction.set : EventAction.clear,
-            businessDate: undo.date,
-            employeeUid: id,
-            teamId: undo.teamId,
-            userId: actorUserId,
+            businessDate: undo.date, employeeUid: id, teamId: undo.teamId, userId: actorUserId,
+            payload: {
+              if (undo.previousPresent.contains(id)) ...{
+                'employmentType': undo.workerEmploymentTypes[id] ?? 'company',
+                'jobCategory': undo.workerJobCategories[id] ?? 'direct_labor',
+              },
+            },
           ),
         EventDraft(
           type: EventType.siteSubmitted,
           action: undo.wasSubmitted ? EventAction.set : EventAction.clear,
-          businessDate: undo.date,
-          teamId: undo.teamId,
-          userId: actorUserId,
+          businessDate: undo.date, teamId: undo.teamId, userId: actorUserId,
         ),
       ]);
 }

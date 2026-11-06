@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:radar_labor/core/events/event_domain_mapper.dart';
 import 'package:radar_labor/core/status/status_models.dart';
 import 'package:radar_labor/core/sync/remote_gateway.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -38,9 +39,20 @@ abstract final class SupabaseEventsPuller {
 
   static LocalEvent? parseEvent(Map data) {
     try {
+      final rawPayload = data['payload'];
+      final payloadMap = rawPayload is Map
+          ? rawPayload.map((k, v) => MapEntry(k.toString(), v as Object?))
+          : (rawPayload is String
+              ? EventDomainMapper.decodePayload(rawPayload)
+              : const <String, Object?>{});
+      final kindRaw = data['resolution_kind'] ?? payloadMap['kind'];
+      final empType = (data['employment_type'] ?? payloadMap['employmentType'])?.toString();
+      final jobCat = (data['job_category'] ?? payloadMap['jobCategory'])?.toString();
+      final devTimeStr = (data['device_time_utc'] ?? data['device_time'])?.toString();
+      final recTimeStr = data['received_at']?.toString();
       return LocalEvent(
         eventId: data['event_id'].toString(),
-        type: EventType.values.byName(data['event_type'].toString()),
+        type: EventType.values.byName((data['event_type'] ?? data['type']).toString()),
         action: EventAction.values.byName(data['action'].toString()),
         businessDate: data['business_date'].toString(),
         deviceSeq: int.tryParse(data['device_seq']?.toString() ?? '1') ?? 1,
@@ -50,6 +62,13 @@ abstract final class SupabaseEventsPuller {
         userId: data['user_id']?.toString(),
         serverSeq: data['server_seq'] as int?,
         deviceId: data['device_id']?.toString() ?? 'server',
+        deviceTimeUtc: devTimeStr != null ? DateTime.tryParse(devTimeStr)?.toUtc() : null,
+        receivedAtUtc: recTimeStr != null ? DateTime.tryParse(recTimeStr)?.toUtc() : null,
+        delivery: EventDelivery.acked,
+        isLate: data['late'] == true,
+        resolutionKind: ResolutionKind.fromKey(kindRaw),
+        employmentType: empType,
+        jobCategory: jobCat,
       );
     } on Object catch (error) {
       debugPrint('Failed to parse remote event: $error');

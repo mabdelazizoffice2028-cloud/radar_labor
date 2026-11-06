@@ -35,21 +35,34 @@ final class AutoSyncListener {
     if (hasNet) unawaited(_triggerSilentSync());
   }
 
+  Future<void> triggerForSession({
+    required ActorContext actor,
+    required ScopeSnapshot scope,
+  }) => _runSync(actor: actor, scope: scope);
+
   Future<void> _triggerSilentSync() async {
-    if (_isSyncing) return;
     final account = ref.read(currentSessionProvider);
     if (account == null) return;
-
     final actor = ActorContext(userId: account.id, role: account.role);
     final scope = ScopeSnapshot(
       teamIds: account.teamIds.toSet(),
       housingIds: account.housingIds.toSet(),
     );
+    await _runSync(actor: actor, scope: scope);
+  }
 
+  Future<void> _runSync({
+    required ActorContext actor,
+    required ScopeSnapshot scope,
+  }) async {
+    if (_isSyncing) return;
     _isSyncing = true;
     try {
       final engine = ref.read(syncEngineProvider);
-      await engine.synchronize(actor: actor, scope: scope);
+      final res = await engine.synchronize(actor: actor, scope: scope);
+      if (res.sessionRevoked) {
+        ref.read(currentSessionProvider.notifier).setSession(null);
+      }
     } on Object catch (error) {
       debugPrint('AutoSync silent fallback (${error.runtimeType}).');
     } finally {

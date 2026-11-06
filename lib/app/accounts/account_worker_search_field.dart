@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/accounts/account_form_dialog.dart';
 import 'package:radar_labor/core/l10n/admin_strings.dart';
+import 'package:radar_labor/features/operations/domain/worker_search_filter.dart';
 
 final class AccountWorkerSearchField extends StatelessWidget {
   const AccountWorkerSearchField({
@@ -17,13 +18,18 @@ final class AccountWorkerSearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Autocomplete<ScopeOption>(
     displayStringForOption: (o) => o.$2,
-    optionsBuilder: (v) => v.text.isEmpty
-        ? employees
-        : employees.where(
-            (e) =>
-                e.$2.toLowerCase().contains(v.text.toLowerCase()) ||
-                e.$1.contains(v.text),
-          ),
+    optionsBuilder: (v) {
+      if (v.text.trim().isEmpty) return employees;
+      return employees.where(
+        (e) => WorkerSearchFilter.matches(
+          query: v.text,
+          code: e.$1,
+          nameAr: e.$2,
+          nameEn: e.$2,
+          id: e.$1,
+        ),
+      );
+    },
     onSelected: (o) => onSelectEmployee(o.$1, o.$2),
     fieldViewBuilder: (ctx, ctrl, focus, onSub) => TextField(
       controller: ctrl,

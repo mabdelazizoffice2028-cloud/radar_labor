@@ -20,11 +20,8 @@ final class HistoryState {
   final String? errorMessage;
 
   HistoryState copyWith({
-    int? daysWindow,
-    bool? isLoading,
-    HistoryPage? page,
-    String? errorMessage,
-    bool clearError = false,
+    int? daysWindow, bool? isLoading, HistoryPage? page,
+    String? errorMessage, bool clearError = false,
   }) => HistoryState(
     daysWindow: daysWindow ?? this.daysWindow,
     isLoading: isLoading ?? this.isLoading,
@@ -41,10 +38,8 @@ final class HistoryNotifier extends Notifier<HistoryState> {
   @override
   HistoryState build() => const HistoryState();
 
-  void setOverrideContext({ActorContext? actor, ScopeSnapshot? scope}) {
-    _overrideActor = actor;
-    _overrideScope = scope;
-  }
+  void setOverrideContext({ActorContext? actor, ScopeSnapshot? scope}) =>
+      (_overrideActor = actor, _overrideScope = scope);
 
   bool get _isArabic => ref.read(appLocaleProvider) == 'ar';
 
@@ -55,12 +50,8 @@ final class HistoryNotifier extends Notifier<HistoryState> {
     final s = ref.read(currentSessionProvider);
     if (s == null) return null;
     final actor = ActorContext(userId: s.id, role: s.role);
-    final scope =
-        ref.read(userScopesProvider(s.id)).value ??
-        ScopeSnapshot(
-          teamIds: s.teamIds.toSet(),
-          housingIds: s.housingIds.toSet(),
-        );
+    final scope = ref.read(userScopesProvider(s.id)).value ??
+        ScopeSnapshot(teamIds: s.teamIds.toSet(), housingIds: s.housingIds.toSet());
     return (actor: actor, scope: scope);
   }
 
@@ -72,20 +63,11 @@ final class HistoryNotifier extends Notifier<HistoryState> {
   Future<void> _load({required int daysWindow}) async {
     final ctx = _actorAndScope();
     if (ctx == null) return;
-    state = state.copyWith(
-      daysWindow: daysWindow,
-      isLoading: true,
-      clearError: true,
-    );
+    state = state.copyWith(daysWindow: daysWindow, isLoading: true, clearError: true);
     try {
-      final page = await ref
-          .read(historyStoreProvider)
-          .loadHistory(
-            actor: ctx.actor,
-            scope: ctx.scope,
-            daysWindow: daysWindow,
-            arabic: _isArabic,
-          );
+      final page = await ref.read(historyStoreProvider).loadHistory(
+        actor: ctx.actor, scope: ctx.scope, daysWindow: daysWindow, arabic: _isArabic,
+      );
       state = state.copyWith(isLoading: false, page: page, clearError: true);
     } on OperationException catch (error) {
       state = state.copyWith(

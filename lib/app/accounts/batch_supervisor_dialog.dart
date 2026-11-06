@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/l10n/admin_strings.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
+import 'package:radar_labor/features/operations/domain/worker_search_filter.dart';
 
 final class BatchSupervisorDialog extends StatefulWidget {
   const BatchSupervisorDialog({required this.employees, required this.arabic, required this.title, super.key});
@@ -22,12 +23,14 @@ final class _BatchSupervisorDialogState extends State<BatchSupervisorDialog> {
   String _query = '';
 
   List<Employee> get _filtered {
-    final q = _query.trim().toLowerCase();
-    if (q.isEmpty) return widget.employees;
-    return widget.employees.where((e) {
-      final name = '${e.fullNameAr} ${e.fullNameEn ?? ''}'.toLowerCase();
-      return name.contains(q) || e.iqamaNo.contains(q);
-    }).toList();
+    if (_query.trim().isEmpty) return widget.employees;
+    return widget.employees.where((e) => WorkerSearchFilter.matches(
+      query: _query,
+      code: e.iqamaNo,
+      nameAr: e.fullNameAr,
+      nameEn: e.fullNameEn,
+      id: e.iqamaNo,
+    )).toList();
   }
 
   @override

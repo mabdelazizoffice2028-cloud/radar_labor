@@ -14,13 +14,13 @@ mixin SiteAttendanceLoadOps on Notifier<SiteAttendanceState>, SiteDraftPersisten
   Future<void> ensureInitialTeam(List<EntityOption> teams) async {
     if (teams.isEmpty) {
       if (state.selectedTeam != null) {
-        state = state.copyWith(clearSelectedTeam: true, rows: const []);
+        state = state.copyWith(clearSelectedTeam: true, hasLoadedDay: false, rows: const []);
       }
       return;
     }
     final cur = state.selectedTeam;
     if (cur != null && teams.any((t) => t.id == cur.id)) {
-      if (state.rows.isEmpty && !state.isLoading) {
+      if (!state.hasLoadedDay && !state.isLoading) {
         await loadTeamDay(team: cur, date: state.selectedDate);
       }
       return;
@@ -31,7 +31,7 @@ mixin SiteAttendanceLoadOps on Notifier<SiteAttendanceState>, SiteDraftPersisten
   Future<void> selectTeam(EntityOption? team) async {
     await flushDraft();
     if (team != null) return loadTeamDay(team: team, date: state.selectedDate);
-    state = state.copyWith(clearSelectedTeam: true, rows: const [], clearError: true);
+    state = state.copyWith(clearSelectedTeam: true, hasLoadedDay: false, rows: const [], clearError: true);
   }
 
   Future<void> selectDate(String date) async {
@@ -54,7 +54,7 @@ mixin SiteAttendanceLoadOps on Notifier<SiteAttendanceState>, SiteDraftPersisten
     final today = store.currentBusinessDate();
     state = state.copyWith(
       selectedTeam: team, selectedDate: date, todayDate: today,
-      isPastDate: date.compareTo(today) < 0, isLoading: true, clearError: true,
+      isPastDate: date.compareTo(today) < 0, isLoading: true, hasLoadedDay: false, clearError: true,
     );
     try {
       final d = await store.loadDay(

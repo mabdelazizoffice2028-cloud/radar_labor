@@ -63,6 +63,7 @@ final class SiteAttendanceNotifier extends Notifier<SiteAttendanceState>
     state = state.copyWith(
       isLoading: false,
       isSaving: false,
+      hasLoadedDay: true,
       errorMessage: OperationFailureMessage.of(failure, isArabic),
     );
   }

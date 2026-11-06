@@ -46,7 +46,8 @@ final class RosterAdminImporter {
           added++;
         } else {
           await (database.update(database.employees)..where((e) => e.iqamaNo.equals(iqama))).write(EmployeesCompanion(
-            fullNameAr: Value(r.name), fullNameEn: Value(r.name), jobTitle: Value(cat),
+            fullNameAr: Value(r.name), fullNameEn: Value(r.name),
+            jobTitle: Value(cat), jobCategory: Value(cat),
             rentalCompany: Value(supplierVal), employmentType: Value(empType),
             archivedAt: const Value(null), rowVersion: Value(ex.rowVersion + 1),
           ));

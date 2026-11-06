@@ -9,8 +9,10 @@ import 'package:radar_labor/app/screens/worker_summary_loader.dart';
 import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
+import 'package:radar_labor/core/l10n/operations_strings.dart';
 import 'package:radar_labor/core/status/status_models.dart';
 import 'package:radar_labor/core/status/worker_summary_calculator.dart';
+import 'package:radar_labor/core/ui/app_snack_bar.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 
 class WorkerSummarySheet extends ConsumerStatefulWidget {
@@ -38,22 +40,35 @@ class _WorkerSummarySheetState extends ConsumerState<WorkerSummarySheet> {
   }
 
   Future<void> _load() async {
-    final res = await WorkerSummaryLoader.load(
-      database: ref.read(appDatabaseProvider), events: ref.read(eventRepositoryProvider),
-      leaves: ref.read(leaveRepositoryProvider), employeeUid: widget.worker.employeeUid,
-      jobCategory: widget.worker.jobCategory, clock: ref.read(clockProvider),
-    );
-    if (mounted) setState(() { _summary = res.summary; _isAbsentToday = res.isAbsentToday; _todayDate = res.todayDate; _loading = false; });
+    try {
+      final res = await WorkerSummaryLoader.load(
+        database: ref.read(appDatabaseProvider), events: ref.read(eventRepositoryProvider),
+        leaves: ref.read(leaveRepositoryProvider), employeeUid: widget.worker.employeeUid,
+        jobCategory: widget.worker.jobCategory, clock: ref.read(clockProvider),
+      );
+      if (mounted) setState(() { _summary = res.summary; _isAbsentToday = res.isAbsentToday; _todayDate = res.todayDate; _loading = false; });
+    } on Object catch (e) {
+      debugPrint('WorkerSummarySheet._load error: ${e.runtimeType}');
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   Future<void> _toggleAbsenceToday() async {
     if (_todayDate == null) return;
-    await ref.read(eventRepositoryProvider).append(EventDraft(
-      businessDate: _todayDate!, type: EventType.housingAbsent,
-      action: _isAbsentToday ? EventAction.clear : EventAction.set,
-      housingId: HousingConstants.defaultHousingId, employeeUid: widget.worker.employeeUid, userId: ref.read(currentSessionProvider)?.id,
-    ));
-    await _load();
+    try {
+      final nextSet = !_isAbsentToday;
+      await ref.read(eventRepositoryProvider).append(EventDraft(
+        businessDate: _todayDate!, type: EventType.housingAbsent,
+        action: nextSet ? EventAction.set : EventAction.clear,
+        housingId: HousingConstants.defaultHousingId, employeeUid: widget.worker.employeeUid,
+        userId: ref.read(currentSessionProvider)?.id,
+        payload: nextSet ? {'employmentType': widget.worker.employmentType, 'jobCategory': widget.worker.jobCategory} : const {},
+      ));
+      await _load();
+    } on Object catch (e) {
+      debugPrint('WorkerSummarySheet._toggleAbsenceToday error: ${e.runtimeType}');
+      if (mounted) AppSnackBar.showError(context, message: OperationsStrings.errSaveFailed(widget.arabic));
+    }
   }
 
   @override

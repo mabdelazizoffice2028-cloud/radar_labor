@@ -17,9 +17,11 @@ final class HousingCheckLoader {
     final workers = await store.getHousingWorkers(housing.id, date: date);
     final ledger = AttendanceLedger(await events.readBusinessDate(date));
     final saved = ledger.isHousingChecked(housing.id);
-    final draft = saved ? null : await draftStore.readDraft(housingId: housing.id, date: date);
-    final absent = saved ? ledger.absentWorkerIdsForHousing(housing.id) : draft?.absentWorkerIds.toSet();
-    final reviewed = saved ? null : draft?.reviewedWorkerIds.toSet();
+    final draft = await draftStore.readDraft(housingId: housing.id, date: date);
+    final absent = draft != null
+        ? draft.absentWorkerIds.toSet()
+        : (saved ? ledger.absentWorkerIdsForHousing(housing.id) : null);
+    final reviewed = draft?.reviewedWorkerIds.toSet();
 
     final rows = List<HousingWorkerRow>.unmodifiable([
       for (final w in workers)
@@ -27,7 +29,9 @@ final class HousingCheckLoader {
           worker: w,
           reviewState: (absent?.contains(w.id) ?? false)
               ? HousingReviewState.absent
-              : (saved || (reviewed?.contains(w.id) ?? false))
+              : (draft != null
+                      ? (reviewed?.contains(w.id) ?? false)
+                      : saved)
                   ? HousingReviewState.reviewedPresent
                   : HousingReviewState.unreviewed,
         ),

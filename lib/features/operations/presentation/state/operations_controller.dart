@@ -30,13 +30,11 @@ final class OperationsController {
   bool _allowsHousing(String id) => canHousing && allowedHousingIds.contains(id);
   bool _allowsTeam(String id) => canSite && allowedTeamIds.contains(id);
 
-  Stream<List<EntityOption>> watchHousings() => store.watchHousings().map(
-        (items) => items.where((item) => _allowsHousing(item.id)).toList(growable: false),
-      );
+  Stream<List<EntityOption>> watchHousings() =>
+      store.watchHousings().map((items) => items.where((i) => _allowsHousing(i.id)).toList(growable: false));
 
-  Stream<List<EntityOption>> watchTeams() => store.watchTeams().map(
-        (items) => items.where((item) => _allowsTeam(item.id)).toList(growable: false),
-      );
+  Stream<List<EntityOption>> watchTeams() =>
+      store.watchTeams().map((items) => items.where((i) => _allowsTeam(i.id)).toList(growable: false));
 
   Stream<List<WorkerOption>> watchHousingWorkers(String housingId) =>
       _allowsHousing(housingId) ? store.watchHousingWorkers(housingId) : const Stream.empty();

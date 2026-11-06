@@ -12,10 +12,12 @@ final class PreferencesDevToolCard extends StatelessWidget {
   const PreferencesDevToolCard({
     required this.database,
     required this.arabic,
+    this.userId,
     super.key,
   });
   final AppDatabase database;
   final bool arabic;
+  final String? userId;
 
   Future<void> _confirmAndClear(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -24,7 +26,7 @@ final class PreferencesDevToolCard extends StatelessWidget {
     );
     if (confirmed != true || !context.mounted) return;
     try {
-      await OperationsDevTools.clearTestData(database);
+      await OperationsDevTools.clearTestData(database, userId: userId);
       unawaited(FieldHaptics.success());
       if (!context.mounted) return;
       AppSnackBar.showSuccess(

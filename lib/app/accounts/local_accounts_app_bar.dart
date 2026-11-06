@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/accounts/accounts_admin_controller.dart';
 import 'package:radar_labor/app/accounts/local_accounts_ops.dart';
 import 'package:radar_labor/core/l10n/admin_strings.dart';
+import 'package:radar_labor/core/l10n/operations_strings.dart';
 
 final class LocalAccountsAppBar extends StatelessWidget
     implements PreferredSizeWidget {
@@ -23,19 +24,30 @@ final class LocalAccountsAppBar extends StatelessWidget
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
+  Future<void> _onImport(BuildContext context) async {
+    try {
+      await LocalAccountsOps.importRoster(
+        context: context,
+        controller: controller,
+        arabic: arabic,
+        toast: toast,
+      );
+      await onReload();
+    } on FormatException catch (e) {
+      debugPrint('LocalAccountsAppBar import validation error: ${e.message}');
+      toast(e.message);
+    } on Object catch (e) {
+      debugPrint('LocalAccountsAppBar import error: ${e.runtimeType}');
+      toast(OperationsStrings.errSaveFailed(arabic));
+    }
+  }
+
   @override
   Widget build(BuildContext context) => AppBar(
     title: Text(AdminStrings.userAccountsTitle(arabic)),
     actions: [
       TextButton.icon(
-        onPressed: busy
-            ? null
-            : () => LocalAccountsOps.importRoster(
-                context: context,
-                controller: controller,
-                arabic: arabic,
-                toast: toast,
-              ).then((_) => onReload()),
+        onPressed: busy ? null : () => _onImport(context),
         icon: const Icon(Icons.upload_file),
         label: Text(AdminStrings.importNamesAction(arabic)),
       ),

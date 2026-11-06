@@ -2,16 +2,16 @@ import 'package:radar_labor/core/status/staff_category_resolver.dart';
 import 'package:radar_labor/core/status/status_models.dart';
 
 final class StatusEngineWorkerEvaluator {
-  static WorkerStatusResult evaluateWorker({
+  static WorkerStatusResult evaluateIndexedWorker({
     required WorkerProfile worker,
-    required List<LocalEvent> dayEvents,
-    required List<LocalEvent> effectiveEvents,
+    required List<LocalEvent> workerEvents,
+    required List<LocalEvent> activeEvents,
+    required LocalEvent? housingCheck,
     required String businessDate,
     required DateTime nowUtc,
     required int slaMinutes,
     required bool isFriday,
   }) {
-    final workerEvents = dayEvents.where((e) => e.employeeUid == worker.employeeUid).toList(growable: false);
     final eligible = worker.isActive && !worker.isOnLeave && worker.employedOn(businessDate);
     final flags = <StatusFlag>{};
     if (!worker.isActive && workerEvents.isNotEmpty) flags.add(StatusFlag.inactiveWorkerEvent);
@@ -19,9 +19,6 @@ final class StatusEngineWorkerEvaluator {
     if (workerEvents.any((e) => e.isLate)) flags.add(StatusFlag.lateEvent);
     if (workerEvents.any((e) => e.delivery == EventDelivery.rejected)) flags.add(StatusFlag.rejectedEvent);
 
-    final activeEvents = effectiveEvents.where(
-      (e) => e.employeeUid == worker.employeeUid && e.delivery != EventDelivery.rejected,
-    );
     final isStaff = !isFriday && StaffCategoryResolver.isAutoPresentStaff(worker.jobCategory);
     final siteEvents = activeEvents.where((e) => e.type == EventType.sitePresent).toList(growable: false);
     final absentEvents = isFriday ? const <LocalEvent>[] : activeEvents.where(
@@ -29,9 +26,6 @@ final class StatusEngineWorkerEvaluator {
     ).toList(growable: false);
     final hasJustification = activeEvents.any((e) => e.type == EventType.justification);
     final hasResolution = activeEvents.any((e) => e.type == EventType.resolution && e.resolutionKind != null);
-    final check = isFriday ? null : effectiveEvents.where(
-      (e) => e.type == EventType.housingCheck && worker.housingId != null && e.housingId == worker.housingId,
-    ).firstOrNull;
 
     if (!isFriday && !hasResolution && absentEvents.isNotEmpty && siteEvents.isNotEmpty) {
       flags.add(StatusFlag.housingSiteConflict);
@@ -49,9 +43,9 @@ final class StatusEngineWorkerEvaluator {
                     ? (hasJustification ? WorkerStatus.justified : WorkerStatus.unknown)
                     : isStaff
                         ? WorkerStatus.onSite
-                        : (check != null ? WorkerStatus.housingOnly : WorkerStatus.notRecorded);
+                        : (housingCheck != null ? WorkerStatus.housingOnly : WorkerStatus.notRecorded);
 
-    final checkAt = check?.receivedAtUtc ?? check?.deviceTimeUtc;
+    final checkAt = housingCheck?.receivedAtUtc ?? housingCheck?.deviceTimeUtc;
     final elapsed = checkAt == null ? null : nowUtc.toUtc().difference(checkAt.toUtc());
     final isUnknown = !isFriday && siteEvents.isEmpty && absentEvents.isNotEmpty && !hasJustification;
     final breached = eligible && isUnknown && elapsed != null && elapsed > Duration(minutes: slaMinutes);

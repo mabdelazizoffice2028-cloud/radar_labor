@@ -35,12 +35,20 @@ final class SiteAttendanceSaveHandler {
         if (res == null || !context.mounted) return;
         resolutions = res;
       }
+      final skippedIds = {
+        for (final entry in resolutions.entries)
+          if (entry.value == ConflictResolutionChoice.skipWorker) entry.key,
+      };
+      final presentWorkers = state.rows
+          .where((r) => r.isPresent && !skippedIds.contains(r.worker.id))
+          .map((r) => r.worker)
+          .toList();
+      final effectiveCount = presentWorkers.length;
       final isFriday = isFridayBusinessDate(prepared.date);
       final countSummary = isFriday
-          ? OperationsStrings.fridaySaveConfirm(arabic, state.presentCount)
-          : OperationsStrings.presentCountLabel(arabic, state.presentCount);
+          ? OperationsStrings.fridaySaveConfirm(arabic, effectiveCount)
+          : OperationsStrings.presentCountLabel(arabic, effectiveCount);
       final diffLine = prepared.diff.hasChanges ? prepared.diff.totalLine(arabic) : null;
-      final presentWorkers = state.rows.where((r) => r.isPresent).map((r) => r.worker).toList();
       final confirmed = await OperationConfirmSyncDialog.show(
         context: context, title: OperationsStrings.confirmSiteAttendanceTitle(arabic),
         entityName: prepared.team.displayName(arabic: arabic), date: prepared.date,

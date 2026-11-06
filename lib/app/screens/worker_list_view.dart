@@ -4,6 +4,7 @@ import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/l10n/app_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/core/ui/components/app_empty_state.dart';
+import 'package:radar_labor/features/operations/domain/worker_search_filter.dart';
 
 class WorkerListView extends StatelessWidget {
   const WorkerListView({
@@ -22,12 +23,14 @@ class WorkerListView extends StatelessWidget {
     return StreamBuilder<List<Employee>>(
       stream: stream,
       builder: (context, state) {
-        final q = query.trim().toLowerCase();
         final list = (state.data ?? []).where((w) {
-          if (q.isEmpty) return true;
-          return w.fullNameAr.toLowerCase().contains(q) ||
-              w.iqamaNo.toLowerCase().contains(q) ||
-              (w.fullNameEn ?? '').toLowerCase().contains(q);
+          return WorkerSearchFilter.matches(
+            query: query,
+            code: w.iqamaNo,
+            nameAr: w.fullNameAr,
+            nameEn: w.fullNameEn,
+            id: w.iqamaNo,
+          );
         }).toList();
         if (list.isEmpty) {
           return AppEmptyState(

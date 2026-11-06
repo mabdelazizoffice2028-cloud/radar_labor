@@ -1,3 +1,31 @@
+## 2026-11-06 — Senior Code Review Surgical Fixes (V2.10)
+
+- **Verification & Status:**
+  - `flutter analyze --no-pub`: **No issues found!** (0 errors, 0 warnings, 0 infos).
+  - `flutter test --no-pub`: **277 / 277 tests passed** (100% success rate, including new `senior_review_fixes_test.dart` and strict `allSourceFiles_areAtMost100Lines` check).
+  - Micro-modularization: Every `.dart` source file in `lib/` (excluding `*.g.dart`) is strictly `<= 100` lines, enforced automatically in `test/architecture/architecture_test.dart`.
+  - Production Release Build:
+    - Command: `flutter build apk --target-platform android-arm64 --release --no-pub` (built in 81.7s).
+    - Artifact: `outputs/Radar Labour.apk`
+    - File Size: `25,276,448` bytes (~24.1 MB).
+    - SHA-256 Hash: `160A785E37BD0D4CD167E3FDB421ED1C8105C458E41C41576A6C683D5F808562`.
+
+- **Implementation Details (Senior Review Surgical Fixes):**
+  1. **Critical Data & State Integrity Fixes:**
+     - **Infinite Loop Fix on Empty Team / Load Failure (`SiteAttendanceState` & `SiteAttendanceLoadOps`):** Added `hasLoadedDay` to `SiteAttendanceState` so `ensureInitialTeam` does not re-trigger `loadTeamDay` infinitely on every rebuild when a team has 0 active workers or when a load fails.
+     - **Sync Delivery & Payload Preservation (`EventDomainMapper`, `OutboxPendingReader`, `SupabaseEventsUploader`, `SupabaseEventsPuller`):** Mapped `'synced'` and `'acked'` to `EventDelivery.acked` (preventing synced events from appearing as `pending` in `StatusEngine`); preserved `employmentType`, `jobCategory`, `resolutionKind`, `deviceId`, and `serverSeq` through outbox reading, RPC upload, and multi-device pull.
+     - **Classification & Undo Preservation (`SyncSnapshotApplier`, `WorkforceImportRepository`, `RosterAdminImporter`, `RosterAdminWorkerUpdater`, `LedgerUndoPlan`):** Preserved `jobCategory` and `rentalCompany` across remote snapshot sync, CSV/XLSX re-import, worker edits, and Undo operations.
+     - **Housing Draft Flush & Auto-Fix Undo (`HousingCheckSaver`, `HousingCheckLoader`, `SiteAttendanceSaver`):** Fixed `flushDraft` so exiting the housing screen saves `state.reviewedWorkerIds` rather than marking all rows as reviewed; restored drafts even on previously saved days; included auto-fixed `housingAbsent` events in `LedgerUndoPlan`.
+     - **Schema V6 Migration, Backup Sequence & DevTool Wipe (`SchemaV6Migration`, `DatabaseRestoreApplier`, `OperationsDevTools`):** Prevented non-numeric employee codes from colliding on `'0000000000'` during v2->v6 migration and updated `events.employee_uid` / `app_users.employee_uid`; synchronized `deviceSequence` to `>= max(events.device_seq)` after backup restore; cleared `lastSyncedServerSeq` and passed real `userId` on test data wipe.
+  2. **Business Logic, Auth & Session Revocation Fixes:**
+     - **Post-Midnight Business Day Lockout (`business_date.dart`, `ScopeDateGuard`, `DailyReportButton`):** Added `isPastLockoutHour` accounting for Riyadh hours `00:00–02:59` belonging to the current business day (`effectiveHour = riyadhHour + 24`), preventing supervisors from bypassing the 9:00 PM / 8:00 PM lockout after midnight, and unlocked `DailyReportButton` immediately for past business dates.
+     - **Admin Past-Day Editing (`ScopeGuard`):** Allowed `projectManager` and `hr` (`canEditPastDays`) to edit past business days (`date != todayBusinessDate`) while keeping today's recording restricted to field supervisors.
+     - **Session Revocation & `currentSessionProvider` Sync (`AuthGateController`, `AuthGate`, `AutoSyncListener`, `SupabaseSnapshotFetcher`):** Watched the signed-in user's `active` flag in `appUsers` to auto-logout immediately upon account deactivation, queried remote `app_users.active` and `settings.roster_epoch` with safe fallbacks, and cleared session when `res.sessionRevoked` is true.
+     - **Direct Attendance (`no_team`) in History & Skip-Worker Count (`HistoryRepository`, `SiteAttendanceSaveHandler`):** Added `no_team` to `teamsById` in `HistoryRepository` and excluded `skipWorker` rows from save confirmation counts.
+  3. **UX, Error Handling, Performance & Architecture Compliance:**
+     - **Search & Clear UX (`SiteWorkerSearchBar`, `WorkerListView`, `BatchSupervisorDialog`, `AccountWorkerSearchField`):** Added `TextEditingController` to `SiteWorkerSearchBar` so the clear (`X`) button clears the input field; unified Arabic & Eastern-Arabic-digit search normalization via `WorkerSearchFilter.matches`.
+     - **Error Visibility & Performance (`LocalAccountsAppBar`, `WorkerSummarySheet`, `DashboardActionHandlers`, `EventRepository`, `StatusEngine`, `DatabaseMigrations`):** Added `readForWorkerSummary(employeeUid)` to avoid full-table event scans, pre-indexed events by `employeeUid` and `housingId` in `StatusEngine` ($O(W + E)$), added SQLite indexes on `events`, `employees`, `user_scopes`, and `audit_log`, cached the workers stream in `WorkersScreen`, and refactored 16 files to enforce the 100-line ceiling across the entire codebase.
+
 ## 2026-11-06 — Phase 12: Performance Benchmarking, Documentation & Production Release Build (Sections 14 & 15)
 
 - **Verification & Status:**

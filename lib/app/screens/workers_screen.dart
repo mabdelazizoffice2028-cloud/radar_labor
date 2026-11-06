@@ -24,6 +24,26 @@ final class WorkersScreen extends StatefulWidget {
 
 final class _WorkersScreenState extends State<WorkersScreen> {
   String _query = '';
+  late Stream<List<Employee>> _stream;
+
+  @override
+  void initState() {
+    super.initState();
+    _stream = _buildStream();
+  }
+
+  @override
+  void didUpdateWidget(covariant WorkersScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.database != widget.database) {
+      _stream = _buildStream();
+    }
+  }
+
+  Stream<List<Employee>> _buildStream() =>
+      (widget.database.select(widget.database.employees)
+            ..where((r) => r.archivedAt.isNull()))
+          .watch();
 
   void _showMessage(String msg) {
     if (!mounted) return;
@@ -58,7 +78,7 @@ final class _WorkersScreenState extends State<WorkersScreen> {
           ),
           Expanded(
             child: WorkerListView(
-              stream: widget.database.select(widget.database.employees).watch(),
+              stream: _stream,
               query: _query,
               arabic: widget.arabic,
             ),

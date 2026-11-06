@@ -29,6 +29,13 @@ abstract final class SupabaseEventsUploader {
               'device_time_utc': e.deviceTimeUtc!.toIso8601String(),
             if (e.resolutionKind != null)
               'resolution_kind': e.resolutionKind!.key,
+            if (e.employmentType != null) 'employment_type': e.employmentType,
+            if (e.jobCategory != null) 'job_category': e.jobCategory,
+            'payload': <String, dynamic>{
+              if (e.resolutionKind != null) 'kind': e.resolutionKind!.key,
+              if (e.employmentType != null) 'employmentType': e.employmentType,
+              if (e.jobCategory != null) 'jobCategory': e.jobCategory,
+            },
           },
       ];
 

@@ -45,10 +45,23 @@ final class SiteAttendanceSaver {
     final absentInHousing = ledger.absentWorkerIdsForHousing(HousingConstants.defaultHousingId);
     final autoFixIds = built.finalSelectedIds.intersection(absentInHousing);
     final allDrafts = List<EventDraft>.from(built.drafts);
+    final undoEntries = List<LedgerKeyRestoreEntry>.from(built.undoPlan.entries);
     for (final wid in autoFixIds) {
       allDrafts.add(EventDraft(
         type: EventType.housingAbsent, action: EventAction.clear, businessDate: prepared.date,
         housingId: HousingConstants.defaultHousingId, employeeUid: wid, userId: actor.userId,
+      ));
+      final key = LedgerKey(
+        type: EventType.housingAbsent,
+        housingId: HousingConstants.defaultHousingId,
+        employeeUid: wid,
+      );
+      final prior = ledger.activeEventFor(key);
+      undoEntries.add(LedgerKeyRestoreEntry(
+        key: key,
+        restoreAction: EventAction.set,
+        employmentType: prior?.employmentType,
+        jobCategory: prior?.jobCategory,
       ));
     }
 
@@ -65,7 +78,11 @@ final class SiteAttendanceSaver {
       }
       await draftStore.deleteDraft(teamId: prepared.team.id, date: prepared.date);
     });
-    return built;
+    return (
+      finalSelectedIds: built.finalSelectedIds,
+      undoPlan: LedgerUndoPlan(businessDate: prepared.date, entries: List.unmodifiable(undoEntries)),
+      drafts: allDrafts,
+    );
   }
 
   Future<void> undo(LedgerUndoPlan plan, String actorUserId) async {

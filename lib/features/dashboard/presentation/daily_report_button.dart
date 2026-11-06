@@ -3,7 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/app_providers.dart';
 import 'package:radar_labor/core/l10n/reports_and_alerts_strings.dart';
 import 'package:radar_labor/core/status/status_models.dart';
-import 'package:radar_labor/core/time/clock.dart';
+import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/dashboard/data/dashboard_report_providers.dart';
 import 'package:radar_labor/features/dashboard/presentation/daily_report_dialog.dart';
@@ -23,8 +23,8 @@ final class DailyReportButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final lockoutHour = ref.watch(siteLockoutHourProvider).value ?? 23;
     final now = ref.watch(clockProvider).nowUtc();
-    final riyadhHour = now.toRiyadh().hour;
-    final isUnlocked = riyadhHour >= lockoutHour;
+    final today = businessDateFor(now);
+    final isUnlocked = date != today || isPastLockoutHour(now, lockoutHour);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppTokens.space8),

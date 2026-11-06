@@ -38,7 +38,14 @@ final class _AuthGateState extends ConsumerState<AuthGate> {
   }
 
   void _onChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    final acc = _ctl.activeAccount;
+    if (ref.read(currentSessionProvider)?.id != acc?.id) {
+      Future.microtask(() {
+        if (mounted) ref.read(currentSessionProvider.notifier).setSession(acc);
+      });
+    }
+    setState(() {});
   }
 
   @override

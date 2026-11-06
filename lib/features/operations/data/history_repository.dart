@@ -1,7 +1,9 @@
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
 import 'package:radar_labor/core/constants/app_constants.dart';
+import 'package:radar_labor/core/constants/operations_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
+import 'package:radar_labor/core/l10n/operations_strings.dart';
 import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/core/time/clock.dart';
 import 'package:radar_labor/features/operations/data/history_date_helper.dart';
@@ -37,7 +39,15 @@ final class HistoryRepository implements HistoryStore {
     final allEmployees = await database.select(database.employees).get();
     final allUsers = await database.select(database.appUsers).get();
 
-    final teamsById = {for (final t in allTeams) t.teamId: EntityOption(id: t.teamId, nameAr: t.nameAr, nameEn: t.nameEn)};
+    final teamsById = {
+      for (final t in allTeams)
+        t.teamId: EntityOption(id: t.teamId, nameAr: t.nameAr, nameEn: t.nameEn),
+      OperationsConstants.noTeamId: EntityOption(
+        id: OperationsConstants.noTeamId,
+        nameAr: OperationsStrings.noTeam(true),
+        nameEn: OperationsStrings.noTeam(false),
+      ),
+    };
     const housingsById = {
       HousingConstants.defaultHousingId: EntityOption(
         id: HousingConstants.defaultHousingId,

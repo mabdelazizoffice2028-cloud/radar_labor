@@ -44,7 +44,7 @@ final class PreferencesScreen extends StatelessWidget {
       SettingsSectionHeader(title: AppStrings.settingsAccount(arabic)),
       Card(child: ListTile(leading: const Icon(Icons.key_outlined), title: Text(AppStrings.changePassword(arabic)), onTap: onChangePassword)),
       Card(child: ListTile(leading: const Icon(Icons.logout), title: Text(AppStrings.signOut(arabic)), onTap: onLogout)),
-      if (_canManage) PreferencesAdminSection(database: database, arabic: arabic),
+      if (_canManage) PreferencesAdminSection(database: database, arabic: arabic, userId: account.id),
       SettingsSectionHeader(title: AppStrings.aboutApp(arabic)),
       Card(
         child: ListTile(

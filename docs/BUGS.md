@@ -13,6 +13,11 @@
 
 ## محلولة
 
+### B-017 — حزمة عيوب مراجعة الكود الشاملة (Senior Review V2.10)
+- **العَرَض:** (1) حلقة إعادة تحميل لانهائية في شاشة حضور الموقع عندما يكون الفريق بلا عمال، (2) تحول `syncStatus = 'synced'` إلى `pending` في `EventDomainMapper` وفقدان `employmentType`/`jobCategory`/`resolutionKind` عند رفع وسحب الأحداث أو التراجع، (3) حفظ غير المراجعين كمراجعين عند الخروج من شاشة السكن (`flushDraft`)، (4) فتح القفل خطأً بين 00:00 و02:59 فجراً بتوقيت الرياض، (5) عدم تمكن مدير المشروع والموارد البشرية من تعديل الأيام السابقة في `ScopeGuard`، (6) بقاء الجلسة نشطة عند تعطيل الحساب محلياً أو عبر المزامنة.
+- **الحل:** إضافة `hasLoadedDay` في `SiteAttendanceState`، وتوحيد `EventDomainMapper` في `OutboxPendingReader` و`SupabaseEventsUploader` و`SupabaseEventsPuller` و`LedgerUndoPlan`، وتمرير `state.reviewedWorkerIds` في `HousingCheckSaver.flushDraft`، وإضافة `isPastLockoutHour` في `business_date.dart`، والسماح بـ `canEditPastDays` للأيام السابقة في `ScopeGuard`، ومراقبة حالة نشاط الحساب في `AuthGateController` و`AutoSyncListener`.
+- **التحقق:** `flutter analyze --no-pub` بلا أي ملاحظة، واختبارات `senior_review_fixes_test.dart` وكامل الحزمة نجحت (277/277).
+
 ### B-010 — رفض CSV بسبب الترميز (Windows-1256 / CP1256)
 - **العَرَض:** أعمدة ملف القوى سليمة لكن الاستيراد يعرض خطأ الملف غير صالح عند تصديره من Excel بالترميز الافتراضي.
 - **السبب:** الملف المفحوص Windows-1256 بينما المحلل يشترط UTF-8 ويطلق FormatException.

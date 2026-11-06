@@ -16,16 +16,10 @@ export 'package:radar_labor/core/events/event_draft.dart';
 
 final class EventRepository {
   EventRepository({
-    required AppDatabase database,
-    required String deviceId,
-    required Clock clock,
-    int cutoffHour = 3,
-    Uuid uuid = const Uuid(),
-  }) : _database = database,
-       _deviceId = deviceId,
-       _clock = clock,
-       _cutoffHour = cutoffHour,
-       _uuid = uuid;
+    required AppDatabase database, required String deviceId, required Clock clock,
+    int cutoffHour = 3, Uuid uuid = const Uuid(),
+  }) : _database = database, _deviceId = deviceId, _clock = clock,
+       _cutoffHour = cutoffHour, _uuid = uuid;
 
   final AppDatabase _database;
   final String _deviceId;
@@ -54,22 +48,14 @@ final class EventRepository {
         final draft = drafts[index];
         final eventId = _uuid.v7();
         final deviceSeq = prevSeq + index + 1;
-        final event = LocalEvent(
-          eventId: eventId,
-          deviceSeq: deviceSeq,
-          type: draft.type,
-          action: draft.action,
-          businessDate: draft.businessDate,
-          employeeUid: draft.employeeUid,
-          teamId: draft.teamId,
-          housingId: draft.housingId,
-          userId: draft.userId,
-          deviceTimeUtc: now,
-          isLate: isLate[index],
+        result.add(LocalEvent(
+          eventId: eventId, deviceSeq: deviceSeq, type: draft.type, action: draft.action,
+          businessDate: draft.businessDate, employeeUid: draft.employeeUid, teamId: draft.teamId,
+          housingId: draft.housingId, userId: draft.userId, deviceTimeUtc: now, isLate: isLate[index],
           resolutionKind: ResolutionKind.fromKey(draft.payload['kind']),
           employmentType: draft.payload['employmentType'] as String?,
           jobCategory: draft.payload['jobCategory'] as String?,
-        );
+        ));
         await _database.into(_database.events).insert(EventsCompanion.insert(
           eventId: eventId, deviceId: _deviceId, deviceSeq: deviceSeq,
           type: draft.type.name, action: draft.action.name, businessDate: draft.businessDate,
@@ -79,7 +65,6 @@ final class EventRepository {
           receivedAt: const Value(null), late: Value(isLate[index]),
           eventSchemaVersion: const Value(1), syncStatus: const Value('pending'),
         ));
-        result.add(event);
       }
       await _database.into(_database.settings).insertOnConflictUpdate(SettingsCompanion.insert(
         key: AppSettingKeys.deviceSequence, value: (prevSeq + drafts.length).toString(),
@@ -89,6 +74,14 @@ final class EventRepository {
   }
 
   Stream<List<LocalEvent>> watchAll() => _database.select(_database.events).watch().map((r) => List.unmodifiable(r.map(EventDomainMapper.toDomain)));
+
+  Future<List<LocalEvent>> readForWorkerSummary(String employeeUid) async {
+    final rows = await (_database.select(_database.events)
+          ..where((e) => e.employeeUid.equals(employeeUid) | e.type.equals(EventType.housingCheck.name))
+          ..orderBy([(e) => OrderingTerm.asc(e.deviceSeq)]))
+        .get();
+    return List.unmodifiable(rows.map(EventDomainMapper.toDomain));
+  }
 
   Future<List<LocalEvent>> readBusinessDate(String date) async {
     final rows = await (_database.select(_database.events)..where((e) => e.businessDate.equals(date))..orderBy([(e) => OrderingTerm.asc(e.deviceSeq)])).get();

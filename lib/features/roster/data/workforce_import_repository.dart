@@ -48,7 +48,8 @@ final class WorkforceImportRepository {
         } else {
           await (_database.update(_database.employees)..where((e) => e.iqamaNo.equals(iqama))).write(
             EmployeesCompanion(
-              fullNameAr: Value(row.name), fullNameEn: Value(row.name), jobTitle: Value(cat),
+              fullNameAr: Value(row.name), fullNameEn: Value(row.name),
+              jobTitle: Value(cat), jobCategory: Value(cat),
               rentalCompany: Value(rentalComp), employmentType: Value(empType),
               archivedAt: const Value(null), rowVersion: Value(existing.rowVersion + 1),
             ),

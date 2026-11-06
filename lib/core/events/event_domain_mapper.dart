@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/status/status_models.dart';
 
@@ -28,18 +29,24 @@ abstract final class EventDomainMapper {
   }
 
   static Map<String, Object?> decodePayload(String payload) {
+    if (payload.isEmpty) return const {};
     try {
       final decoded = jsonDecode(payload);
       return decoded is Map<String, Object?> ? decoded : const {};
-    } on Exception {
+    } on FormatException catch (e) {
+      debugPrint('EventDomainMapper.decodePayload malformed JSON: ${e.message}');
       return const {};
     }
   }
 
   static EventDelivery parseDelivery(String syncStatus) {
+    if (syncStatus == 'synced' || syncStatus == 'acked') {
+      return EventDelivery.acked;
+    }
     try {
       return EventDelivery.values.byName(syncStatus);
-    } on ArgumentError {
+    } on ArgumentError catch (e) {
+      debugPrint('EventDomainMapper.parseDelivery unknown status ($syncStatus): ${e.message}');
       return EventDelivery.pending;
     }
   }

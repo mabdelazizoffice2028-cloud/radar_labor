@@ -7,11 +7,15 @@ final class LedgerKeyRestoreEntry {
     required this.key,
     required this.restoreAction,
     this.resolutionKind,
+    this.employmentType,
+    this.jobCategory,
   });
 
   final LedgerKey key;
   final EventAction restoreAction;
   final ResolutionKind? resolutionKind;
+  final String? employmentType;
+  final String? jobCategory;
 }
 
 /// Pure undo plan that restores all touched ledger keys (including conflict resolutions and cross-team clears)
@@ -38,6 +42,8 @@ final class LedgerUndoPlan {
           key: key,
           restoreAction: active != null ? EventAction.set : EventAction.clear,
           resolutionKind: active?.resolutionKind,
+          employmentType: active?.employmentType,
+          jobCategory: active?.jobCategory,
         ),
       );
     }

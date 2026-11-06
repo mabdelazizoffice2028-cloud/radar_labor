@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/events/event_repository.dart';
 import 'package:radar_labor/features/operations/domain/housing_draft_store.dart';
@@ -34,10 +35,11 @@ final class HousingCheckSaver {
     try {
       await draftStore.writeDraft(
         housingId: defaultHousing.id, date: state.selectedDate,
-        reviewedWorkerIds: state.rows.map((r) => r.worker.id), absentWorkerIds: state.absentWorkerIds,
+        reviewedWorkerIds: state.reviewedWorkerIds, absentWorkerIds: state.absentWorkerIds,
       );
       return true;
-    } on Exception {
+    } on Exception catch (e) {
+      debugPrint('HousingCheckSaver.flushDraft error: ${e.runtimeType}');
       return false;
     }
   }

@@ -96,4 +96,13 @@ void main() {
         .toList();
     expect(violations, isEmpty);
   });
+
+  test('allSourceFiles_areAtMost100Lines', () {
+    final violations = [
+      for (final file in _sources())
+        if (file.readAsLinesSync().length > 100)
+          '${_norm(file)} (${file.readAsLinesSync().length} lines)',
+    ];
+    expect(violations, isEmpty);
+  });
 }

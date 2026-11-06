@@ -20,36 +20,40 @@ final class OperationsHousingOperations {
     final prevAbsences = ledger.absentWorkerIdsForHousing(housing.id);
     final wasChecked = ledger.isHousingChecked(housing.id);
     final ids = {...prevAbsences, ...absentIds};
+    final empTypes = <String, String>{...?workerEmploymentTypes};
+    final jobCats = <String, String>{...?workerJobCategories};
+    for (final id in prevAbsences) {
+      final ev = ledger.activeEventFor(LedgerKey(
+        type: EventType.housingAbsent, housingId: housing.id, employeeUid: id,
+      ));
+      if (ev?.employmentType != null) empTypes.putIfAbsent(id, () => ev!.employmentType!);
+      if (ev?.jobCategory != null) jobCats.putIfAbsent(id, () => ev!.jobCategory!);
+    }
     await events.appendBatch([
       EventDraft(
-        type: EventType.housingCheck,
-        action: EventAction.set,
-        businessDate: date,
-        housingId: housing.id,
-        userId: actorUserId,
+        type: EventType.housingCheck, action: EventAction.set,
+        businessDate: date, housingId: housing.id, userId: actorUserId,
       ),
       for (final id in ids)
         EventDraft(
           type: EventType.housingAbsent,
           action: absentIds.contains(id) ? EventAction.set : EventAction.clear,
-          businessDate: date,
-          employeeUid: id,
-          housingId: housing.id,
-          userId: actorUserId,
+          businessDate: date, employeeUid: id, housingId: housing.id, userId: actorUserId,
           payload: {
             if (absentIds.contains(id)) ...{
-              'employmentType': workerEmploymentTypes?[id] ?? 'company',
-              'jobCategory': workerJobCategories?[id] ?? 'direct_labor',
+              'employmentType': empTypes[id] ?? 'company',
+              'jobCategory': jobCats[id] ?? 'direct_labor',
             },
           },
         ),
     ]);
     return HousingCheckUndo(
-      date: date,
-      housingId: housing.id,
+      date: date, housingId: housing.id,
       previousAbsences: Set.unmodifiable(prevAbsences),
       currentAbsences: Set.unmodifiable(absentIds),
       wasChecked: wasChecked,
+      workerEmploymentTypes: Map.unmodifiable(empTypes),
+      workerJobCategories: Map.unmodifiable(jobCats),
     );
   }
 
@@ -58,18 +62,19 @@ final class OperationsHousingOperations {
         EventDraft(
           type: EventType.housingCheck,
           action: undo.wasChecked ? EventAction.set : EventAction.clear,
-          businessDate: undo.date,
-          housingId: undo.housingId,
-          userId: actorUserId,
+          businessDate: undo.date, housingId: undo.housingId, userId: actorUserId,
         ),
         for (final id in {...undo.previousAbsences, ...undo.currentAbsences})
           EventDraft(
             type: EventType.housingAbsent,
             action: undo.previousAbsences.contains(id) ? EventAction.set : EventAction.clear,
-            businessDate: undo.date,
-            employeeUid: id,
-            housingId: undo.housingId,
-            userId: actorUserId,
+            businessDate: undo.date, employeeUid: id, housingId: undo.housingId, userId: actorUserId,
+            payload: {
+              if (undo.previousAbsences.contains(id)) ...{
+                'employmentType': undo.workerEmploymentTypes[id] ?? 'company',
+                'jobCategory': undo.workerJobCategories[id] ?? 'direct_labor',
+              },
+            },
           ),
       ]);
 }

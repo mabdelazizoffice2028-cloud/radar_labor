@@ -34,3 +34,16 @@ String businessDateFor(
 
 /// Returns true if the Riyadh business date represents a Friday.
 bool isFridayBusinessDate(String businessDate) => FridayResolver.isFriday(businessDate);
+
+/// Returns true if [nowUtc] in Riyadh time has reached or passed [lockoutHour]
+/// within the current business day (accounting for the 03:00 AM cutoff).
+bool isPastLockoutHour(
+  DateTime nowUtc,
+  int lockoutHour, {
+  int cutoffHour = TimeConstants.defaultDayCutoffHour,
+}) {
+  final riyadhHour = nowUtc.toUtc().add(TimeConstants.riyadhUtcOffset).hour;
+  final effectiveHour = riyadhHour < cutoffHour ? riyadhHour + 24 : riyadhHour;
+  final effectiveLockout = lockoutHour < cutoffHour ? lockoutHour + 24 : lockoutHour;
+  return effectiveHour >= effectiveLockout;
+}

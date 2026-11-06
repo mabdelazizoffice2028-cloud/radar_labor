@@ -29,21 +29,38 @@ final class StatusEngine {
         .where((event) => event.businessDate == businessDate)
         .toList(growable: false);
     final effectiveEvents = StatusEngineEvents.effectiveEvents(dayEvents);
-    final results = <WorkerStatusResult>[];
 
-    for (final worker in workers) {
-      results.add(
-        StatusEngineWorkerEvaluator.evaluateWorker(
+    final dayByWorker = <String, List<LocalEvent>>{};
+    for (final e in dayEvents) {
+      final uid = e.employeeUid;
+      if (uid != null) dayByWorker.putIfAbsent(uid, () => []).add(e);
+    }
+    final activeByWorker = <String, List<LocalEvent>>{};
+    final checksByHousing = <String, LocalEvent>{};
+    for (final e in effectiveEvents) {
+      if (e.delivery == EventDelivery.rejected) continue;
+      if (e.type == EventType.housingCheck && e.housingId != null) {
+        checksByHousing.putIfAbsent(e.housingId!, () => e);
+      }
+      final uid = e.employeeUid;
+      if (uid != null) activeByWorker.putIfAbsent(uid, () => []).add(e);
+    }
+
+    final results = <WorkerStatusResult>[
+      for (final worker in workers)
+        StatusEngineWorkerEvaluator.evaluateIndexedWorker(
           worker: worker,
-          dayEvents: dayEvents,
-          effectiveEvents: effectiveEvents,
+          workerEvents: dayByWorker[worker.employeeUid] ?? const [],
+          activeEvents: activeByWorker[worker.employeeUid] ?? const [],
+          housingCheck: isFriday || worker.housingId == null
+              ? null
+              : checksByHousing[worker.housingId!],
           businessDate: businessDate,
           nowUtc: nowUtc,
           slaMinutes: slaMinutes,
           isFriday: isFriday,
         ),
-      );
-    }
+    ];
 
     return StatusSnapshot(
       businessDate: businessDate,
