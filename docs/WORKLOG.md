@@ -1,3 +1,22 @@
+## 2026-11-06 — Phase 7: Shift Start & End Settings (Section 12)
+
+- **Verification & Status:**
+  - flutter analyze --no-pub: No issues found! (0 errors, 0 warnings, 0 infos).
+  - flutter test --no-pub: 258 / 258 tests passed (100% success rate, +5 new tests in test/core/database/shift_settings_test.dart).
+  - Micro-modularization: Every created / touched .dart file strictly <= 69 lines (ideal <= 80).
+
+- **Implementation Details (Section 12):**
+  1. **Administrative Shift Settings in SQLite:**
+     - Added `AppSettingKeys.shiftStartMinute` (default 420 minutes / 07:00) and `AppSettingKeys.shiftEndMinute` (default 1020 minutes / 17:00).
+     - Implemented `ShiftSettingsExtension` on `LocalSettingsRepository` for persistent reading and writing.
+  2. **Dedicated Administration UI:**
+     - Modularized into `PreferencesShiftSection` and `ShiftTimeTile` within `PreferencesAdminSection` alongside existing lockout hour settings.
+     - Localized via `ShiftSettingsStrings` with 30-minute interval selection and Riyadh time formatting.
+  3. **Preservation of Core Boundaries:**
+     - Day cutoff hour remains strictly 3:00 AM (unaltered).
+     - SLA window remains 120 minutes (unaltered).
+     - Shift settings are purely informational and documented for shifts, having no breaking side-effects on the cutoff engine.
+
 ## 2026-11-06 — Phase 6: English Internal Values & Complete BiDi Localization (Section 4)
 
 - **Verification & Status:**
