@@ -1,3 +1,30 @@
+## 2026-11-06 — Phase 10: Comprehensive Backup & Restore (Section 13)
+
+- **Verification & Status:**
+  - flutter analyze --no-pub: No issues found! (0 errors, 0 warnings, 0 infos).
+  - flutter test --no-pub: 268 / 268 tests passed (100% success rate, +4 new tests in test/features/operations/comprehensive_backup_restore_test.dart).
+  - Micro-modularization: Every created / touched .dart file strictly <= 77 lines (ideal <= 80, absolute hard cap <= 100).
+    - `database_backup_models.dart`: 35 lines.
+    - `database_backup_exporter.dart`: 66 lines.
+    - `database_restore_validator.dart`: 77 lines.
+    - `database_restore_applier.dart`: 38 lines.
+    - `database_backup_service.dart`: 52 lines.
+
+- **Implementation Details (Section 13):**
+  1. **Comprehensive Backup Exporter:**
+     - Exports complete local database state to structured JSON: `formatVersion` (1), `dbSchemaVersion` (6), ISO-8601 UTC timestamp, and all core entities (`settings`, `teams`, `employees`, `appUsers`, `userScopes`, and `events`).
+     - Pure architecture compliance: uses injected `Clock` instead of forbidden direct `DateTime.now()`.
+  2. **Strict Schema & Relational Validator:**
+     - Pre-validates JSON structure, required primary keys, field types, and foreign key dependencies before modifying any table.
+     - Rejects malformed JSON, missing versions, or unconfirmed restore attempts with typed `BackupValidationException`.
+  3. **Atomic Relational Restore Applier:**
+     - Executes entirely inside Drift `database.transaction(...)`.
+     - Deletes tables in reverse relational dependency order (`events`, `userScopes`, `appUsers`, `employees`, `teams`, `settings`).
+     - Populates tables in strict forward dependency order to preserve foreign key constraints and relational integrity.
+  4. **Authorization & Audit Trail:**
+     - Restores require explicit administrative authorization (`canWipeRoster` or `canManageReferenceData`) and explicit confirmation phrase ("استعادة نسخة احتياطية" or "RESTORE BACKUP").
+     - Records audited actions `backup_exported` and `backup_restored` in `AuditLogRepository`.
+
 ## 2026-11-06 — Phase 9: Event Integrity & Double-Submission Guards (Section 10)
 
 - **Verification & Status:**
