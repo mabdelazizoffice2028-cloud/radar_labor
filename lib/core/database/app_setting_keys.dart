@@ -11,6 +11,7 @@ abstract final class AppSettingKeys {
   static const String siteLockoutHour = 'site_lockout_hour';
   static const String shiftStartMinute = 'shift_start_minute';
   static const String shiftEndMinute = 'shift_end_minute';
+  static const String lastSyncedServerSeq = 'last_synced_server_seq';
   static const String workerLeaves = 'worker_leaves_v1';
   static const String draftSiteAttendancePrefix = 'draft_site_attendance_';
   static const String draftHousingCheckPrefix = 'draft_housing_check_';

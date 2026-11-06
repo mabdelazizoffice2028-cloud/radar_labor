@@ -57,6 +57,8 @@ final class LocalEvent {
     this.resolutionKind,
     this.employmentType,
     this.jobCategory,
+    this.deviceId = 'server',
+    this.serverSeq,
   });
 
   final String eventId;
@@ -75,4 +77,6 @@ final class LocalEvent {
   final ResolutionKind? resolutionKind;
   final String? employmentType;
   final String? jobCategory;
+  final String deviceId;
+  final int? serverSeq;
 }

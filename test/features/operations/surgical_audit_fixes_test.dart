@@ -45,6 +45,12 @@ final class _MultiBatchMockGateway implements RemoteSyncGateway {
   }
 
   @override
+  Future<RemoteSyncPullResult> pullEvents({
+    required int sinceServerSeq,
+    int limit = 200,
+  }) async => RemoteSyncPullResult(events: const [], lastServerSeq: sinceServerSeq);
+
+  @override
   Future<RemoteRosterSnapshot> fetchSnapshot({required String actorUserId}) async =>
       const RemoteRosterSnapshot(rosterEpoch: 1);
 }

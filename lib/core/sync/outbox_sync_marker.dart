@@ -12,8 +12,35 @@ abstract final class OutboxSyncMarker {
     final now = clock.nowUtc();
     await database.transaction(() async {
       for (final id in eventIds) {
-        await (database.update(database.events)..where((e) => e.eventId.equals(id))).write(
-          EventsCompanion(syncStatus: const Value('synced'), receivedAt: Value(now)),
+        await (database.update(database.events)
+              ..where((e) => e.eventId.equals(id)))
+            .write(
+          EventsCompanion(
+            syncStatus: const Value('synced'),
+            receivedAt: Value(now),
+          ),
+        );
+      }
+    });
+  }
+
+  static Future<void> markEventsRejected(
+    AppDatabase database,
+    Map<String, String> rejectedEvents,
+    Clock clock,
+  ) async {
+    if (rejectedEvents.isEmpty) return;
+    final now = clock.nowUtc();
+    await database.transaction(() async {
+      for (final entry in rejectedEvents.entries) {
+        await (database.update(database.events)
+              ..where((e) => e.eventId.equals(entry.key)))
+            .write(
+          EventsCompanion(
+            syncStatus: const Value('rejected'),
+            rejectReason: Value(entry.value),
+            receivedAt: Value(now),
+          ),
         );
       }
     });
@@ -28,8 +55,13 @@ abstract final class OutboxSyncMarker {
     final now = clock.nowUtc();
     await database.transaction(() async {
       for (final id in auditIds) {
-        await (database.update(database.auditLogs)..where((a) => a.auditId.equals(id))).write(
-          AuditLogsCompanion(syncStatus: const Value('synced'), receivedAt: Value(now)),
+        await (database.update(database.auditLogs)
+              ..where((a) => a.auditId.equals(id)))
+            .write(
+          AuditLogsCompanion(
+            syncStatus: const Value('synced'),
+            receivedAt: Value(now),
+          ),
         );
       }
     });

@@ -1,3 +1,29 @@
+## 2026-11-06 — Phase 8: Multi-Device Sync & Supabase Ingest SQL (Section 9)
+
+- **Verification & Status:**
+  - flutter analyze --no-pub: No issues found! (0 errors, 0 warnings, 0 infos).
+  - flutter test --no-pub: 261 / 261 tests passed (100% success rate, +3 new tests in test/core/sync/sync_engine_test.dart).
+  - Micro-modularization: Every created / touched .dart file strictly <= 88 lines (hard cap <= 100).
+
+- **Implementation Details (Section 9):**
+  1. **Supabase Ingest & RLS SQL Prepared for Owner Review:**
+     - Created standalone script `supabase_ingest_and_rls.sql` in project root.
+     - Implements monotonically increasing sequence `events_server_seq_seq`.
+     - Implements RPC function `ingest_events(p_events jsonb)` with idempotency by `event_id`, business date validation, server sequence assignment, and structured accepted/rejected responses.
+     - Implements comprehensive Row Level Security (RLS) policies for admin/hr, site supervisors, housing supervisors, and viewers.
+     - Delivered strictly for owner review (not applied to hosted Supabase instance).
+  2. **Outbox System & Explicit Rejection Handling:**
+     - Server rejected events immediately transition to `rejected` status with explicit `rejectReason` via `OutboxSyncMarker.markEventsRejected`.
+     - Rejected events are removed from active retry loops and surfaced to management via `OutboxRepository.readRejectedEvents()` and `readRejectedCount()`.
+  3. **Idempotent Inbound Event Consumption:**
+     - Added `RemoteSyncGateway.pullEvents(sinceServerSeq)`.
+     - Implemented `SyncEventsApplier` to pull server events and insert them into local SQLite using `event_id` uniqueness.
+     - Duplicate event pulls are completely idempotent and update `server_seq` without creating redundant rows.
+     - Tracked `AppSettingKeys.lastSyncedServerSeq` in local settings.
+  4. **Dynamic Roster Epoch & Session Revocation:**
+     - Evaluates `snap.rosterEpoch` and `snap.accountActive` during synchronization.
+     - Deactivated accounts immediately flag `sessionRevoked = true`, terminating the session and preventing unauthorized access.
+
 ## 2026-11-06 — Phase 7: Shift Start & End Settings (Section 12)
 
 - **Verification & Status:**

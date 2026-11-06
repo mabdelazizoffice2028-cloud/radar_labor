@@ -29,7 +29,13 @@ final class SyncBatchUploader {
         audits: pAu,
       );
 
-      if (ack.acceptedEventIds.isEmpty && ack.acceptedAuditIds.isEmpty) {
+      if (ack.rejectedEvents.isNotEmpty) {
+        await outbox.markEventsRejected(ack.rejectedEvents);
+      }
+
+      if (ack.acceptedEventIds.isEmpty &&
+          ack.acceptedAuditIds.isEmpty &&
+          ack.rejectedEvents.isEmpty) {
         break;
       }
 

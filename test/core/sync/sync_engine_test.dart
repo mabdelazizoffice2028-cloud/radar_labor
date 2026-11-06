@@ -47,7 +47,12 @@ final class _FakeRlsRemoteGateway implements RemoteSyncGateway {
     }
 
     final acceptedEvents = <String>{};
+    final rejectedEvents = <String, String>{};
     for (final ev in events) {
+      if (nextUploadRejections.containsKey(ev.eventId)) {
+        rejectedEvents[ev.eventId] = nextUploadRejections[ev.eventId]!;
+        continue;
+      }
       // RLS Policy 2: Site supervisor can only write to scoped teams
       if (actorRole == AuthRole.siteSupervisor &&
           ev.teamId != null &&
@@ -74,7 +79,27 @@ final class _FakeRlsRemoteGateway implements RemoteSyncGateway {
     return RemoteUploadAck(
       acceptedEventIds: acceptedEvents,
       acceptedAuditIds: acceptedAudits,
+      rejectedEvents: rejectedEvents,
     );
+  }
+
+  final List<LocalEvent> serverInboundEvents = [];
+  final Map<String, String> nextUploadRejections = {};
+
+  @override
+  Future<RemoteSyncPullResult> pullEvents({
+    required int sinceServerSeq,
+    int limit = 200,
+  }) async {
+    final filtered = serverInboundEvents
+        .where((e) => (e.serverSeq ?? 0) > sinceServerSeq)
+        .take(limit)
+        .toList();
+    var maxSeq = sinceServerSeq;
+    for (final e in filtered) {
+      if ((e.serverSeq ?? 0) > maxSeq) maxSeq = e.serverSeq!;
+    }
+    return RemoteSyncPullResult(events: filtered, lastServerSeq: maxSeq);
   }
 
   @override
@@ -246,5 +271,89 @@ void main() {
     // Exponential backoff helper
     expect(SyncEngine.backoffForAttempt(1), const Duration(seconds: 2));
     expect(SyncEngine.backoffForAttempt(3), const Duration(seconds: 8));
+  });
+
+  group('Section 9: Multi-Device Sync & Supabase Ingest Integration', () {
+    test('Server rejected events transition to rejected status with reason and do not re-upload', () async {
+      await db.into(db.settings).insert(
+        SettingsCompanion.insert(key: 'device_activated', value: 'true'),
+      );
+
+      final ev1 = await events.append(
+        const EventDraft(
+          type: EventType.sitePresent,
+          action: EventAction.set,
+          businessDate: '2026-04-19',
+          employeeUid: 'emp-bad',
+          teamId: 'team-1',
+          userId: 'sup-1',
+        ),
+      );
+
+      gateway.nextUploadRejections[ev1.eventId] = 'employee_inactive_on_server';
+
+      final result = await engine.synchronize(actor: supActor, scope: supScope);
+      expect(result.uploadedEventsCount, 0);
+
+      // Verify rejected event in outbox
+      final rejectedCount = await outbox.readRejectedCount();
+      expect(rejectedCount, 1);
+
+      final rejectedRows = await outbox.readRejectedEvents();
+      expect(rejectedRows.length, 1);
+      expect(rejectedRows.first.eventId, ev1.eventId);
+
+      final dbRow = await (db.select(db.events)..where((e) => e.eventId.equals(ev1.eventId))).getSingle();
+      expect(dbRow.syncStatus, 'rejected');
+      expect(dbRow.rejectReason, 'employee_inactive_on_server');
+
+      // Subsequent sync does NOT re-attempt upload
+      final secondSync = await engine.synchronize(actor: supActor, scope: supScope);
+      expect(secondSync.uploadedEventsCount, 0);
+      expect(secondSync.pendingRemaining, 0);
+    });
+
+    test('Inbound events with server_seq are pulled and applied idempotently', () async {
+      await db.into(db.settings).insert(
+        SettingsCompanion.insert(key: 'device_activated', value: 'true'),
+      );
+
+      const remoteEv1 = LocalEvent(
+        eventId: 'remote-ev-1',
+        type: EventType.sitePresent,
+        action: EventAction.set,
+        businessDate: '2026-04-19',
+        deviceSeq: 1,
+        serverSeq: 101,
+        teamId: 'team-1',
+        employeeUid: 'emp-101',
+      );
+
+      gateway.serverInboundEvents.add(remoteEv1);
+
+      // First sync pulls and applies
+      await engine.synchronize(actor: supActor, scope: supScope);
+
+      final localEvents = await (db.select(db.events)..where((e) => e.eventId.equals('remote-ev-1'))).get();
+      expect(localEvents.length, 1);
+      expect(localEvents.first.serverSeq, 101);
+      expect(localEvents.first.syncStatus, 'synced');
+
+      // Duplicate sync with same event remains idempotent
+      await engine.synchronize(actor: supActor, scope: supScope);
+      final localEventsAfter = await (db.select(db.events)..where((e) => e.eventId.equals('remote-ev-1'))).get();
+      expect(localEventsAfter.length, 1);
+    });
+
+    test('Deactivated account on server immediately revokes session', () async {
+      await db.into(db.settings).insert(
+        SettingsCompanion.insert(key: 'device_activated', value: 'true'),
+      );
+
+      gateway.serverAccountActive = false;
+
+      final result = await engine.synchronize(actor: supActor, scope: supScope);
+      expect(result.sessionRevoked, isTrue);
+    });
   });
 }

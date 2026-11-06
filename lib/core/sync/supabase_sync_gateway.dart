@@ -3,11 +3,12 @@ import 'package:radar_labor/core/audit/audit_entry.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/status/status_models.dart';
 import 'package:radar_labor/core/sync/remote_gateway.dart';
+import 'package:radar_labor/core/sync/supabase_events_puller.dart';
+import 'package:radar_labor/core/sync/supabase_events_uploader.dart';
 import 'package:radar_labor/core/sync/supabase_snapshot_fetcher.dart';
 import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Real remote sync gateway powered by Supabase (PRD §23.6, Part B).
 final class SupabaseSyncGateway implements RemoteSyncGateway {
   SupabaseSyncGateway({this.client});
   final SupabaseClient? client;
@@ -26,43 +27,19 @@ final class SupabaseSyncGateway implements RemoteSyncGateway {
 
   @override
   Future<RemoteUploadAck> uploadBatch({
-    required String actorUserId, required AuthRole actorRole,
-    required Set<String> allowedTeamIds, required Set<String> allowedHousingIds,
-    required List<LocalEvent> events, required List<AuditEntry> audits,
+    required String actorUserId,
+    required AuthRole actorRole,
+    required Set<String> allowedTeamIds,
+    required Set<String> allowedHousingIds,
+    required List<LocalEvent> events,
+    required List<AuditEntry> audits,
   }) async {
     try {
-      final eventsPayload = [
-        for (final e in events)
-          <String, dynamic>{
-            'event_id': e.eventId, 'user_id': actorUserId, 'event_type': e.type.name,
-            'action': e.action.name, 'business_date': e.businessDate, 'device_seq': e.deviceSeq,
-            if (e.employeeUid != null) 'employee_uid': e.employeeUid,
-            if (e.teamId != null) 'team_id': e.teamId,
-            if (e.housingId != null) 'housing_id': e.housingId,
-            if (e.deviceTimeUtc != null) 'device_time_utc': e.deviceTimeUtc!.toIso8601String(),
-            if (e.resolutionKind != null) 'resolution_kind': e.resolutionKind!.key,
-          },
-      ];
-
-      final dynamic res = await _resolvedClient.rpc('ingest_events', params: {'p_events': eventsPayload});
-      final accepted = <String>{};
-      if (res is List) {
-        for (final item in res) {
-          if (item is Map) {
-            final id = item['event_id']?.toString();
-            final status = item['status']?.toString();
-            if (id != null && (status == 'acked' || status == 'duplicate' || item['accepted'] == true)) {
-              accepted.add(id);
-            }
-          } else if (item is String) {
-            accepted.add(item);
-          }
-        }
-      }
-
-      return RemoteUploadAck(
-        acceptedEventIds: res == null ? events.map((e) => e.eventId).toSet() : accepted,
-        acceptedAuditIds: audits.map((a) => a.auditId).toSet(),
+      return await SupabaseEventsUploader.upload(
+        _resolvedClient,
+        actorUserId: actorUserId,
+        events: events,
+        audits: audits,
       );
     } on OperationException {
       rethrow;
@@ -73,9 +50,34 @@ final class SupabaseSyncGateway implements RemoteSyncGateway {
   }
 
   @override
-  Future<RemoteRosterSnapshot> fetchSnapshot({required String actorUserId}) async {
+  Future<RemoteSyncPullResult> pullEvents({
+    required int sinceServerSeq,
+    int limit = 200,
+  }) async {
     try {
-      return await SupabaseSnapshotFetcher.fetch(_resolvedClient, actorUserId: actorUserId);
+      return await SupabaseEventsPuller.pull(
+        _resolvedClient,
+        sinceServerSeq: sinceServerSeq,
+        limit: limit,
+      );
+    } catch (error) {
+      debugPrint('Supabase pullEvents error: $error');
+      return RemoteSyncPullResult(
+        events: const [],
+        lastServerSeq: sinceServerSeq,
+      );
+    }
+  }
+
+  @override
+  Future<RemoteRosterSnapshot> fetchSnapshot({
+    required String actorUserId,
+  }) async {
+    try {
+      return await SupabaseSnapshotFetcher.fetch(
+        _resolvedClient,
+        actorUserId: actorUserId,
+      );
     } on OperationException {
       rethrow;
     } catch (error) {

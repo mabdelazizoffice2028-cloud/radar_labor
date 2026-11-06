@@ -4,7 +4,6 @@ import 'package:radar_labor/core/status/status_models.dart';
 
 export 'package:radar_labor/core/sync/offline_remote_sync_gateway.dart';
 
-/// Snapshot of server-side reference data downloaded during sync (PRD §23.6).
 final class RemoteRosterSnapshot {
   const RemoteRosterSnapshot({
     required this.rosterEpoch,
@@ -45,18 +44,28 @@ final class RemoteEmployeeRow {
   final int rowVersion;
 }
 
-/// Result of an idempotent batch upload to the trusted server RPC (PRD §23.6).
 final class RemoteUploadAck {
   const RemoteUploadAck({
     required this.acceptedEventIds,
     required this.acceptedAuditIds,
+    this.rejectedEvents = const {},
   });
 
   final Set<String> acceptedEventIds;
   final Set<String> acceptedAuditIds;
+  final Map<String, String> rejectedEvents;
 }
 
-/// Abstract gateway isolating all network/cloud communication from the app & UI (PRD §17.4, Principle 8).
+final class RemoteSyncPullResult {
+  const RemoteSyncPullResult({
+    required this.events,
+    required this.lastServerSeq,
+  });
+
+  final List<LocalEvent> events;
+  final int lastServerSeq;
+}
+
 abstract interface class RemoteSyncGateway {
   Future<bool> isReachable();
 
@@ -67,6 +76,11 @@ abstract interface class RemoteSyncGateway {
     required Set<String> allowedHousingIds,
     required List<LocalEvent> events,
     required List<AuditEntry> audits,
+  });
+
+  Future<RemoteSyncPullResult> pullEvents({
+    required int sinceServerSeq,
+    int limit = 200,
   });
 
   Future<RemoteRosterSnapshot> fetchSnapshot({required String actorUserId});

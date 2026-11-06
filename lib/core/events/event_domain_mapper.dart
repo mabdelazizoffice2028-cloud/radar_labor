@@ -22,6 +22,8 @@ abstract final class EventDomainMapper {
       resolutionKind: ResolutionKind.fromKey(payloadMap['kind']),
       employmentType: payloadMap['employmentType'] as String?,
       jobCategory: payloadMap['jobCategory'] as String?,
+      deviceId: row.deviceId,
+      serverSeq: row.serverSeq,
     );
   }
 
