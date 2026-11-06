@@ -5,6 +5,7 @@ import 'package:radar_labor/core/l10n/operations_strings.dart';
 import 'package:radar_labor/core/l10n/supervisor_task_strings.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
+import 'package:radar_labor/features/operations/domain/worker_search_filter.dart';
 import 'package:radar_labor/features/operations/presentation/state/housing_check_notifier.dart';
 import 'package:radar_labor/features/operations/presentation/state/housing_check_state.dart';
 import 'package:radar_labor/features/operations/presentation/state/operations_controller.dart';
@@ -110,16 +111,14 @@ final class _ScopedWorkerLookupSheetState
     final filtered = _query.trim().isEmpty
         ? workers
         : workers
-              .where((item) {
-                final q = _query.trim().toLowerCase();
-                final nameAr = item.worker.nameAr.toLowerCase();
-                final nameEn = (item.worker.nameEn ?? '').toLowerCase();
-                final code = item.worker.code.toLowerCase();
-                return nameAr.contains(q) ||
-                    nameEn.contains(q) ||
-                    code.contains(q);
-              })
-              .toList(growable: false);
+            .where((item) => WorkerSearchFilter.matches(
+                  query: _query,
+                  code: item.worker.code,
+                  nameAr: item.worker.nameAr,
+                  nameEn: item.worker.nameEn,
+                  id: item.worker.id,
+                ))
+            .toList(growable: false);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(

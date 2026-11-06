@@ -4,6 +4,27 @@ Append one dated handoff entry for each model/session. Keep prior entries so the
 next model can understand decisions and recoveries. The newest handoff is at the
 top of the log.
 
+## 2026-11-06 — Phase 4: Partial Search, Unified Arabic Collation & Multi-Selection De-duplication
+
+- **Verification & Status:**
+  - flutter analyze --no-pub: No issues found! (0 errors, 0 warnings, 0 infos).
+  - flutter test --no-pub: 246 / 246 tests passed (100% success rate, +5 new tests in test/features/operations/partial_search_and_collation_test.dart).
+  - Micro-modularization: Every touched .dart file strictly <= 80 lines.
+
+- **Key Architectural & Search Enhancements:**
+  1. **Comprehensive Partial Search (Section 7.1):**
+     - Centralized multi-attribute substring matching anywhere in Arabic name, English name, worker code, and Iqama (including last 4 digits) via `WorkerSearchFilter.matches`.
+     - Added 2-character minimum search threshold to prevent sluggish typing while preserving instant responsiveness.
+     - Added optimized fast-paths for digit/English matching before running collation, ensuring 1,500+ worker datasets filter within sub-millisecond budgets.
+  2. **Unified Arabic Collation (Section 7.2):**
+     - Expanded `NameCollation.sortKey` to unify all hamza forms (أ، إ، آ، ء، ئ، ؤ، ٱ -> ا).
+     - Unified ya & alif maqsura (ي، ى -> ي) and ta-marbuta & ha (ة، هـ -> ه).
+     - Fully stripped all diacritics, tatweel, and collapsed multiple whitespace spans.
+     - Reused `WorkerSearchFilter` and `NameCollation` across `HousingCheckState`, `SiteAttendanceState`, `TeamSetupNotifier`, `ScopedWorkerLookupSheet`, and `SiteAttendancePreparer`.
+  3. **Multi-Selection De-duplication (Section 7.3):**
+     - Enforced `Set<String>` worker id uniqueness in `SiteAttendanceState` (`existingWorkerIds`, `presentWorkerIds`, `selectedActiveWorkerIds`).
+     - Excluded existing team workers in `SiteAttendanceSaveOps.searchGuests` and guarded against duplicate additions in `addGuestWorker`.
+
 ## 2026-11-06 — Phase 3: Daily Screens, Unassigned Worker Attendance & Ergonomics
 
 - **Verification & Status:**

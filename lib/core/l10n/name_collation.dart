@@ -5,15 +5,15 @@ abstract final class NameCollation {
   );
   static final RegExp _whitespace = RegExp(r'\s+');
 
-  /// Normalizes Arabic alef/ya/ta-marbuta, strips diacritics/tatweel, and lowercases Latin.
+  /// Normalizes Arabic alef/hamza/ya/ta-marbuta, strips diacritics/tatweel, and lowercases Latin.
   static String sortKey(String name) {
     final stripped = name.replaceAll(_diacriticsAndTatweel, '');
     final buffer = StringBuffer();
     for (final rune in stripped.runes) {
       final char = switch (rune) {
-        0x0623 || 0x0625 || 0x0622 => 'ا', // أ إ آ -> ا
-        0x0649 => 'ي', // ى -> ي
-        0x0629 => 'ه', // ة -> ه
+        0x0621 || 0x0622 || 0x0623 || 0x0624 || 0x0625 || 0x0626 || 0x0671 => 'ا', // ء آ أ ؤ إ ئ ٱ -> ا
+        0x0649 || 0x064A => 'ي', // ى ي -> ي
+        0x0629 || 0x0647 => 'ه', // ة ه -> ه
         _ => String.fromCharCode(rune),
       };
       buffer.write(char);

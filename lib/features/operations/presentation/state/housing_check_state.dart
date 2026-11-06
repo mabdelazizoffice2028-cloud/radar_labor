@@ -46,7 +46,7 @@ final class HousingCheckState {
   List<HousingWorkerRow> get filteredRows {
     if (searchQuery.trim().isEmpty) return rows;
     return rows.where((r) => WorkerSearchFilter.matches(
-      query: searchQuery, code: r.worker.code, nameAr: r.worker.nameAr, nameEn: r.worker.nameEn,
+      query: searchQuery, code: r.worker.code, nameAr: r.worker.nameAr, nameEn: r.worker.nameEn, id: r.worker.id,
     )).toList(growable: false);
   }
 

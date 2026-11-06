@@ -7,6 +7,7 @@ import 'package:radar_labor/core/l10n/name_collation.dart';
 import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
 import 'package:radar_labor/features/operations/domain/team_setup_store.dart';
+import 'package:radar_labor/features/operations/domain/worker_search_filter.dart';
 
 /// Immutable presentation state for the supervisor Team Setup Wizard and Team Editor (PRD §7).
 final class TeamSetupState {
@@ -236,7 +237,6 @@ final class TeamSetupNotifier extends Notifier<TeamSetupState> {
     final query = searchQuery ?? state.searchQuery;
     final selected = selectedWorkerIds ?? state.selectedWorkerIds;
     final ar = arabic ?? state.arabic;
-    final normQuery = NameCollation.sortKey(query);
 
     final sortedAll = [...all]
       ..sort(
@@ -250,17 +250,16 @@ final class TeamSetupNotifier extends Notifier<TeamSetupState> {
         ),
       );
 
-    final visible = normQuery.isEmpty
+    final visible = query.trim().isEmpty
         ? sortedAll
         : sortedAll
-              .where((w) {
-                final keyAr = NameCollation.sortKey(w.nameAr);
-                final keyEn = NameCollation.sortKey(w.nameEn ?? '');
-                final keyCode = w.code.toLowerCase();
-                return keyAr.contains(normQuery) ||
-                    keyEn.contains(normQuery) ||
-                    keyCode.contains(normQuery);
-              })
+              .where((w) => WorkerSearchFilter.matches(
+                    query: query,
+                    code: w.code,
+                    nameAr: w.nameAr,
+                    nameEn: w.nameEn,
+                    id: w.id,
+                  ))
               .toList(growable: false);
 
     final selectedSorted = [

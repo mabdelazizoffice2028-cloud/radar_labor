@@ -31,7 +31,8 @@ final class SiteAttendancePreparer {
       final mAr = NameCollation.sortKey(emp.fullNameAr).contains(qNorm);
       final mEn = NameCollation.sortKey(emp.fullNameEn ?? '').contains(qNorm);
       final mCode = emp.employeeCode.toLowerCase().contains(qCode);
-      if (!mAr && !mEn && !mCode) continue;
+      final mIqama = emp.employeeUid.toLowerCase().contains(qCode);
+      if (!mAr && !mEn && !mCode && !mIqama) continue;
       final team = emp.currentTeamId == null ? null : teamsById[emp.currentTeamId!];
       matches.add(CrossTeamWorkerOption(
         worker: toWorker(emp), teamId: emp.currentTeamId, teamNameAr: team?.nameAr, teamNameEn: team?.nameEn,

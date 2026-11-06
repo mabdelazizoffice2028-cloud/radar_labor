@@ -43,7 +43,7 @@ final class SiteAttendanceState {
   Set<String> get guestWorkerIds => {for (final r in rows) if (r.isGuest) r.worker.id};
 
   List<AttendanceRow> get filteredRows => searchQuery.trim().isEmpty ? rows : rows.where(
-    (r) => WorkerSearchFilter.matches(query: searchQuery, code: r.worker.code, nameAr: r.worker.nameAr, nameEn: r.worker.nameEn),
+    (r) => WorkerSearchFilter.matches(query: searchQuery, code: r.worker.code, nameAr: r.worker.nameAr, nameEn: r.worker.nameEn, id: r.worker.id),
   ).toList(growable: false);
 
   SiteAttendanceState withLoadedDay(LoadedSiteAttendanceDay d, String today) => copyWith(

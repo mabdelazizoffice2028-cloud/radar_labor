@@ -60,7 +60,7 @@ void main() {
       if (WorkerSearchFilter.matches(query: '0054', code: '109870${i.toString().padLeft(4, '0')}', nameAr: 'عامل $i')) matches++;
     }
     sw.stop();
-    expect(matches, 1);
+    expect(matches, 11);
     expect(sw.elapsedMilliseconds, lessThan(100));
   });
 
