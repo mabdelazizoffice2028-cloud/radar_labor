@@ -36,6 +36,7 @@ mixin SiteAttendanceSaveOps
     required PreparedSiteSave prepared,
     required Map<String, ConflictResolutionChoice> resolutions,
   }) async {
+    if (state.isSaving) return null;
     draftTimer?.cancel();
     final ctx = actorAndScope();
     if (ctx == null) return null;
@@ -49,6 +50,7 @@ mixin SiteAttendanceSaveOps
       state = state.copyWith(isSaving: false, lastUndoPlan: res.undoPlan, lastSummary: res.summary);
       return res;
     } on Exception catch (e) {
+      state = state.copyWith(isSaving: false);
       setFailure(e);
       return null;
     }

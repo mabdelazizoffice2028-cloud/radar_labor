@@ -53,6 +53,7 @@ final class HousingCheckNotifier extends Notifier<HousingCheckState> {
   }
 
   Future<HousingCheckUndo?> confirmSave({required OperationsController controller, required PreparedHousingCheck check}) async {
+    if (state.isSaving) return null;
     _draftTimer?.cancel();
     state = state.copyWith(isSaving: true, clearError: true);
     final (next, undo) = await _saver.confirm(controller: controller, check: check, cur: state, ar: _isAr);

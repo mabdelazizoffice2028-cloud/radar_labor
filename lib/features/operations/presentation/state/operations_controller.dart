@@ -1,19 +1,17 @@
 import 'package:radar_labor/core/auth/role_capabilities.dart';
-import 'package:radar_labor/core/l10n/attendance_message_strings.dart';
-import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/core/time/clock.dart';
-import 'package:radar_labor/features/operations/domain/attendance_summary.dart';
 import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
 import 'package:radar_labor/features/operations/domain/operations_store.dart';
 import 'package:radar_labor/features/operations/presentation/state/operations_housing_coordinator.dart';
+import 'package:radar_labor/features/operations/presentation/state/operations_site_coordinator.dart';
 import 'package:radar_labor/features/operations/presentation/state/prepared_operations.dart';
 
 export 'package:radar_labor/features/operations/presentation/state/prepared_operations.dart';
 
 /// Coordinates daily operation rules while screens handle only presentation (BC-3).
 final class OperationsController {
-  const OperationsController({
+  OperationsController({
     required this.store, required this.clock, required this.actorUserId,
     required this.capabilities, this.allowedHousingIds = const [], this.allowedTeamIds = const [],
   });
@@ -24,6 +22,8 @@ final class OperationsController {
   final RoleCapabilities capabilities;
   final List<String> allowedHousingIds;
   final List<String> allowedTeamIds;
+  bool _isSavingHousing = false;
+  bool _isSavingSite = false;
 
   bool get canHousing => capabilities.canRecordHousing;
   bool get canSite => capabilities.canRecordSite;
@@ -53,10 +53,18 @@ final class OperationsController {
     );
   }
 
-  Future<HousingCheckUndo> saveHousingCheck(PreparedHousingCheck check) =>
-      _guard(canHousing && _allowsHousing(check.housing.id)).then((_) => store.saveHousingCheck(
-            date: check.date, housing: check.housing, absentIds: check.summary.workerIds, actorUserId: actorUserId,
-          ));
+  Future<HousingCheckUndo> saveHousingCheck(PreparedHousingCheck check) async {
+    if (_isSavingHousing) throw const OperationException(DatabaseBusy());
+    _isSavingHousing = true;
+    try {
+      await _guard(canHousing && _allowsHousing(check.housing.id));
+      return await store.saveHousingCheck(
+        date: check.date, housing: check.housing, absentIds: check.summary.workerIds, actorUserId: actorUserId,
+      );
+    } finally {
+      _isSavingHousing = false;
+    }
+  }
 
   Future<void> undoHousingCheck(HousingCheckUndo undo) =>
       _guard(canHousing && _allowsHousing(undo.housingId))
@@ -66,21 +74,23 @@ final class OperationsController {
     required EntityOption team, required Set<String> presentIds, required bool arabic,
   }) async {
     await _guard(canSite && _allowsTeam(team.id));
-    final workers = await watchTeamWorkers(team.id).first;
-    final date = businessDateFor(clock.nowUtc());
-    return PreparedSiteAttendance(
-      team: team, date: date,
-      summary: AttendanceSummary.siteAttendance(
-        team: team, date: date, workers: workers, presentIds: presentIds,
-        arabic: arabic, strings: AttendanceMessageStrings.fromLanguage(arabic: arabic),
-      ),
+    return OperationsSiteCoordinator.prepare(
+      store: store, clock: clock, team: team, presentIds: presentIds, arabic: arabic,
     );
   }
 
-  Future<SiteAttendanceUndo> saveSiteAttendance(PreparedSiteAttendance attendance) =>
-      _guard(canSite && _allowsTeam(attendance.team.id)).then((_) => store.saveSiteAttendance(
-            date: attendance.date, team: attendance.team, presentIds: attendance.summary.workerIds, actorUserId: actorUserId,
-          ));
+  Future<SiteAttendanceUndo> saveSiteAttendance(PreparedSiteAttendance attendance) async {
+    if (_isSavingSite) throw const OperationException(DatabaseBusy());
+    _isSavingSite = true;
+    try {
+      await _guard(canSite && _allowsTeam(attendance.team.id));
+      return await store.saveSiteAttendance(
+        date: attendance.date, team: attendance.team, presentIds: attendance.summary.workerIds, actorUserId: actorUserId,
+      );
+    } finally {
+      _isSavingSite = false;
+    }
+  }
 
   Future<void> undoSiteAttendance(SiteAttendanceUndo undo) =>
       _guard(canSite && _allowsTeam(undo.teamId)).then((_) => store.undoSiteAttendance(undo, actorUserId: actorUserId));

@@ -1,3 +1,28 @@
+## 2026-11-06 — Phase 9: Event Integrity & Double-Submission Guards (Section 10)
+
+- **Verification & Status:**
+  - flutter analyze --no-pub: No issues found! (0 errors, 0 warnings, 0 infos).
+  - flutter test --no-pub: 264 / 264 tests passed (100% success rate, +3 new tests in test/features/operations/double_submission_guard_test.dart).
+  - Micro-modularization: Every created / touched .dart file strictly <= 90 lines (ideal <= 80, absolute hard cap <= 100).
+    - `operations_site_coordinator.dart`: 29 lines.
+    - `operations_controller.dart`: 90 lines.
+    - `site_attendance_save_ops.dart`: 74 lines.
+    - `housing_check_notifier.dart`: 80 lines.
+
+- **Implementation Details (Section 10):**
+  1. **Site Attendance Double-Submission Guard:**
+     - In `SiteAttendanceSaveOps.confirmSave`, added immediate re-entrancy guard: `if (state.isSaving) return null;`.
+     - In `catch` block, ensured state is reliably cleared with `state = state.copyWith(isSaving: false)`.
+  2. **Housing Check Double-Submission Guard:**
+     - In `HousingCheckNotifier.confirmSave`, added immediate guard: `if (state.isSaving) return null;`.
+     - Preserved clean failure reset in `HousingCheckSaver.confirm` resetting `isSaving: false`.
+  3. **OperationsController Re-entrancy Locks:**
+     - Added atomic locks `_isSavingHousing` and `_isSavingSite` to `OperationsController`.
+     - Throws `OperationException(DatabaseBusy())` on concurrent submissions.
+     - Extracted `OperationsSiteCoordinator` (29 lines) to maintain strict micro-modularization under the 100-line ceiling.
+  4. **Transaction Rollback Resilience:**
+     - Verified atomic transaction rollback in `EventRepository.appendBatch`: if an exception occurs mid-transaction, all drafted events are rolled back cleanly, sequence numbers are never incremented, and no orphaned events remain.
+
 ## 2026-11-06 — Phase 8: Multi-Device Sync & Supabase Ingest SQL (Section 9)
 
 - **Verification & Status:**
