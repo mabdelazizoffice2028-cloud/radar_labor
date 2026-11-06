@@ -56,14 +56,28 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
   });
 
-  testWidgets('PreferencesDevToolCard executes clear on Confirm', (tester) async {
+  testWidgets('PreferencesDevToolCard requires exact confirmation phrase before clear', (tester) async {
     await tester.pumpWidget(wrapWithScope(PreferencesDevToolCard(database: db, arabic: true)));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('مسح بيانات التجارب'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('مسح البيانات'));
+    // Confirm button is initially disabled
+    final confirmFinder = find.widgetWithText(FilledButton, 'مسح البيانات');
+    expect(tester.widget<FilledButton>(confirmFinder).enabled, isFalse);
+
+    // Typing wrong text keeps it disabled
+    await tester.enterText(find.byType(TextField), 'نص خاطئ');
+    await tester.pumpAndSettle();
+    expect(tester.widget<FilledButton>(confirmFinder).enabled, isFalse);
+
+    // Typing exact phrase enables it
+    await tester.enterText(find.byType(TextField), 'مسح بيانات التجربة');
+    await tester.pumpAndSettle();
+    expect(tester.widget<FilledButton>(confirmFinder).enabled, isTrue);
+
+    await tester.tap(confirmFinder);
     await tester.pumpAndSettle();
 
     expect(find.text('تم مسح بيانات التجارب بنجاح'), findsOneWidget);

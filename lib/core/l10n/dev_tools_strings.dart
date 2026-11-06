@@ -1,10 +1,15 @@
 /// Localized strings for Preferences dev tools, clearing data, and importing rosters.
 abstract final class DevToolsStrings {
+  static const String confirmPhraseAr = 'مسح بيانات التجربة';
+  static const String confirmPhraseEn = 'clear test data';
+  static String confirmPhrase(bool ar) => ar ? confirmPhraseAr : confirmPhraseEn;
+  static String confirmInputHint(bool ar) =>
+      ar ? 'اكتب "$confirmPhraseAr" للتأكيد:' : 'Type "$confirmPhraseEn" to confirm:';
   static String confirmClearTitle(bool ar) =>
       ar ? 'تأكيد مسح البيانات' : 'Confirm Data Clear';
   static String confirmClearBody(bool ar) => ar
-      ? 'هل أنت متأكد من مسح جميع أحداث الحضور والتسجيل التجريبية؟ لن يتم حذف العمال أو الفرق، فقط الحركات.'
-      : 'Are you sure you want to clear all test attendance and registration events? Workers and teams will not be deleted, only ledger entries.';
+      ? 'هل أنت متأكد من مسح جميع أحداث الحضور والتسجيل التجريبية؟ لن يتم حذف العمال أو الفرق أو الحسابات أو الإعدادات.'
+      : 'Are you sure you want to clear all test attendance and registration events? Workers, teams, accounts, and settings will be preserved.';
   static String cancel(bool ar) => ar ? 'إلغاء' : 'Cancel';
   static String clearData(bool ar) => ar ? 'مسح البيانات' : 'Clear Data';
   static String clearSuccess(bool ar) =>

@@ -49,6 +49,7 @@ abstract final class HousingConstants {
 }
 
 abstract final class AppConstants {
+  static const bool isDeveloperToolsEnabled = true;
   static const String defaultHousingId = HousingConstants.defaultHousingId;
   static const String defaultHousingName = HousingConstants.defaultHousingName;
   static const String defaultHousingNameAr = HousingConstants.defaultHousingNameAr;

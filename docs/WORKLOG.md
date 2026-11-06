@@ -1,3 +1,35 @@
+## 2026-11-06 — Phase 5: Controlled Test Data Wipe Tool (Section 8)
+
+- **Verification & Status:**
+  - flutter analyze --no-pub: No issues found! (0 errors, 0 warnings, 0 infos).
+  - flutter test --no-pub: 248 / 248 tests passed (100% success rate, +2 new tests in test/features/operations/test_data_wipe_test.dart).
+  - Micro-modularization: Every created / touched .dart file strictly <= 73 lines (ideal <= 80).
+
+- **Strict Controls Implemented:**
+  1. **Developer Tool Flag (Section 8.1):**
+     - Added `AppConstants.isDeveloperToolsEnabled` flag.
+     - Wrapped developer wipe card in `PreferencesAdminSection` with this flag so it can be disabled in production.
+  2. **Explicit Arabic Confirmation Phrase (Section 8.2):**
+     - Implemented `PreferencesWipeDialog` with an autofocus `TextField`.
+     - Action button is strictly disabled until the exact localized confirmation phrase is typed: "مسح بيانات التجربة" (Arabic) or "clear test data" (English).
+  3. **Preservation & Scope of Data (Section 8.3):**
+     - Wiped: `events` table completely, and draft attendance/housing records in `settings` (`draft_site_attendance_%`, `draft_housing_check_%`).
+     - Strictly Preserved: `employees`, `teams`, `app_users`, `housings`, and general `settings`.
+     - `AppSettingKeys.deviceSequence` is NEVER reset to zero, preserving remote Supabase sequence continuity and preventing ID collisions.
+  4. **Mandatory Automatic Pre-wipe Local Backup (Section 8.4):**
+     - Automated JSON snapshot of all `events` and `drafts` before any database deletion.
+     - Formatted file name: `backup_test_data_YYYY-MM-DD_HH-mm-ss.json`.
+     - Synchronous file write (`writeAsStringSync`) ensures the backup exists on disk before entering the database transaction. If file creation fails, the transaction aborts and no data is wiped.
+  5. **Audited Operation (Section 8.5):**
+     - Recorded an entry in `audit_log` tracking user ID, timestamp, count of wiped events, and full path of the backup file.
+  6. **Automated Verification Suite (Section 8.6):**
+     - `test/features/operations/test_data_wipe_test.dart` verifies:
+       a) Events and drafts wiped, workers and device sequence preserved.
+       b) Backup file creation and content validation.
+       c) `audit_log` entry recording.
+       d) Confirmation text requirement (Arabic & English).
+     - Updated `test/app/dev_tools_and_notifications_test.dart` to test dialog validation and wipe execution.
+
 # Work log
 
 Append one dated handoff entry for each model/session. Keep prior entries so the

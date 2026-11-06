@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/app/screens/preferences_dev_tool_card.dart';
 import 'package:radar_labor/app/screens/preferences_import_card.dart';
 import 'package:radar_labor/app/widgets/settings_section_header.dart';
+import 'package:radar_labor/core/constants/app_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/database/local_settings_repository.dart';
 import 'package:radar_labor/core/database/lockout_settings_extension.dart';
@@ -57,8 +58,10 @@ final class _PreferencesAdminSectionState extends State<PreferencesAdminSection>
       _tile(LockoutStrings.siteLockout(widget.arabic), _siteHour, (v) async {
         setState(() => _siteHour = v); await _settings.writeSiteLockoutHour(v);
       }),
-      const SizedBox(height: AppTokens.space8),
-      PreferencesDevToolCard(database: widget.database, arabic: widget.arabic),
+      if (AppConstants.isDeveloperToolsEnabled) ...[
+        const SizedBox(height: AppTokens.space8),
+        PreferencesDevToolCard(database: widget.database, arabic: widget.arabic),
+      ],
     ],
   );
 }
