@@ -1,3 +1,19 @@
+## 2026-11-06 — Phase 6: English Internal Values & Complete BiDi Localization (Section 4)
+
+- **Verification & Status:**
+  - flutter analyze --no-pub: No issues found! (0 errors, 0 warnings, 0 infos).
+  - flutter test --no-pub: 253 / 253 tests passed (100% success rate, +5 new tests in test/core/l10n/english_internal_values_and_bidi_localization_test.dart).
+  - Micro-modularization: Every created / touched .dart file strictly <= 80 lines.
+
+- **Audited Internal English Values & Localization:**
+  1. **Strict ASCII English Internal System Values (Section 4):**
+     - Verified that all internal enums (`EventType`, `EventAction`, `ResolutionKind`, `WorkerStatus`, `AuthRole`, `EventDelivery`, `StatusFlag`), internal database columns, defaults, settings, and payload keys use strictly ASCII English tokens (`PRESENT`, `ABSENT`, `NOT_REVIEWED`, `COMPANY`, `RENTAL`, `ACCOMMODATION`).
+     - `AuthRole.housingSupervisor` remains fixed internally as mandated.
+     - Worker names and personal identification codes are never altered or translated.
+  2. **BiDi & RTL/LTR Text Isolation:**
+     - Verified that `SiteWhatsappFormatter` and `HousingWhatsappFormatter` support complete localization with RTL text direction and BiDi Unicode isolates (`U+200F` RLM and `U+2066 ... U+2069` LRI/PDI) for dates, worker codes, and quantities.
+     - Normalization converts Arabic workforce input ('إيجار' / 'ايجار' / 'شركة') into standardized English tokens (`rental` / `company`) without data loss.
+
 ## 2026-11-06 — Phase 5: Controlled Test Data Wipe Tool (Section 8)
 
 - **Verification & Status:**
