@@ -1,3 +1,24 @@
+## 2026-11-06 — Phase 11: Import/Export & Windows-1256 CSV Encoding (Section 13 & B-010)
+
+- **Verification & Status:**
+  - flutter analyze --no-pub: No issues found! (0 errors, 0 warnings, 0 infos).
+  - flutter test --no-pub: 272 / 272 tests passed (100% success rate, +4 new tests in test/features/roster/windows_1256_csv_import_test.dart).
+  - Micro-modularization: Every created / touched .dart file strictly <= 66 lines (ideal <= 80, absolute hard cap <= 100).
+    - `windows_1256_decoder.dart`: 41 lines.
+    - `workforce_tabular_reader.dart`: 66 lines.
+
+- **Implementation Details (Section 13 & B-010):**
+  1. **Windows-1256 (CP1256) Custom Codec:**
+     - Created `Windows1256Decoder` implementing the complete standard mapping table for Arabic characters (0x80 to 0xFF) and standard ASCII (0x00 to 0x7F).
+     - Provides bidirectional `decode(bytes)` and `encode(string)`.
+  2. **Seamless Automatic Fallback in Tabular Reader:**
+     - In `WorkforceTabularReader._csv`, attempts UTF-8 decoding first (`utf8.decode(bytes, allowMalformed: false)`).
+     - On encountering any `FormatException` from non-UTF8 Excel exports, automatically falls back to `Windows1256Decoder.decode(bytes)`.
+     - Automatically strips UTF-8 BOM (`\uFEFF`) if present.
+     - Preserves Arabic employee names, designations, and suppliers without mojibake or corrupt characters.
+  3. **Defect Resolution:**
+     - Fully resolves **B-010** (CSV rejection due to Windows-1256 encoding).
+
 ## 2026-11-06 — Phase 10: Comprehensive Backup & Restore (Section 13)
 
 - **Verification & Status:**

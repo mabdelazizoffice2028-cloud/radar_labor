@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:excel/excel.dart';
+import 'package:radar_labor/features/roster/domain/windows_1256_decoder.dart';
 
 /// Reads tabular rows from raw CSV or Excel bytes.
 final class WorkforceTabularReader {
@@ -20,7 +21,19 @@ final class WorkforceTabularReader {
   }
 
   List<List<String>> _csv(List<int> bytes) {
-    final text = utf8.decode(bytes, allowMalformed: false);
+    String text;
+    try {
+      text = utf8.decode(bytes, allowMalformed: false);
+    } on FormatException {
+      text = Windows1256Decoder.decode(bytes);
+    }
+    if (text.startsWith('\uFEFF')) {
+      text = text.substring(1);
+    }
+    return _parseCsv(text);
+  }
+
+  List<List<String>> _parseCsv(String text) {
     final result = <List<String>>[];
     var row = <String>[];
     final field = StringBuffer();
