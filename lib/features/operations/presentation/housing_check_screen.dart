@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
-import 'package:radar_labor/core/l10n/operations_strings.dart';
 import 'package:radar_labor/core/time/business_date.dart';
 import 'package:radar_labor/core/ui/app_tokens.dart';
 import 'package:radar_labor/features/operations/presentation/state/housing_check_notifier.dart';
@@ -40,7 +39,7 @@ final class _HousingCheckScreenState extends ConsumerState<HousingCheckScreen> {
     final isFriday = isFridayBusinessDate(state.selectedDate);
 
     return Scaffold(
-      appBar: AppBar(title: Text(OperationsStrings.startCampusCheckAction(ar))),
+      appBar: AppBar(title: Text(state.selectedHousing?.displayName(arabic: ar) ?? '')),
       body: UnsavedChangesGuard(
         hasUnsavedChanges: state.hasUnsavedChanges,
         persistDraft: notifier.flushDraft, arabic: ar,

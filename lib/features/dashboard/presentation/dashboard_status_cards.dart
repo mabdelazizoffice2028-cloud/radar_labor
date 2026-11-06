@@ -34,7 +34,7 @@ final class DashboardStatusCards extends StatelessWidget {
       );
     }
 
-    final absent = snapshot.count(WorkerStatus.unknown) + snapshot.count(WorkerStatus.housingOnly);
+    final absent = snapshot.count(WorkerStatus.unknown);
     return GridView.count(
       crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), childAspectRatio: 1.75,
       children: [

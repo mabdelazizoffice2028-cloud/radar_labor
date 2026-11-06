@@ -1,23 +1,19 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
+import 'package:radar_labor/core/constants/operations_constants.dart';
 import 'package:radar_labor/core/l10n/operations_strings.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
 import 'package:radar_labor/features/operations/domain/team_setup_store.dart';
+import 'package:radar_labor/features/operations/presentation/site_attendance_screen.dart';
 import 'package:radar_labor/features/operations/presentation/state/operations_controller.dart';
 import 'package:radar_labor/features/operations/presentation/team_setup/team_wizard_screen.dart';
 import 'package:radar_labor/features/operations/presentation/widgets/no_teams_empty_state.dart';
 
-/// Observes the scoped team stream for a site supervisor. Shows loading and
-/// error states, the create-team entry point when no team exists, and
-/// otherwise the regular launcher [child].
+/// Observes scoped team stream. Shows loading/error, empty state, or [child].
 final class SiteSupervisorTeamsGate extends StatefulWidget {
   const SiteSupervisorTeamsGate({
-    required this.controller,
-    required this.arabic,
-    required this.child,
-    this.teamSetupStore,
-    this.actor,
-    super.key,
+    required this.controller, required this.arabic, required this.child,
+    this.teamSetupStore, this.actor, this.scope, super.key,
   });
 
   final OperationsController controller;
@@ -25,14 +21,13 @@ final class SiteSupervisorTeamsGate extends StatefulWidget {
   final Widget child;
   final TeamSetupStore? teamSetupStore;
   final ActorContext? actor;
+  final ScopeSnapshot? scope;
 
   @override
-  State<SiteSupervisorTeamsGate> createState() =>
-      _SiteSupervisorTeamsGateState();
+  State<SiteSupervisorTeamsGate> createState() => _SiteSupervisorTeamsGateState();
 }
 
-final class _SiteSupervisorTeamsGateState
-    extends State<SiteSupervisorTeamsGate> {
+final class _SiteSupervisorTeamsGateState extends State<SiteSupervisorTeamsGate> {
   late Stream<List<EntityOption>> _teams = widget.controller.watchTeams();
 
   @override
@@ -43,14 +38,20 @@ final class _SiteSupervisorTeamsGateState
     }
   }
 
-  Future<void> _openWizard(TeamSetupStore store, ActorContext actor) async {
-    await Navigator.of(context).push<EntityOption>(
-      MaterialPageRoute(
-        builder: (_) =>
-            TeamWizardScreen(store: store, actor: actor, arabic: widget.arabic),
+  void _openWizard(TeamSetupStore store, ActorContext actor) {
+    Navigator.of(context).push<EntityOption>(MaterialPageRoute(
+      builder: (_) => TeamWizardScreen(store: store, actor: actor, arabic: widget.arabic),
+    ));
+  }
+
+  void _openDirectAttendance() {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => SiteAttendanceScreen(
+        controller: widget.controller, arabic: widget.arabic,
+        teamSetupStore: widget.teamSetupStore, actor: widget.actor,
+        scope: widget.scope, initialTeamId: OperationsConstants.noTeamId,
       ),
-    );
-    // The scoped team stream refreshes the launcher on its own.
+    ));
   }
 
   @override
@@ -65,19 +66,15 @@ final class _SiteSupervisorTeamsGateState
           );
         }
         if (!snapshot.hasData) {
-          return const Center(
-            key: ValueKey('teams_loading'),
-            child: CircularProgressIndicator(),
-          );
+          return const Center(key: ValueKey('teams_loading'), child: CircularProgressIndicator());
         }
         if (snapshot.requireData.isNotEmpty) return widget.child;
         final store = widget.teamSetupStore;
         final actor = widget.actor;
         return NoTeamsEmptyState(
           arabic: widget.arabic,
-          onCreateTeam: store == null || actor == null
-              ? null
-              : () => _openWizard(store, actor),
+          onCreateTeam: store == null || actor == null ? null : () => _openWizard(store, actor),
+          onDirectAttendance: _openDirectAttendance,
         );
       },
     );

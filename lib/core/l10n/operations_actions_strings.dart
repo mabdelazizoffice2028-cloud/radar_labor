@@ -50,4 +50,6 @@ abstract final class OperationsActionsStrings {
   static String fridayOvertimeLabel(bool ar) => ar ? 'عمل إضافي (الجمعة)' : 'Friday Overtime';
   static String fridayRestLabel(bool ar) => ar ? 'راحة الجمعة' : 'Friday Rest';
   static String confirmFridayOvertime(bool ar) => ar ? 'تأكيد العمل الإضافي' : 'Confirm Overtime';
+  static String directAttendance(bool ar) => ar ? 'تسجيل حضور مباشر' : 'Record Direct Attendance';
+  static String directWorkersNoTeam(bool ar) => ar ? 'عمال بدون فريق' : 'Direct Workers (No Team)';
 }

@@ -4,6 +4,29 @@ Append one dated handoff entry for each model/session. Keep prior entries so the
 next model can understand decisions and recoveries. The newest handoff is at the
 top of the log.
 
+## 2026-11-06 — Phase 3: Daily Screens, Unassigned Worker Attendance & Ergonomics
+
+- **Verification & Status:**
+  - flutter analyze --no-pub: No issues found! (0 errors, 0 warnings, 0 infos).
+  - flutter test --no-pub: 241 / 241 tests passed (100% success rate, +4 new tests in test/features/operations/unassigned_worker_attendance_test.dart).
+  - Micro-modularization: Every created / touched .dart file strictly <= 83 lines (ideal <= 80).
+
+- **Key Architectural & Functional Enhancements:**
+  1. **Direct Attendance for Unassigned Workers (Section 6.1):**
+     - Allowed `no_team` across `ScopeSnapshot` and `OperationsController`, enabling site supervisors to record attendance without needing a team upfront.
+     - Updated `NoTeamsEmptyState` to retain the existing `create_first_team_button` and provide a secondary `record_without_team_button` for direct unassigned attendance.
+     - Updated `SiteSupervisorTeamsGate` to navigate directly to unassigned attendance when requested.
+     - Enhanced `SiteAttendanceRowBuilder.buildRows` to match workers with `currentTeamId == null` when `teamId == no_team`.
+     - Added "عمال بدون فريق" (`OperationsStrings.directWorkersNoTeam`) to the team selector in `SiteAttendanceScreen`, allowing seamless switching between scoped teams and unassigned workers.
+     - Extracted `SiteAttendanceScreenHelpers` to keep both `site_attendance_screen.dart` (64 lines) and helpers (62 lines) well within micro-modularization constraints.
+  2. **Field Ergonomics for Housing Supervisor (Section 6.2):**
+     - Single housing assignment auto-selects and loads directly with the housing name displayed as the AppBar title in `HousingCheckScreen`.
+     - Visually and semantically separated unreviewed workers ("لم يراجع", subtle/neutral styling) from confirmed absences ("غائب", high-contrast warning badge/border) in `HousingWorkerTile` and `HousingCheckLoader`.
+     - Standardized `DashboardStatusCards` and `DailyReportCompiler` to strictly distinguish confirmed absent workers (`WorkerStatus.unknown`) from unreviewed / untouched workers (`WorkerStatus.notRecorded`).
+
+- **Decisions Made (Section 3.4):**
+  - Used `OperationsConstants.noTeamId = 'no_team'` as the standard identifier for unassigned workforce attendance, allowing unified ledger tracking and conflict detection without breaking schema or requiring migration.
+
 ## 2026-11-06 — Phase 2: Company/Rental Classification & Unified Attendance Engine
 
 - **Verification & Architectural Status:**

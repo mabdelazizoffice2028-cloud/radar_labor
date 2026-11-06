@@ -7,6 +7,7 @@ final class NoTeamsEmptyState extends StatelessWidget {
   const NoTeamsEmptyState({
     required this.arabic,
     required this.onCreateTeam,
+    this.onDirectAttendance,
     super.key,
   });
 
@@ -14,6 +15,9 @@ final class NoTeamsEmptyState extends StatelessWidget {
 
   /// Null hides the button when team creation is not available.
   final VoidCallback? onCreateTeam;
+
+  /// Direct attendance recording without team assignment.
+  final VoidCallback? onDirectAttendance;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +48,18 @@ final class NoTeamsEmptyState extends StatelessWidget {
                 icon: const Icon(Icons.group_add_outlined),
                 label: Text(OperationsStrings.createNewTeam(arabic)),
                 onPressed: onCreateTeam,
+              ),
+            ],
+            if (onDirectAttendance != null) ...[
+              const SizedBox(height: AppTokens.space12),
+              OutlinedButton.icon(
+                key: const ValueKey('record_without_team_button'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(AppTokens.minTouchTarget),
+                ),
+                icon: const Icon(Icons.playlist_add_check_outlined),
+                label: Text(OperationsStrings.directAttendance(arabic)),
+                onPressed: onDirectAttendance,
               ),
             ],
           ],

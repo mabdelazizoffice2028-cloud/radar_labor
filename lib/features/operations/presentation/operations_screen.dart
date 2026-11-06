@@ -106,6 +106,7 @@ final class OperationsScreen extends StatelessWidget {
                   arabic: arabic,
                   teamSetupStore: teamSetupStore,
                   actor: actor,
+                  scope: scope,
                   child: launcher,
                 )
               : launcher,

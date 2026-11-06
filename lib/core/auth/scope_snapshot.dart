@@ -11,7 +11,7 @@ final class ScopeSnapshot {
   final Set<String> teamIds;
   final Set<String> housingIds;
 
-  bool allowsTeam(String teamId) => teamIds.contains(teamId);
+  bool allowsTeam(String teamId) => teamIds.contains(teamId) || teamId == 'no_team';
 
   bool allowsHousing(String housingId) => housingIds.contains(housingId);
 }

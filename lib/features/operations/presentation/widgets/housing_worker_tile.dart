@@ -19,9 +19,14 @@ final class HousingWorkerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isAbsent = row.isAbsent;
-    final bg = isAbsent ? AppTokens.statusUnknownSoft : AppTokens.surface;
+    final isUnreviewed = row.reviewState == HousingReviewState.unreviewed;
+    final bg = isAbsent
+        ? AppTokens.statusUnknownSoft
+        : (isUnreviewed ? AppTokens.statusNotRecordedSoft : AppTokens.surface);
     final border = isAbsent ? AppTokens.statusUnknown : AppTokens.outline;
-    final iconColor = isAbsent ? AppTokens.statusUnknown : AppTokens.textSecondary;
+    final iconColor = isAbsent
+        ? AppTokens.statusUnknown
+        : (isUnreviewed ? AppTokens.statusNotRecorded : AppTokens.textSecondary);
     final checkIcon = isAbsent ? Icons.check_box : Icons.check_box_outline_blank;
 
     return Card(
@@ -48,6 +53,11 @@ final class HousingWorkerTile extends StatelessWidget {
                 Text(
                   HousingReviewStrings.reviewStateAbsent(arabic),
                   style: const TextStyle(color: AppTokens.statusUnknown, fontWeight: FontWeight.bold, fontSize: 13),
+                )
+              else if (isUnreviewed)
+                Text(
+                  HousingReviewStrings.reviewStateUnreviewed(arabic),
+                  style: const TextStyle(color: AppTokens.statusNotRecorded, fontSize: 12),
                 ),
             ],
           ),

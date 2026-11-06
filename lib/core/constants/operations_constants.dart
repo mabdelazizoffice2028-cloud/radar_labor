@@ -12,4 +12,5 @@ abstract final class OperationsConstants {
   static const int historyPageDays = 14;
   static const int riyadhUtcOffsetHours = 3;
   static const int dayCutoffHour = 3;
+  static const String noTeamId = 'no_team';
 }

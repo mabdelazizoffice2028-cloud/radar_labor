@@ -33,7 +33,7 @@ final class DailyReportCompiler {
     final isFriday = isFridayBusinessDate(date);
     final absentCount = isFriday
         ? 0
-        : (snapshot.count(WorkerStatus.housingOnly) + snapshot.count(WorkerStatus.unknown));
+        : snapshot.count(WorkerStatus.unknown);
     final unreviewedCount = isFriday ? 0 : snapshot.count(WorkerStatus.notRecorded);
 
     return DailyReportGenerator.generate(

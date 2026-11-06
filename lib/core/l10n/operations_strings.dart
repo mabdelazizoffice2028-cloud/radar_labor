@@ -68,7 +68,7 @@ abstract final class OperationsStrings {
   static String fridayOvertimeCountLabel(bool ar, int count) => OperationsActionsStrings.fridayOvertimeCountLabel(ar, count); static String selectDefaultCrew(bool ar) => OperationsActionsStrings.selectDefaultCrew(ar);
   static String fridayBannerTitle(bool ar) => OperationsActionsStrings.fridayBannerTitle(ar); static String fridaySaveConfirm(bool ar, int count) => OperationsActionsStrings.fridaySaveConfirm(ar, count);
   static String fridayOvertimeLabel(bool ar) => OperationsActionsStrings.fridayOvertimeLabel(ar); static String fridayRestLabel(bool ar) => OperationsActionsStrings.fridayRestLabel(ar);
-  static String confirmFridayOvertime(bool ar) => OperationsActionsStrings.confirmFridayOvertime(ar);
+  static String confirmFridayOvertime(bool ar) => OperationsActionsStrings.confirmFridayOvertime(ar); static String directAttendance(bool ar) => OperationsActionsStrings.directAttendance(ar); static String directWorkersNoTeam(bool ar) => OperationsActionsStrings.directWorkersNoTeam(ar);
 
   static String errPermissionDenied(bool ar) => OperationsErrorStrings.errPermissionDenied(ar); static String errDateOutOfWindow(bool ar) => OperationsErrorStrings.errDateOutOfWindow(ar);
   static String errFutureDate(bool ar) => OperationsErrorStrings.errFutureDate(ar); static String errWorkersUnavailable(bool ar) => OperationsErrorStrings.errWorkersUnavailable(ar);

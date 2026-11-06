@@ -1,3 +1,4 @@
+import 'package:radar_labor/core/constants/operations_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/l10n/attendance_message_strings.dart';
 import 'package:radar_labor/features/operations/data/site_attendance_preparer.dart';
@@ -13,9 +14,12 @@ final class SiteAttendanceSummaryHelper {
     required bool arabic,
     String? supervisorName,
   }) {
+    final isNoTeam = team.id == OperationsConstants.noTeamId;
     final workers = [
       for (final emp in activeEmployees)
-        if (emp.currentTeamId == team.id ||
+        if ((isNoTeam
+                ? (emp.currentTeamId == null || emp.currentTeamId!.isEmpty)
+                : emp.currentTeamId == team.id) ||
             presentIds.contains(emp.employeeUid))
           SiteAttendancePreparer.toWorker(emp),
     ]..sort((a, b) => SiteAttendancePreparer.cmpWorker(a, b, arabic));

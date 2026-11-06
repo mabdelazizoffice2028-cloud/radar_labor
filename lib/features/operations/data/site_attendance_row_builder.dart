@@ -1,3 +1,4 @@
+import 'package:radar_labor/core/constants/operations_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/l10n/name_collation.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
@@ -15,9 +16,13 @@ abstract final class SiteAttendanceRowBuilder {
   }) {
     final rows = <AttendanceRow>[];
     final addedIds = <String>{};
+    final isNoTeam = teamId == OperationsConstants.noTeamId;
 
     for (final emp in activeById.values) {
-      if (emp.currentTeamId == teamId) {
+      final matchesTeam = isNoTeam
+          ? (emp.currentTeamId == null || emp.currentTeamId!.isEmpty)
+          : emp.currentTeamId == teamId;
+      if (matchesTeam) {
         rows.add(AttendanceRow(
           worker: toWorker(emp),
           isPresent: selectedIds.contains(emp.employeeUid),
