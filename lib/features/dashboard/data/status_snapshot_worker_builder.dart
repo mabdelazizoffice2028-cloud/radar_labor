@@ -40,6 +40,8 @@ final class StatusSnapshotWorkerBuilder {
         housingId: employee.housingId,
         isActive: employee.isActive,
         jobCategory: employee.jobCategory,
+        employmentType: employee.employmentType,
+        rentalCompany: employee.rentalCompany,
         isOnLeave: onLeaveIds.contains(employee.employeeUid),
         employmentPeriods: List.unmodifiable(
           periodGroups[employee.employeeUid] ?? const [],

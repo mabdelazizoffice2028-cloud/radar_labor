@@ -12,6 +12,8 @@ final class OperationsHousingOperations {
     required EntityOption housing,
     required Set<String> absentIds,
     required String actorUserId,
+    Map<String, String>? workerEmploymentTypes,
+    Map<String, String>? workerJobCategories,
   }) async {
     final previous = await events.readBusinessDate(date);
     final ledger = AttendanceLedger(previous);
@@ -34,6 +36,12 @@ final class OperationsHousingOperations {
           employeeUid: id,
           housingId: housing.id,
           userId: actorUserId,
+          payload: {
+            if (absentIds.contains(id)) ...{
+              'employmentType': workerEmploymentTypes?[id] ?? 'company',
+              'jobCategory': workerJobCategories?[id] ?? 'direct_labor',
+            },
+          },
         ),
     ]);
     return HousingCheckUndo(

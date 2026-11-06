@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:radar_labor/core/audit/audit_log_repository.dart';
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
+import 'package:radar_labor/core/constants/employment_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 
@@ -18,6 +19,7 @@ final class RosterAdminWorkerCreator {
     String category = 'Worker',
     String? supplier,
     String? teamId,
+    String employmentType = EmploymentConstants.company,
   }) async {
     if (!actor.capabilities.canManageReferenceData) {
       throw const OperationException(PermissionDenied());
@@ -25,7 +27,7 @@ final class RosterAdminWorkerCreator {
     final iqama = code.trim().length >= 10
         ? code.trim().substring(0, 10)
         : code.trim().padLeft(10, '0');
-    final isRental = supplier != null && supplier.trim().isNotEmpty;
+    final isRental = EmploymentConstants.isRental(employmentType);
     await database.transaction(() async {
       await database.into(database.employees).insert(
             EmployeesCompanion.insert(
@@ -34,7 +36,7 @@ final class RosterAdminWorkerCreator {
               fullNameEn: Value(fullNameEn?.trim()),
               jobTitle: Value(category.trim()),
               jobCategory: Value(category.trim()),
-              employmentType: Value(isRental ? 'rental' : 'company'),
+              employmentType: Value(isRental ? EmploymentConstants.rental : EmploymentConstants.company),
               rentalCompany: Value(supplier?.trim()),
               currentTeamId: Value(teamId),
             ),

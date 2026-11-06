@@ -1,0 +1,44 @@
+import 'dart:convert';
+import 'package:radar_labor/core/database/app_database.dart';
+import 'package:radar_labor/core/status/status_models.dart';
+
+abstract final class EventDomainMapper {
+  static LocalEvent toDomain(Event row) {
+    final payloadMap = decodePayload(row.payload);
+    return LocalEvent(
+      eventId: row.eventId,
+      deviceSeq: row.deviceSeq,
+      type: EventType.values.byName(row.type),
+      action: EventAction.values.byName(row.action),
+      businessDate: row.businessDate,
+      employeeUid: row.employeeUid,
+      teamId: row.teamId,
+      housingId: row.housingId,
+      userId: row.userId,
+      receivedAtUtc: row.receivedAt?.toUtc(),
+      deviceTimeUtc: row.deviceTime.toUtc(),
+      delivery: parseDelivery(row.syncStatus),
+      isLate: row.late,
+      resolutionKind: ResolutionKind.fromKey(payloadMap['kind']),
+      employmentType: payloadMap['employmentType'] as String?,
+      jobCategory: payloadMap['jobCategory'] as String?,
+    );
+  }
+
+  static Map<String, Object?> decodePayload(String payload) {
+    try {
+      final decoded = jsonDecode(payload);
+      return decoded is Map<String, Object?> ? decoded : const {};
+    } on Exception {
+      return const {};
+    }
+  }
+
+  static EventDelivery parseDelivery(String syncStatus) {
+    try {
+      return EventDelivery.values.byName(syncStatus);
+    } on ArgumentError {
+      return EventDelivery.pending;
+    }
+  }
+}

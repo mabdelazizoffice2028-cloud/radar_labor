@@ -1,6 +1,7 @@
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
 import 'package:radar_labor/core/l10n/attendance_message_strings.dart';
 import 'package:radar_labor/core/l10n/name_collation.dart';
+import 'package:radar_labor/core/status/status_models.dart';
 import 'package:radar_labor/features/operations/domain/attendance_ledger.dart';
 import 'package:radar_labor/features/operations/domain/history_models.dart';
 import 'package:radar_labor/features/operations/domain/operations_models.dart';
@@ -39,7 +40,8 @@ final class HistoryHousingSectionBuilder {
           for (final w in workers)
             WhatsappWorkerItem(
               code: w.code, name: w.displayName(arabic: arabic),
-              employmentType: w.employmentType, jobCategory: w.jobCategory,
+              employmentType: ledger.activeEventFor(LedgerKey(type: EventType.housingAbsent, housingId: housingId, employeeUid: w.id))?.employmentType ?? w.employmentType,
+              jobCategory: ledger.activeEventFor(LedgerKey(type: EventType.housingAbsent, housingId: housingId, employeeUid: w.id))?.jobCategory ?? w.jobCategory,
             ),
         ],
         arabic: arabic,

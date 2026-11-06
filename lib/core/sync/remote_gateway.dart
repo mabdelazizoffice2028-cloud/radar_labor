@@ -2,6 +2,8 @@ import 'package:radar_labor/core/audit/audit_entry.dart';
 import 'package:radar_labor/core/auth/auth_role.dart';
 import 'package:radar_labor/core/status/status_models.dart';
 
+export 'package:radar_labor/core/sync/offline_remote_sync_gateway.dart';
+
 /// Snapshot of server-side reference data downloaded during sync (PRD §23.6).
 final class RemoteRosterSnapshot {
   const RemoteRosterSnapshot({
@@ -25,6 +27,7 @@ final class RemoteEmployeeRow {
     this.supplier,
     this.currentTeamId,
     this.housingId,
+    this.employmentType = 'company',
     this.isActive = true,
     this.rowVersion = 1,
   });
@@ -37,6 +40,7 @@ final class RemoteEmployeeRow {
   final String? supplier;
   final String? currentTeamId;
   final String? housingId;
+  final String employmentType;
   final bool isActive;
   final int rowVersion;
 }
@@ -66,30 +70,4 @@ abstract interface class RemoteSyncGateway {
   });
 
   Future<RemoteRosterSnapshot> fetchSnapshot({required String actorUserId});
-}
-
-/// Default offline-first gateway when no cloud backend is connected yet.
-final class OfflineRemoteSyncGateway implements RemoteSyncGateway {
-  const OfflineRemoteSyncGateway();
-
-  @override
-  Future<bool> isReachable() async => false;
-
-  @override
-  Future<RemoteUploadAck> uploadBatch({
-    required String actorUserId,
-    required AuthRole actorRole,
-    required Set<String> allowedTeamIds,
-    required Set<String> allowedHousingIds,
-    required List<LocalEvent> events,
-    required List<AuditEntry> audits,
-  }) async => const RemoteUploadAck(
-    acceptedEventIds: <String>{},
-    acceptedAuditIds: <String>{},
-  );
-
-  @override
-  Future<RemoteRosterSnapshot> fetchSnapshot({
-    required String actorUserId,
-  }) async => const RemoteRosterSnapshot(rosterEpoch: 1);
 }

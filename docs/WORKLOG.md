@@ -4,6 +4,28 @@ Append one dated handoff entry for each model/session. Keep prior entries so the
 next model can understand decisions and recoveries. The newest handoff is at the
 top of the log.
 
+## 2026-11-06 — Phase 2: Company/Rental Classification & Unified Attendance Engine
+
+- **Verification & Architectural Status:**
+  - flutter analyze --no-pub: No issues found! (0 errors, 0 warnings, 0 infos).
+  - flutter test --no-pub: 237 / 237 tests passed (100% success rate, +3 new tests in test/features/operations/company_rental_classification_test.dart).
+  - Micro-modularization: Every created / touched .dart file strictly <= 89 lines.
+
+- **Key Improvements & Architectural Changes:**
+  1. **Historical Snapshot in Event Ledger:**
+     - Updated EventDraft and EventRepository to capture employmentType and jobCategory within the event payload JSON at recording time.
+     - Updated LocalEvent and EventDomainMapper to extract these snapshot values from payload, falling back to current employee record / company default for legacy events.
+     - In OperationsHousingOperations and SiteAttendanceSaveBuilder, atomically persisted the workers snapshot classification with the event.
+  2. **Unified Attendance Breakdown Engine:**
+     - Created AttendanceBreakdownCalculator in lib/core/status/attendance_breakdown_calculator.dart (pure Dart, zero dependencies).
+     - Partitions workforce into company, rental, labor, and operators, ensuring totalCount == companyCount + rentalCount == laborCount + operatorCount == workers.length.
+     - Integrated into DailyReportCompiler and WhatsApp formatting so summary cards, daily reports, and WhatsApp messages use a single mathematical calculation.
+  3. **Strict Decoupling of Supplier from Employment Type:**
+     - Fixed RosterAdminImporter, RosterAdminWorkerCreator, and SyncSnapshotApplier: no longer coerce workers with a supplier to rental.
+     - Preserved employmentType in RosterAdminWorkerUpdater on employee updates so classification is never lost.
+     - Modularized EventRepository into EventDraft, EventDraftValidator, and EventDomainMapper, reducing file size to 89 lines.
+     - Modularized SiteAttendanceSaveBuilder and RemoteGateway into sub-modules (SiteAttendanceUndoDraftBuilder and OfflineRemoteSyncGateway).
+
 ## 2026-11-06 — Phase 1: Baseline Verification & Company/Rental WhatsApp Diagnosis
 
 - **Status & Baseline Verification:**

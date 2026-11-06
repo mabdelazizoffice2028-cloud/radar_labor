@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:radar_labor/core/constants/employment_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/time/clock.dart';
 import 'package:radar_labor/features/roster/domain/workforce_import_result.dart';
@@ -26,8 +27,12 @@ final class WorkforceImportRepository {
         final iqama = row.code.trim();
         final existing = byCode[iqama];
         final cat = row.designation.isEmpty ? 'direct_labor' : row.designation;
-        final empType = row.employmentType == 'rental' ? 'rental' : 'company';
-        final rentalComp = row.supplier.trim().isEmpty ? null : row.supplier.trim();
+        final empType = EmploymentConstants.isRental(row.employmentType)
+            ? EmploymentConstants.rental
+            : EmploymentConstants.company;
+        final rentalComp = empType == EmploymentConstants.rental && row.supplier.trim().isNotEmpty
+            ? row.supplier.trim()
+            : null;
 
         if (existing == null) {
           await _database.into(_database.employees).insert(EmployeesCompanion.insert(

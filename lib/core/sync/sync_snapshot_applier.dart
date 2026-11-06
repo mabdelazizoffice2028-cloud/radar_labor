@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:radar_labor/core/constants/employment_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/core/database/app_setting_keys.dart';
 import 'package:radar_labor/core/sync/remote_gateway.dart';
@@ -30,7 +31,8 @@ final class SyncSnapshotApplier {
       for (final remote in snapshot.employees) {
         final local = byUid[remote.employeeUid];
         final iqama = remote.employeeUid;
-        final isRental = remote.supplier != null && remote.supplier!.isNotEmpty;
+        final isRental = EmploymentConstants.isRental(remote.employmentType);
+        final empType = isRental ? EmploymentConstants.rental : EmploymentConstants.company;
         if (local == null) {
           await database.into(database.employees).insert(
                 EmployeesCompanion.insert(
@@ -39,8 +41,8 @@ final class SyncSnapshotApplier {
                   fullNameEn: Value(remote.fullNameEn),
                   jobTitle: Value(remote.category),
                   jobCategory: Value(remote.category),
-                  employmentType: Value(isRental ? 'rental' : 'company'),
-                  rentalCompany: Value(remote.supplier),
+                  employmentType: Value(empType),
+                  rentalCompany: Value(isRental ? remote.supplier : null),
                   currentTeamId: Value(remote.currentTeamId),
                   archivedAt: Value(remote.isActive ? null : clock.nowUtc()),
                   rowVersion: Value(remote.rowVersion),
@@ -53,8 +55,8 @@ final class SyncSnapshotApplier {
               fullNameAr: Value(remote.fullNameAr),
               fullNameEn: Value(remote.fullNameEn),
               jobTitle: Value(remote.category),
-              rentalCompany: Value(remote.supplier),
-              employmentType: Value(isRental ? 'rental' : 'company'),
+              rentalCompany: Value(isRental ? remote.supplier : null),
+              employmentType: Value(empType),
               currentTeamId: Value(remote.currentTeamId),
               archivedAt: Value(remote.isActive ? null : clock.nowUtc()),
               rowVersion: Value(remote.rowVersion),

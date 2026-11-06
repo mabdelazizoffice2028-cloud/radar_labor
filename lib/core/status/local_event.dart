@@ -55,6 +55,8 @@ final class LocalEvent {
     this.delivery = EventDelivery.pending,
     this.isLate = false,
     this.resolutionKind,
+    this.employmentType,
+    this.jobCategory,
   });
 
   final String eventId;
@@ -71,4 +73,6 @@ final class LocalEvent {
   final EventDelivery delivery;
   final bool isLate;
   final ResolutionKind? resolutionKind;
+  final String? employmentType;
+  final String? jobCategory;
 }

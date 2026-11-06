@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:radar_labor/core/audit/audit_log_repository.dart';
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
+import 'package:radar_labor/core/constants/employment_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 import 'package:radar_labor/features/operations/domain/roster_wipe_plan.dart';
@@ -30,11 +31,13 @@ final class RosterAdminImporter {
         final iqama = r.code.trim();
         final ex = byCode[iqama];
         final cat = r.designation.isEmpty ? 'direct_labor' : r.designation;
-        final isRental = r.supplier.isNotEmpty;
+        final isRental = EmploymentConstants.isRental(r.employmentType);
+        final empType = isRental ? EmploymentConstants.rental : EmploymentConstants.company;
+        final supplierVal = isRental && r.supplier.isNotEmpty ? r.supplier : null;
         if (ex == null) {
           await database.into(database.employees).insert(EmployeesCompanion.insert(
             iqamaNo: iqama, fullNameAr: r.name, fullNameEn: Value(r.name), jobTitle: Value(cat), jobCategory: Value(cat),
-            employmentType: Value(isRental ? 'rental' : 'company'), rentalCompany: Value(isRental ? r.supplier : null),
+            employmentType: Value(empType), rentalCompany: Value(supplierVal),
           ));
           await database.into(database.workerHistory).insert(WorkerHistoryCompanion.insert(
             historyId: uuid.v4(), iqamaNo: iqama, action: 'imported_create',
@@ -44,7 +47,7 @@ final class RosterAdminImporter {
         } else {
           await (database.update(database.employees)..where((e) => e.iqamaNo.equals(iqama))).write(EmployeesCompanion(
             fullNameAr: Value(r.name), fullNameEn: Value(r.name), jobTitle: Value(cat),
-            rentalCompany: Value(isRental ? r.supplier : null), employmentType: Value(isRental ? 'rental' : 'company'),
+            rentalCompany: Value(supplierVal), employmentType: Value(empType),
             archivedAt: const Value(null), rowVersion: Value(ex.rowVersion + 1),
           ));
           await database.into(database.workerHistory).insert(WorkerHistoryCompanion.insert(

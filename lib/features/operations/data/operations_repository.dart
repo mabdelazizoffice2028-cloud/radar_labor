@@ -49,16 +49,28 @@ final class OperationsRepository implements OperationsStore {
       (database.select(database.employees)..where((r) => r.archivedAt.isNull() & r.currentTeamId.equals(teamId))).watch().map(_toWorkers);
 
   @override
-  Future<HousingCheckUndo> saveHousingCheck({required String date, required EntityOption housing, required Set<String> absentIds, required String actorUserId}) =>
-      _housing.save(date: date, housing: housing, absentIds: absentIds, actorUserId: actorUserId);
+  Future<HousingCheckUndo> saveHousingCheck({required String date, required EntityOption housing, required Set<String> absentIds, required String actorUserId}) async {
+    final rows = await (database.select(database.employees)..where((r) => r.iqamaNo.isIn(absentIds))).get();
+    return _housing.save(
+      date: date, housing: housing, absentIds: absentIds, actorUserId: actorUserId,
+      workerEmploymentTypes: {for (final r in rows) r.iqamaNo: r.employmentType},
+      workerJobCategories: {for (final r in rows) r.iqamaNo: r.jobCategory},
+    );
+  }
 
   @override
   Future<void> undoHousingCheck(HousingCheckUndo undo, {required String actorUserId}) =>
       _housing.undo(undo, actorUserId: actorUserId);
 
   @override
-  Future<SiteAttendanceUndo> saveSiteAttendance({required String date, required EntityOption team, required Set<String> presentIds, required String actorUserId}) =>
-      _site.save(date: date, team: team, presentIds: presentIds, actorUserId: actorUserId);
+  Future<SiteAttendanceUndo> saveSiteAttendance({required String date, required EntityOption team, required Set<String> presentIds, required String actorUserId}) async {
+    final rows = await (database.select(database.employees)..where((r) => r.iqamaNo.isIn(presentIds))).get();
+    return _site.save(
+      date: date, team: team, presentIds: presentIds, actorUserId: actorUserId,
+      workerEmploymentTypes: {for (final r in rows) r.iqamaNo: r.employmentType},
+      workerJobCategories: {for (final r in rows) r.iqamaNo: r.jobCategory},
+    );
+  }
 
   @override
   Future<void> undoSiteAttendance(SiteAttendanceUndo undo, {required String actorUserId}) =>

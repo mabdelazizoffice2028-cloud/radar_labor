@@ -19,6 +19,8 @@ final class WorkerProfile {
     this.housingId,
     this.isActive = true,
     this.jobCategory = 'direct_labor',
+    this.employmentType = 'company',
+    this.rentalCompany,
     this.isOnLeave = false,
   });
 
@@ -29,6 +31,8 @@ final class WorkerProfile {
   final String? housingId;
   final bool isActive;
   final String jobCategory;
+  final String employmentType;
+  final String? rentalCompany;
   final bool isOnLeave;
   final List<EmploymentPeriod> employmentPeriods;
 

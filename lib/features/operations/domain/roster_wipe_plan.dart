@@ -7,12 +7,14 @@ final class RosterImportEntry {
     required this.name,
     this.designation = 'Worker',
     this.supplier = '',
+    this.employmentType = 'company',
   });
 
   final String code;
   final String name;
   final String designation;
   final String supplier;
+  final String employmentType;
 }
 
 final class RosterImportResult {

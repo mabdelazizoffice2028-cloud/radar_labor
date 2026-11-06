@@ -12,6 +12,8 @@ final class OperationsSiteOperations {
     required EntityOption team,
     required Set<String> presentIds,
     required String actorUserId,
+    Map<String, String>? workerEmploymentTypes,
+    Map<String, String>? workerJobCategories,
   }) async {
     final previous = await events.readBusinessDate(date);
     final ledger = AttendanceLedger(previous);
@@ -27,6 +29,12 @@ final class OperationsSiteOperations {
           employeeUid: id,
           teamId: team.id,
           userId: actorUserId,
+          payload: {
+            if (presentIds.contains(id)) ...{
+              'employmentType': workerEmploymentTypes?[id] ?? 'company',
+              'jobCategory': workerJobCategories?[id] ?? 'direct_labor',
+            },
+          },
         ),
       EventDraft(
         type: EventType.siteSubmitted,

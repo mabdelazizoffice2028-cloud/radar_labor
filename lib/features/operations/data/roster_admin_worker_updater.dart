@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:radar_labor/core/audit/audit_log_repository.dart';
 import 'package:radar_labor/core/auth/scope_snapshot.dart';
+import 'package:radar_labor/core/constants/employment_constants.dart';
 import 'package:radar_labor/core/database/app_database.dart';
 import 'package:radar_labor/features/operations/domain/operation_failure.dart';
 
@@ -17,6 +18,8 @@ final class RosterAdminWorkerUpdater {
     String? nameEn,
     String? category,
     Value<String?> teamId = const Value.absent(),
+    String? employmentType,
+    String? rentalCompany,
   }) async {
     _guard(actor);
     await database.transaction(() async {
@@ -27,6 +30,8 @@ final class RosterAdminWorkerUpdater {
         fullNameEn: nameEn != null ? Value(nameEn.trim()) : const Value.absent(),
         jobTitle: category != null ? Value(category.trim()) : const Value.absent(),
         currentTeamId: teamId,
+        employmentType: employmentType != null ? Value(EmploymentConstants.normalize(employmentType)) : const Value.absent(),
+        rentalCompany: rentalCompany != null ? Value(rentalCompany.trim().isEmpty ? null : rentalCompany.trim()) : const Value.absent(),
         rowVersion: Value(ex.rowVersion + 1),
       ));
       await audit.record(
